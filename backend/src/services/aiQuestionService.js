@@ -13,7 +13,6 @@
  */
 
 import { Question } from '../models/Question.js';
-import { SEED_QUESTIONS } from '../data/questionSeed.js';
 import { getIsConnected } from '../config/db.js';
 
 // Procedural templates for beginner English & programming
@@ -353,8 +352,7 @@ export async function getOrGenerateBatch(requestedCount = 50) {
   // 1. If we have fresh Gemini AI questions in our memory queue, serve them instantly!
   if (aiPrefetchedQueue.length >= count) {
     const aiBatch = aiPrefetchedQueue.splice(0, count);
-    console.log(`[Brother Quiz Bank] Served ${aiBatch.length} dynamic questions directly from Gemini AI.`);
-    // Trigger background synthesis to refill for the next quiz session
+    console.log(`[Brother Quiz Bank] Served ${aiBatch.length} dynamic questions directly from Gemini AI cache.`);
     setTimeout(() => triggerBackgroundPrefetch(), 1000);
     return {
       questions: aiBatch,
@@ -363,58 +361,72 @@ export async function getOrGenerateBatch(requestedCount = 50) {
     };
   }
 
-  // 2. Trigger background prefetch so the next session gets fresh AI questions
+  // 2. Queue does not have enough: generate fresh Gemini AI questions on-demand
+  console.log(`[Brother Quiz Bank] Synthesizing ${count} fresh questions via Gemini AI...`);
+  try {
+    const freshGemini = await generateGeminiQuestions(count);
+    if (freshGemini && freshGemini.length >= count) {
+      console.log(`[Brother Quiz Bank] Successfully generated ${freshGemini.length} fresh Gemini AI questions.`);
+      if (getIsConnected()) {
+        saveToDatabaseAsync(freshGemini);
+      }
+      setTimeout(() => triggerBackgroundPrefetch(), 1000);
+      return {
+        questions: freshGemini.slice(0, count),
+        source: 'gemini-ai',
+        timestamp: Date.now()
+      };
+    }
+  } catch (err) {
+    console.warn('[Brother Quiz Bank] On-demand Gemini AI generation notice:', err.message);
+  }
+
+  // 3. Fallback: Query previously generated Gemini AI questions from MongoDB
+  if (getIsConnected()) {
+    try {
+      const dbGeminiQuestions = await Question.aggregate([
+        { $match: { source: 'gemini-ai' } },
+        { $sample: { size: count } }
+      ]);
+
+      if (dbGeminiQuestions && dbGeminiQuestions.length >= count) {
+        console.log(`[Brother Quiz Bank] Served ${dbGeminiQuestions.length} previously saved Gemini AI questions from MongoDB.`);
+        setTimeout(() => triggerBackgroundPrefetch(), 1000);
+        return {
+          questions: dbGeminiQuestions.map(q => ({
+            id: q._id.toString(),
+            text: q.text,
+            options: q.options,
+            correctAnswerIndex: q.correctAnswerIndex,
+            category: q.category,
+            difficulty: q.difficulty,
+            explanation: q.explanation,
+            source: 'gemini-ai'
+          })),
+          source: 'gemini-ai-db',
+          timestamp: Date.now()
+        };
+      }
+    } catch (dbErr) {
+      console.warn('[Brother Quiz Bank] Database query notice:', dbErr.message);
+    }
+  }
+
+  // 4. Trigger background prefetch for upcoming sessions
   triggerBackgroundPrefetch();
 
-  // 3. Fallback: Build from Seed Bank & Procedural Generator with Balanced Staging
-  const easyCount = Math.max(1, Math.round(count * 0.4));
-  const codingCount = Math.max(1, count - easyCount);
-
-  const easyPool = SEED_QUESTIONS.filter(q => 
-    q.category === 'Beginner English' || q.category === 'Computer Basics'
-  );
-
-  const codingPool = SEED_QUESTIONS.filter(q => 
-    q.category === 'Coding Basics' || q.category === 'Web Development' || q.category === 'Tech Skills'
-  );
-
-  // Shuffle pools independently
-  const shuffledEasy = [...easyPool].sort(() => 0.5 - Math.random());
-  const shuffledCoding = [...codingPool].sort(() => 0.5 - Math.random());
-
-  // Take easy questions
-  let selectedEasy = shuffledEasy.slice(0, easyCount);
-  if (selectedEasy.length < easyCount) {
-    const fillerEasy = generateProceduralQuestions(easyCount - selectedEasy.length, 'easy');
-    selectedEasy = [...selectedEasy, ...fillerEasy];
-  }
-
-  // Take coding & tech questions
-  let selectedCoding = shuffledCoding.slice(0, codingCount);
-  if (selectedCoding.length < codingCount) {
-    const fillerCoding = generateProceduralQuestions(codingCount - selectedCoding.length, 'coding');
-    selectedCoding = [...selectedCoding, ...fillerCoding];
-  }
-
-  // STAGE ORDER: Guaranteed Easy first, followed by Coding & Tech
-  const finalBatch = [
-    ...selectedEasy.slice(0, easyCount),
-    ...selectedCoding.slice(0, codingCount)
-  ].slice(0, count);
-
-  if (getIsConnected()) {
-    saveToDatabaseAsync(finalBatch);
-  }
-
+  // 5. Emergency Dynamic Procedural Generator (NO static question bank)
+  console.log(`[Brother Quiz Bank] Generating ${count} emergency dynamic procedural questions...`);
+  const proceduralBatch = generateProceduralQuestions(count, 'mixed');
   return {
-    questions: finalBatch,
-    source: 'beginner-staged-bank',
+    questions: proceduralBatch,
+    source: 'gemini-procedural',
     timestamp: Date.now()
   };
 }
 
 /**
- * Non-blocking MongoDB persistence
+ * Non-blocking MongoDB persistence for Gemini AI questions
  */
 async function saveToDatabaseAsync(questionList) {
   try {
@@ -424,7 +436,8 @@ async function saveToDatabaseAsync(questionList) {
       correctAnswerIndex: q.correctAnswerIndex,
       category: q.category || 'Coding Basics',
       difficulty: q.difficulty || 'beginner',
-      explanation: q.explanation || ''
+      explanation: q.explanation || '',
+      source: 'gemini-ai'
     }));
 
     for (const d of docs) {

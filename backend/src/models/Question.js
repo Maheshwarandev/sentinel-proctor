@@ -34,6 +34,10 @@ const questionSchema = new mongoose.Schema({
     type: String, 
     default: '' 
   },
+  source: {
+    type: String,
+    default: 'gemini-ai'
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 
@@ -42,6 +46,7 @@ const questionSchema = new mongoose.Schema({
 
 // Production Indexes for Rapid Question Shuffling and Topic Partitioning
 questionSchema.index({ category: 1, difficulty: 1 });
+questionSchema.index({ source: 1 });
 questionSchema.index({ createdAt: -1 });
 
 export const Question = mongoose.models.Question || mongoose.model('Question', questionSchema);

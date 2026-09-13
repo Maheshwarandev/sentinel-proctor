@@ -248,22 +248,8 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
       setQuestionSeconds(0);
       setLoading(false);
     } catch (err) {
-      console.warn('Quiz init backend fetch notice, activating offline seed bank:', err.message);
-      // Seamlessly activate curated seed bank so the assessment NEVER fails or goes blank
-      const fallbackBatch = SEED_QUESTIONS.slice(0, limit).map(q => ({
-        id: q.id,
-        text: q.text,
-        options: q.options,
-        category: q.category,
-        difficulty: q.difficulty,
-        correctAnswerIndex: q.correctAnswerIndex,
-        explanation: q.explanation
-      }));
-
-      setSessionId(`offline_ses_${Date.now()}`);
-      setQuestions(fallbackBatch);
-      setQuestionStartTime(Date.now());
-      setQuestionSeconds(0);
+      console.warn('Quiz init backend fetch notice:', err.message);
+      setError('Unable to load AI questions. Please verify your connection and try again.');
       setLoading(false);
     }
   };

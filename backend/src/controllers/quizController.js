@@ -1,34 +1,22 @@
 import { Question } from '../models/Question.js';
-import { SEED_QUESTIONS } from '../data/questionSeed.js';
 import { getIsConnected } from '../config/db.js';
 import { getOrGenerateBatch, generateGeminiQuestions } from '../services/aiQuestionService.js';
 
 // In-memory active quiz sessions map: sessionId -> { questionMap, startedAt }
 const activeQuizSessions = new Map();
 
-// Helper to seed MongoDB with SEED_QUESTIONS if connected and empty
-let isSeeded = false;
-async function ensureSeeded() {
-  if (isSeeded) return;
-  if (!getIsConnected()) return;
-
+// Helper to clean up any legacy static seed bank questions so only Gemini AI questions exist
+let isLegacyCleaned = false;
+async function purgeLegacySeedBank() {
+  if (isLegacyCleaned || !getIsConnected()) return;
   try {
-    const count = await Question.countDocuments();
-    if (count === 0) {
-      console.log('[Brother Quiz Bank] Seeding 100 curated questions into MongoDB...');
-      await Question.insertMany(SEED_QUESTIONS.map(q => ({
-        text: q.text,
-        options: q.options,
-        correctAnswerIndex: q.correctAnswerIndex,
-        category: q.category,
-        difficulty: q.difficulty,
-        explanation: q.explanation
-      })));
-      console.log('[Brother Quiz Bank] Successfully seeded question database.');
+    const deleted = await Question.deleteMany({ source: { $ne: 'gemini-ai' } });
+    if (deleted?.deletedCount > 0) {
+      console.log(`[Brother Quiz Bank] Removed ${deleted.deletedCount} legacy static questions. Active questions are 100% Gemini AI.`);
     }
-    isSeeded = true;
+    isLegacyCleaned = true;
   } catch (err) {
-    console.warn('[Brother Quiz Bank] Database seed notice:', err.message);
+    console.warn('[Brother Quiz Bank] Cleanup notice:', err.message);
   }
 }
 
@@ -73,7 +61,7 @@ export const updateQuizSettings = (req, res) => {
  */
 export const startQuizSession = async (req, res) => {
   try {
-    await ensureSeeded();
+    await purgeLegacySeedBank();
 
     const limit = Math.max(3, Math.min(100, parseInt(req.query.limit, 10) || currentQuestionLimit));
 
@@ -153,12 +141,16 @@ export const gradeQuizSession = async (req, res) => {
 
     let session = activeQuizSessions.get(sessionId);
 
-    // Fallback: if session in-memory map was wiped due to server restart, locate questions by ID in seed or DB
+    // Fallback: if session in-memory map was wiped due to server restart, locate questions by ID in memory or DB
     let questionResolver = (id) => session?.questionMap?.get(id);
 
-    if (!session) {
-      const fallbackMap = new Map(SEED_QUESTIONS.map(q => [q.id, q]));
-      questionResolver = (id) => fallbackMap.get(id);
+    if (!session && getIsConnected()) {
+      try {
+        const qIds = answers.map(a => a.questionId);
+        const dbDocs = await Question.find({ _id: { $in: qIds } });
+        const fallbackDbMap = new Map(dbDocs.map(q => [q._id.toString(), q]));
+        questionResolver = (id) => fallbackDbMap.get(id);
+      } catch (e) {}
     }
 
     let correctCount = 0;
@@ -280,16 +272,14 @@ export const generateMoreQuestions = async (req, res) => {
  */
 export const getQuestionBankStats = async (req, res) => {
   try {
-    let totalQuestions = SEED_QUESTIONS.length;
+    let totalQuestions = 0;
     let inDb = false;
 
     if (getIsConnected()) {
       try {
-        const count = await Question.countDocuments();
-        if (count > 0) {
-          totalQuestions = count;
-          inDb = true;
-        }
+        const count = await Question.countDocuments({ source: 'gemini-ai' });
+        totalQuestions = count;
+        inDb = count > 0;
       } catch (e) {}
     }
 
@@ -298,7 +288,7 @@ export const getQuestionBankStats = async (req, res) => {
       totalQuestions,
       inDb,
       aiEngineAvailable: !!process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('YOUR_GEMINI_API_KEY'),
-      aiProvider: process.env.GEMINI_API_KEY ? 'Google Gemini 1.5 Flash' : 'Procedural Grammar Engine'
+      aiProvider: 'Google Gemini AI'
     });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
