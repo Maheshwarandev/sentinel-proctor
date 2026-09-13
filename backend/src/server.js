@@ -77,15 +77,18 @@ app.get('/api/network-info', (req, res) => {
   const isHttps = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https';
   const detectedUrl = `${isHttps ? 'https' : 'http'}://${host}`;
   const cloudUrl = process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL || process.env.TUNNEL_URL;
-  const onlineCandidateUrl = cloudUrl || (process.env.NODE_ENV === 'production' ? detectedUrl : 'https://electron-evaluated-hat-operators.trycloudflare.com/');
+  const baseUrl = (cloudUrl || detectedUrl).replace(/\/+$/, '');
+  const onlineTestUrl = `${baseUrl}/test`;
+  const onlineHubUrl = `${baseUrl}/candidate`;
 
   res.status(200).json({
     success: true,
     lanIp,
-    onlineCandidateUrl,
-    lanCandidateUrl: onlineCandidateUrl,
-    localCandidateUrl: process.env.NODE_ENV === 'production' ? `${detectedUrl}/` : `http://localhost:${clientPort}/`,
-    localAdminUrl: process.env.NODE_ENV === 'production' ? `${detectedUrl}/admin` : `http://localhost:${clientPort}/admin`,
+    onlineCandidateUrl: onlineTestUrl,
+    lanCandidateUrl: onlineTestUrl,
+    onlineHubUrl,
+    localCandidateUrl: process.env.NODE_ENV === 'production' ? `${baseUrl}/test` : `http://localhost:${clientPort}/test`,
+    localAdminUrl: process.env.NODE_ENV === 'production' ? `${baseUrl}/` : `http://localhost:${clientPort}/`,
     serverLanUrl: `http://${lanIp}:${serverPort}`
   });
 });

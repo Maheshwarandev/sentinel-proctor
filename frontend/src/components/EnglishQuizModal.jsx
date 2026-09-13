@@ -883,7 +883,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
     if (onClose) {
       onClose();
     } else {
-      navigate('/');
+      navigate('/candidate');
     }
   };
 
@@ -956,7 +956,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
         {/* Close button */}
         <button
           type="button"
-          onClick={onClose || (() => navigate('/'))}
+          onClick={onClose || (() => navigate('/candidate'))}
           className="p-1.5 rounded-xl text-[#AFAFAF] hover:text-[#4B4B4B] hover:bg-[#F7F7F7] transition-colors cursor-pointer"
           title="Exit Practice"
         >

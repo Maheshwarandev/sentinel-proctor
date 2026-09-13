@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, 
@@ -16,7 +16,10 @@ import {
   Check,
   Minus,
   Plus,
-  FileCheck2
+  FileCheck2,
+  Copy,
+  ExternalLink,
+  Share2
 } from 'lucide-react';
 import { useForensics } from '../context/ForensicContext';
 import { CyberNotificationPopup } from './CyberNotificationPopup';
@@ -41,6 +44,27 @@ export const AdminIntelligenceBoard = () => {
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
   const [customLimitInput, setCustomLimitInput] = useState(module2QuestionLimit);
   const [limitFeedback, setLimitFeedback] = useState(null);
+  const [copiedTestLink, setCopiedTestLink] = useState(false);
+  const [copiedHubLink, setCopiedHubLink] = useState(false);
+
+  useEffect(() => {
+    setCustomLimitInput(module2QuestionLimit);
+  }, [module2QuestionLimit]);
+
+  const candidateTestUrl = `${window.location.origin}/test`;
+  const candidateHubUrl = `${window.location.origin}/candidate`;
+
+  const handleCopyLink = (type) => {
+    const url = type === 'hub' ? candidateHubUrl : candidateTestUrl;
+    navigator.clipboard.writeText(url);
+    if (type === 'hub') {
+      setCopiedHubLink(true);
+      setTimeout(() => setCopiedHubLink(false), 2400);
+    } else {
+      setCopiedTestLink(true);
+      setTimeout(() => setCopiedTestLink(false), 2400);
+    }
+  };
 
   const handleSetQuestionLimit = async (limit) => {
     const val = Math.max(3, Math.min(100, parseInt(limit, 10) || 50));
@@ -166,6 +190,58 @@ export const AdminIntelligenceBoard = () => {
       </div>
 
       {/* ============================================================= */}
+      {/* CANDIDATE ACCESS & ASSESSMENT DISPATCHER                      */}
+      {/* ============================================================= */}
+      <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-slate-900/90 to-slate-900/70 p-5 shadow-xl backdrop-blur-md">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          
+          <div className="space-y-1 max-w-xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                <Share2 className="w-4 h-4" />
+              </span>
+              <h2 className="text-sm font-bold text-white tracking-tight">
+                Brother Assessment Access Link
+              </h2>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold">
+                ROOT (/) LOCKED TO ADMIN
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Default Render link goes to Admin. Give the dedicated link below to your brother to access his assessment workstation (Module 1 Typing, Module 2 English, Module 3 Handwriting).
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-shrink-0">
+            {/* Direct Brother Assessment Test Link */}
+            <div className="flex items-center space-x-1.5 p-1.5 rounded-xl bg-slate-950 border border-cyan-500/50 shadow-sm">
+              <span className="text-[11px] font-mono text-cyan-300 px-2 truncate max-w-[200px] sm:max-w-[260px]">
+                {candidateTestUrl}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopyLink('test')}
+                className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center space-x-1 transition-all cursor-pointer shadow-sm"
+              >
+                {copiedTestLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedTestLink ? 'Copied!' : 'Copy Brother Link'}</span>
+              </button>
+              <a
+                href={candidateTestUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="Open Brother assessment link in new tab"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ============================================================= */}
       {/* EXECUTIVE KPI STAT CARDS (GRID OF 4)                          */}
       {/* ============================================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -282,8 +358,8 @@ export const AdminIntelligenceBoard = () => {
       {/* ============================================================= */}
       {/* MODULE 2: ENGLISH ASSESSMENT QUESTION LIMIT CONFIGURATION    */}
       {/* ============================================================= */}
-      <div className="rounded-2xl border border-sky-500/30 bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-sky-950/30 p-5 sm:p-6 shadow-xl backdrop-blur-md space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+      <div className="rounded-2xl border border-sky-500/30 bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-sky-950/30 p-5 sm:p-6 shadow-xl backdrop-blur-md space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400">
               <Sliders className="w-5 h-5" />
@@ -303,82 +379,26 @@ export const AdminIntelligenceBoard = () => {
             </div>
           </div>
 
-          {/* Current Active Limit Indicator Badge */}
-          <div className="flex items-center space-x-2 shrink-0">
-            <div className="px-3.5 py-1.5 rounded-xl bg-slate-950 border border-sky-500/40 text-center font-mono">
-              <span className="text-[10px] uppercase text-slate-400 block">Current Target</span>
-              <span className="text-sm font-bold text-sky-400">
-                {module2QuestionLimit} Questions
-              </span>
-            </div>
-            <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-emerald-500/40 text-center font-mono">
+          {/* Stepper + Pass Mark Badges */}
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {/* Pass Mark (70%) Badge */}
+            <div className="px-3.5 py-1.5 rounded-xl bg-slate-950 border border-emerald-500/40 text-center font-mono">
               <span className="text-[10px] uppercase text-slate-400 block">Pass Mark (70%)</span>
               <span className="text-sm font-bold text-emerald-400">
                 {Math.ceil(module2QuestionLimit * 0.7)} / {module2QuestionLimit}
               </span>
             </div>
-          </div>
-        </div>
 
-        {/* Feedback alert toast */}
-        {limitFeedback && (
-          <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs font-mono font-semibold flex items-center space-x-2 animate-in fade-in">
-            <Check className="w-4 h-4 text-emerald-400" />
-            <span>{limitFeedback}</span>
-          </div>
-        )}
-
-        {/* Preset Chips and Custom Input */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-1">
-          {/* Quick Preset Buttons */}
-          <div className="space-y-1.5">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
-              1-Click Question Presets:
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              {[
-                { count: 5, label: '5 Qs', desc: 'Rapid' },
-                { count: 10, label: '10 Qs', desc: 'Standard' },
-                { count: 15, label: '15 Qs', desc: 'Medium' },
-                { count: 20, label: '20 Qs', desc: 'Full' },
-                { count: 25, label: '25 Qs', desc: 'Extended' },
-                { count: 30, label: '30 Qs', desc: 'Deep' },
-                { count: 50, label: '50 Qs', desc: 'Comprehensive' }
-              ].map(preset => {
-                const isSelected = module2QuestionLimit === preset.count;
-                return (
-                  <button
-                    key={preset.count}
-                    type="button"
-                    onClick={() => handleSetQuestionLimit(preset.count)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 active:scale-95 cursor-pointer ${
-                      isSelected
-                        ? 'bg-sky-500 text-slate-950 shadow-[0_0_15px_rgba(56,189,248,0.4)] font-bold'
-                        : 'bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-sky-500/40'
-                    }`}
-                  >
-                    <Zap className={`w-3 h-3 ${isSelected ? 'text-slate-950' : 'text-sky-400'}`} />
-                    <span>{preset.label}</span>
-                    <span className={`text-[9px] ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>
-                      ({preset.desc})
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Custom Stepper Input */}
-          <div className="space-y-1.5 shrink-0">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
-              Custom Question Count:
-            </span>
+            {/* Custom Question Stepper */}
             <div className="flex items-center space-x-2">
-              <div className="flex items-center rounded-xl bg-slate-950 border border-slate-700/80 p-1">
+              <div className="flex items-center rounded-xl bg-slate-950 border border-slate-700/80 p-1 shadow-inner">
                 <button
                   type="button"
-                  onClick={() => handleSetQuestionLimit(Math.max(3, module2QuestionLimit - 5))}
-                  className="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                  onClick={() => {
+                    const current = parseInt(customLimitInput, 10) || module2QuestionLimit || 50;
+                    handleSetQuestionLimit(Math.max(3, current - 5));
+                  }}
+                  className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
                   title="Decrease by 5 questions"
                 >
                   <Minus className="w-3.5 h-3.5" />
@@ -396,8 +416,11 @@ export const AdminIntelligenceBoard = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => handleSetQuestionLimit(Math.min(100, module2QuestionLimit + 5))}
-                  className="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                  onClick={() => {
+                    const current = parseInt(customLimitInput, 10) || module2QuestionLimit || 50;
+                    handleSetQuestionLimit(Math.min(100, current + 5));
+                  }}
+                  className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
                   title="Increase by 5 questions"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -407,94 +430,25 @@ export const AdminIntelligenceBoard = () => {
               <button
                 type="button"
                 onClick={() => handleSetQuestionLimit(customLimitInput)}
-                className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs font-mono flex items-center space-x-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs font-mono flex items-center space-x-1.5 transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
               >
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Apply Limit</span>
               </button>
             </div>
           </div>
         </div>
-      </div>
 
-
-
-      {/* ============================================================= */}
-      {/* RECENT SUBMISSIONS LEDGER PREVIEW                             */}
-      {/* ============================================================= */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/70 p-5 sm:p-6 shadow-xl backdrop-blur-md space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-          <div>
-            <h3 className="text-sm font-bold text-white tracking-tight">
-              Task Submissions Status
-            </h3>
-            <p className="text-xs text-slate-400">Current status of all 3 mandatory daily compliance modules.</p>
+        {/* Feedback alert toast */}
+        {limitFeedback && (
+          <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs font-mono font-semibold flex items-center space-x-2 animate-in fade-in">
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span>{limitFeedback}</span>
           </div>
-          <button
-            onClick={() => navigate('/admin/submissions')}
-            className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1"
-          >
-            <span>View all in Submissions Box</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {tasks.map((task) => (
-            <div 
-              key={task.id}
-              className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-3 flex flex-col justify-between"
-            >
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase">
-                    {task.id === 'mod-1-keyboard' ? 'Module 1' : task.id === 'mod-2-duolingo' ? 'Module 2' : 'Module 3'}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    {task.submittedAt 
-                      ? new Date(task.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      : 'Pending'}
-                  </span>
-                </div>
-                <h4 className="text-xs font-bold text-white">
-                  {task.title}
-                </h4>
-                <p className="text-[11px] text-slate-400 line-clamp-2">
-                  {task.type === 'keyboard' 
-                    ? `WPM: ${task.telemetry?.wpm || 68} | Words: ${task.submissionText ? task.submissionText.trim().split(/\s+/).length : 0}`
-                    : (task.type === 'image_ocr' || task.type === 'english_quiz' || task.id === 'mod-2-duolingo')
-                    ? (task.quizScore !== undefined 
-                        ? `Score: ${task.quizScore}/${task.totalQuestions || module2QuestionLimit} (${task.percentage}%) • Certified`
-                        : `Target: ${module2QuestionLimit} Qs (Pass Mark: ${Math.ceil(module2QuestionLimit * 0.7)}/${module2QuestionLimit})`)
-                    : `Device: ${task.exifData?.deviceModel || 'iPhone 15 Pro Max'}`
-                  }
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-2 pt-2 border-t border-slate-800/60">
-                <button
-                  onClick={() => {
-                    setSelectedTaskId(task.id);
-                    navigate('/admin/submissions');
-                  }}
-                  className="flex-1 py-1.5 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[11px] font-medium transition-colors text-center"
-                >
-                  Review
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedTaskId(task.id);
-                    navigate('/admin/anti-cheat');
-                  }}
-                  className="py-1.5 px-2 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 text-[11px] font-medium transition-colors"
-                >
-                  Telemetry
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        )}
       </div>
+
+
 
     </div>
   );

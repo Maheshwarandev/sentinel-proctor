@@ -10,9 +10,13 @@ import { EnglishQuizModal } from './components/EnglishQuizModal';
 function AppLayout() {
   const location = useLocation();
   const { isRedLockdownActive, theme } = useForensics();
-  // Upper navbar is strictly isolated to /admin for the supervisor
-  // Brother will NEVER see the upper navbar on his link or workstation
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  // Candidate routes are strictly isolated for Brother - distraction-free, zero upper navbar
+  const candidateRoutes = ['/candidate', '/test', '/brother', '/quiz', '/exercise', '/subject'];
+  const isCandidateRoute = candidateRoutes.some(path => 
+    location.pathname === path || location.pathname.startsWith(`${path}/`)
+  );
+  // Default root '/' and any /admin routes are dedicated to the Admin Supervisor
+  const isAdminRoute = !isCandidateRoute;
 
   return (
     <div className={`${!isAdminRoute ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'} flex flex-col font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-500 relative ${
@@ -35,15 +39,17 @@ function AppLayout() {
 
       <main className={`flex-1 flex flex-col min-h-0 ${!isAdminRoute ? 'overflow-hidden' : ''}`}>
         <Routes>
-          {/* Main Direct Link for Brother - Clean, distraction-free, zero upper navbar */}
-          <Route path="/" element={<SubjectHub />} />
+          {/* Candidate Direct Links - Dedicated links supervisor gives to Brother */}
+          <Route path="/test" element={<SubjectHub />} />
+          <Route path="/candidate" element={<SubjectHub />} />
+          <Route path="/brother" element={<SubjectHub />} />
           <Route path="/subject" element={<SubjectHub />} />
           <Route path="/exercise" element={<SubjectHub />} />
-          <Route path="/exercise/english" element={<EnglishQuizModal isOpen={true} onClose={() => window.location.href = '/'} />} />
-          <Route path="/test" element={<EnglishQuizModal isOpen={true} onClose={() => window.location.href = '/'} />} />
-          <Route path="/quiz" element={<EnglishQuizModal isOpen={true} onClose={() => window.location.href = '/'} />} />
+          <Route path="/exercise/english" element={<EnglishQuizModal isOpen={true} onClose={() => window.location.href = '/test'} />} />
+          <Route path="/quiz" element={<EnglishQuizModal isOpen={true} onClose={() => window.location.href = '/test'} />} />
 
-          {/* Admin Protected Gate - requires passcode verification */}
+          {/* Admin Protected Gate - DEFAULT Render root (/) is Admin */}
+          <Route path="/" element={<AdminGate />} />
           <Route path="/admin" element={<AdminGate />} />
           <Route path="/admin/submissions" element={<AdminGate />} />
           <Route path="/admin/finished-tasks" element={<AdminGate />} />
@@ -51,7 +57,7 @@ function AppLayout() {
           <Route path="/admin/telemetry" element={<AdminGate />} />
           <Route path="/admin/archive" element={<AdminGate />} />
 
-          {/* Any other link redirects directly to Subject Hub */}
+          {/* Any other link redirects directly to default Admin Gate */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

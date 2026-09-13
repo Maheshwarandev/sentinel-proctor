@@ -50,7 +50,7 @@ export const CyberHeader = () => {
       .catch(() => {});
   }, []);
 
-  const isDashboard = location.pathname === '/admin';
+  const isDashboard = location.pathname === '/admin' || location.pathname === '/';
   const isSubmissions = location.pathname.startsWith('/admin/submissions') || location.pathname.startsWith('/admin/finished-tasks');
   const isAntiCheat = location.pathname.startsWith('/admin/anti-cheat') || location.pathname.startsWith('/admin/telemetry');
   const isArchive = location.pathname.startsWith('/admin/archive');
@@ -58,20 +58,17 @@ export const CyberHeader = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
   const completedCount = tasks.filter(t => t.status === 'SUBMITTED' || t.status === 'VERIFIED').length;
 
-  const getLanLink = () => {
-    if (networkInfo?.lanCandidateUrl) return networkInfo.lanCandidateUrl;
-    return `${window.location.origin}/`;
+  const getCandidateTestLink = () => {
+    if (networkInfo?.onlineCandidateUrl) return networkInfo.onlineCandidateUrl;
+    return `${window.location.origin}/test`;
   };
 
-  const getLocalLink = () => {
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return `${window.location.origin}/`;
-    }
-    return `${window.location.protocol}//localhost:5173/`;
+  const getCandidateHubLink = () => {
+    return `${window.location.origin}/candidate`;
   };
 
-  const copyLink = (type) => {
-    const url = type === 'lan' ? getLanLink() : getLocalLink();
+  const copyLink = (type = 'test') => {
+    const url = type === 'hub' ? getCandidateHubLink() : getCandidateTestLink();
     navigator.clipboard.writeText(url);
     setCopiedType(type);
     setCopied(true);
@@ -82,8 +79,8 @@ export const CyberHeader = () => {
   };
 
   const handleQuickShare = () => {
-    // If on localhost, default to copying the LAN link so it works on the other laptop!
-    copyLink('lan');
+    // Default to copying the candidate test link directly for Brother!
+    copyLink('test');
     setShowShareDropdown(prev => !prev);
   };
 
@@ -289,12 +286,12 @@ export const CyberHeader = () => {
                     </div>
 
                     <div className="space-y-3 text-left">
-                      {/* Option 1: Other Laptop (LAN) */}
+                      {/* Option 1: Direct Assessment Test Link */}
                       <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/40 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-bold text-cyan-300 flex items-center space-x-1.5">
                             <Laptop className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>For Other Laptop / Phone (Same Wi-Fi)</span>
+                            <span>Brother Test Link (English Assessment)</span>
                           </span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold">
                             RECOMMENDED
@@ -304,46 +301,49 @@ export const CyberHeader = () => {
                           <input
                             type="text"
                             readOnly
-                            value={getLanLink()}
+                            value={getCandidateTestLink()}
                             className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] font-mono text-slate-200 select-all focus:outline-none"
                           />
                           <button
                             type="button"
-                            onClick={() => copyLink('lan')}
+                            onClick={() => copyLink('test')}
                             className="px-2.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center space-x-1 transition-all flex-shrink-0 cursor-pointer"
                           >
-                            {copied && copiedType === 'lan' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                            <span>{copied && copiedType === 'lan' ? 'Copied' : 'Copy'}</span>
+                            {copied && copiedType === 'test' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copied && copiedType === 'test' ? 'Copied' : 'Copy'}</span>
                           </button>
                         </div>
                         <p className="text-[10px] text-slate-400 leading-tight">
-                          Open this link on your second laptop. Both devices must be on the same Wi-Fi.
+                          Give this link to your brother. The test starts directly with camera and anti-cheat proctoring.
                         </p>
                       </div>
 
-                      {/* Option 2: This Computer (Localhost) */}
+                      {/* Option 2: Candidate Hub (All 3 Modules) */}
                       <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-medium text-slate-300">
-                            This Computer Only (Localhost)
+                            Candidate Hub (All 3 Modules)
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <input
                             type="text"
                             readOnly
-                            value={getLocalLink()}
+                            value={getCandidateHubLink()}
                             className="w-full px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 select-all focus:outline-none"
                           />
                           <button
                             type="button"
-                            onClick={() => copyLink('local')}
+                            onClick={() => copyLink('hub')}
                             className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold flex items-center space-x-1 transition-all flex-shrink-0 cursor-pointer"
                           >
-                            {copied && copiedType === 'local' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                            <span>{copied && copiedType === 'local' ? 'Copied' : 'Copy'}</span>
+                            {copied && copiedType === 'hub' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            <span>{copied && copiedType === 'hub' ? 'Copied' : 'Copy'}</span>
                           </button>
                         </div>
+                        <p className="text-[10px] text-slate-500 leading-tight">
+                          Includes Typing Speed, English Assessment, and Handwritten Task modules.
+                        </p>
                       </div>
                     </div>
                   </div>
