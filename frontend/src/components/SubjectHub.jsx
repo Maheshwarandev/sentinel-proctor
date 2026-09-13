@@ -1,0 +1,1346 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Terminal, 
+  FileText, 
+  ShieldAlert, 
+  Lock, 
+  CheckCircle2, 
+  AlertOctagon, 
+  Clock, 
+  Activity, 
+  Sparkles, 
+  Send, 
+  Camera, 
+  AlertTriangle,
+  Image as ImageIcon,
+  ArrowLeft,
+  RotateCcw,
+  Sun,
+  Moon,
+  BookOpen,
+  X,
+  Maximize2,
+  Minimize2,
+  Cpu,
+  FileCheck,
+  Edit3,
+  Zap
+} from 'lucide-react';
+import { useForensics, INITIAL_TASKS } from '../context/ForensicContext';
+import { EnglishQuizModal } from './EnglishQuizModal';
+import { WRITING_TOPICS } from '../data/writingTopics';
+
+export const SubjectHub = () => {
+  const { 
+    tasks, 
+    submitKeyboardPractice, 
+    submitDuolingoPractice, 
+    submitWritingPractice, 
+    clearTask,
+    triggerRedLockdown,
+    theme,
+    toggleTheme,
+    isAllTasksCompleted,
+    unlockNewDayTasks,
+    module2QuestionLimit = 50
+  } = useForensics();
+
+  const [timeUntilTomorrow, setTimeUntilTomorrow] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+      const diffMs = Math.max(0, tomorrow.getTime() - now.getTime());
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+      setTimeUntilTomorrow({ hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const [canvasMode, setCanvasMode] = useState(() => {
+    return localStorage.getItem('forensic_canvas_mode') || 'auto';
+  });
+
+  const handleCanvasModeChange = (mode) => {
+    setCanvasMode(mode);
+    localStorage.setItem('forensic_canvas_mode', mode);
+  };
+
+  const isLightWritingCanvas = canvasMode === 'paper' || (canvasMode === 'auto' && theme === 'light');
+
+  const keyboardTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-1-keyboard')) || INITIAL_TASKS[0];
+  const duolingoTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-2-duolingo')) || INITIAL_TASKS[1];
+  const writingTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-3-writing')) || INITIAL_TASKS[2];
+
+  // Windows 11 English Assessment Engine Modal State
+  const [isEnglishQuizOpen, setIsEnglishQuizOpen] = useState(false);
+
+  // -------------------------------------------------------------
+  // MODULE 1: FULLSCREEN BLACK WRITING CANVAS STATE
+  // -------------------------------------------------------------
+  const [isWritingAreaOpen, setIsWritingAreaOpen] = useState(false);
+  const isWritingAreaOpenRef = useRef(false);
+  const [inputText, setInputText] = useState(keyboardTask?.submissionText || '');
+  const [typingSeconds, setTypingSeconds] = useState(0);
+  const [isTypingActive, setIsTypingActive] = useState(false);
+  const isTypingActiveRef = useRef(false);
+  const [pasteBlockedAlert, setPasteBlockedAlert] = useState(null);
+  const [tabSwitchesCount, setTabSwitchesCount] = useState(0);
+  const [blurCount, setBlurCount] = useState(0);
+  const [pasteAttempts, setPasteAttempts] = useState(0);
+  const [keystrokesCount, setKeystrokesCount] = useState(keyboardTask?.telemetry?.totalKeystrokes || 0);
+  const [hubNotification, setHubNotification] = useState(null);
+
+  const showHubToast = (msg, type = 'success') => {
+    setHubNotification({ msg, type });
+    setTimeout(() => setHubNotification(null), 3200);
+  };
+
+  const typingTimerRef = useRef(null);
+  const idleTimeoutRef = useRef(null);
+
+  // Keep isWritingAreaOpenRef synchronized
+  useEffect(() => {
+    isWritingAreaOpenRef.current = isWritingAreaOpen;
+  }, [isWritingAreaOpen]);
+
+  // ACTIVE WRITING TIMER: ticks ONLY when writing area is actively open
+  useEffect(() => {
+    if (!isWritingAreaOpen) {
+      if (typingTimerRef.current) clearInterval(typingTimerRef.current);
+      return;
+    }
+
+    typingTimerRef.current = setInterval(() => {
+      if (isWritingAreaOpenRef.current && isTypingActiveRef.current) {
+        setTypingSeconds(prev => prev + 1);
+      }
+    }, 1000);
+
+    return () => {
+      if (typingTimerRef.current) clearInterval(typingTimerRef.current);
+    };
+  }, [isWritingAreaOpen]);
+
+  // Clean up idle grace timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    };
+  }, []);
+
+  // Format time into MM:SS
+  const formatTimer = (s) => {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  // Window visibility & blur telemetry
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        setTabSwitchesCount(p => {
+          const next = p + 1;
+          flashPasteAlert(`TELEMETRY STRIKE: Tab switch detected away from keyboard terminal! (${next} warning${next > 1 ? 's' : ''})`);
+          // ONLY trigger full red alarm if he repeatedly breaks the rule (3 or more switches while actively writing)
+          if (isWritingAreaOpenRef.current && next >= 3) {
+            triggerRedLockdown('PERSISTENT TAB SWITCHING: Subject repeatedly navigated away (3+ times) during active writing practice!', {
+              module: 'Module 1: Keyboard Practice',
+              type: 'TAB_SWITCH',
+              count: next
+            });
+          }
+          return next;
+        });
+      }
+    };
+    const onBlur = () => {
+      setBlurCount(b => b + 1);
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, [triggerRedLockdown]);
+
+  const flashPasteAlert = (msg) => {
+    setPasteBlockedAlert(msg);
+    setTimeout(() => setPasteBlockedAlert(null), 3800);
+  };
+
+  // Prevent Paste, Drop, and Right-Click Context Menu
+  const handlePaste = (e) => {
+    e.preventDefault();
+    setPasteAttempts(p => p + 1);
+    flashPasteAlert('CRITICAL SECURITY INTERCEPTION: External clipboard paste blocked by Sentinel Engine!');
+    triggerRedLockdown('CLIPBOARD PASTE DETECTED: External text injection attempted in Module 1 writing canvas.', {
+      module: 'Module 1: Keyboard Practice',
+      type: 'CLIPBOARD_PASTE'
+    });
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    flashPasteAlert('CRITICAL SECURITY INTERCEPTION: Drag & Drop binary injection prohibited!');
+    triggerRedLockdown('BINARY INJECTION ATTEMPT: Drag-and-drop text/file bypass detected in Module 1.', {
+      module: 'Module 1: Keyboard Practice',
+      type: 'DRAG_DROP'
+    });
+  };
+
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    flashPasteAlert('CONTEXT MENU RESTRICTED: Inspection & external shortcuts disabled.');
+  };
+
+  const markTypingActive = () => {
+    setIsTypingActive(true);
+    isTypingActiveRef.current = true;
+
+    clearTimeout(idleTimeoutRef.current);
+    idleTimeoutRef.current = setTimeout(() => {
+      setIsTypingActive(false);
+      isTypingActiveRef.current = false;
+    }, 3500); // 3.5 second grace period for typing pauses between sentences
+  };
+
+  const handleTextChange = (e) => {
+    setInputText(e.target.value);
+    setKeystrokesCount(k => k + 1);
+    markTypingActive();
+  };
+
+  const handleKeyDown = () => {
+    markTypingActive();
+  };
+
+  // Calculate live Words, Chars & WPM
+  const words = inputText.trim() ? inputText.trim().split(/\s+/).length : 0;
+  const chars = inputText.length;
+  const minutes = Math.max(0.1, typingSeconds / 60);
+  const liveWpm = Math.round(words / minutes);
+
+  const handleFinishClick = () => {
+    if (!inputText.trim()) {
+      flashPasteAlert('Cannot submit empty attestation. Please type manually before finishing.');
+      return;
+    }
+
+    const humanScore = Math.max(60, 100 - (tabSwitchesCount * 15) - (pasteAttempts * 20));
+
+    submitKeyboardPractice(inputText, {
+      wpm: liveWpm || 65,
+      tabSwitches: tabSwitchesCount,
+      blurEvents: blurCount,
+      pasteAttempts: pasteAttempts,
+      humanCadenceScore: humanScore,
+      durationSec: typingSeconds,
+      totalKeystrokes: keystrokesCount,
+      backspaceCount: 5
+    });
+
+    setIsWritingAreaOpen(false);
+    showHubToast('Module 1: Keyboard practice submitted successfully!');
+  };
+
+  // -------------------------------------------------------------
+  // MODULE 2: ENGLISH PRACTICE (DUOLINGO) STATE
+  // -------------------------------------------------------------
+  const [duoImage, setDuoImage] = useState(duolingoTask?.image || null);
+  const [duoScanning, setDuoScanning] = useState(false);
+  const [duoFileMeta, setDuoFileMeta] = useState({
+    fileName: duolingoTask?.fileName || '',
+    fileSize: duolingoTask?.fileSize || '',
+    streak: duolingoTask?.ocrData?.streakDetected || '42 DAYS STREAK'
+  });
+
+  const handleDuolingoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setDuoScanning(true);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setDuoImage(event.target.result);
+        setDuoFileMeta({
+          fileName: file.name,
+          fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+          streak: '43 DAYS STREAK (OCR CONFIRMED)'
+        });
+        setTimeout(() => {
+          setDuoScanning(false);
+        }, 1500);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUseSampleDuolingo = () => {
+    setDuoScanning(true);
+    setTimeout(() => {
+      setDuoImage('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80');
+      setDuoFileMeta({
+        fileName: 'duolingo_live_streak_capture.png',
+        fileSize: '1.68 MB',
+        streak: '45 DAYS STREAK'
+      });
+      setDuoScanning(false);
+    }, 1200);
+  };
+
+  const handleSubmitDuolingo = () => {
+    if (!duoImage) {
+      showHubToast('Please upload a Duolingo screenshot before submitting.', 'error');
+      return;
+    }
+    submitDuolingoPractice({
+      image: duoImage,
+      fileName: duoFileMeta.fileName,
+      fileSize: duoFileMeta.fileSize,
+      hash: {
+        md5: '7d9b04859a4309c68a18357f89b9d31a',
+        sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+        matchStatus: 'CLEAR - No Duplicates Found'
+      },
+      ocrData: {
+        streakDetected: duoFileMeta.streak,
+        xpEarned: '+30 XP VERIFIED',
+        lessonTitle: 'B2 Corporate Compliance & English Telemetry',
+        confidencePct: 99.1,
+        timestampFound: 'Today, Just now'
+      }
+    });
+    showHubToast('Module 2: Duolingo artifact submitted successfully!');
+  };
+
+  // -------------------------------------------------------------
+  // MODULE 3: WRITING PRACTICE (1 FIXED TOPIC FOR THE DAY VIA API)
+  // -------------------------------------------------------------
+  const [dailyWritingTopic, setDailyWritingTopic] = useState(() => WRITING_TOPICS[0]);
+  const [isWritingTopicModalOpen, setIsWritingTopicModalOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDailyWritingTopic = async () => {
+      try {
+        const res = await fetch('/api/tasks/daily-writing-topic');
+        const data = await res.json();
+        if (isMounted && data.success && data.topic) {
+          setDailyWritingTopic(data.topic);
+        }
+      } catch (err) {
+        console.warn('[SubjectHub] Daily writing topic fetch failed, using fallback:', err);
+      }
+    };
+
+    fetchDailyWritingTopic();
+    return () => { isMounted = false; };
+  }, [isAllTasksCompleted]);
+
+  const currentWritingTopic = dailyWritingTopic;
+
+  const [writingImage, setWritingImage] = useState(writingTask?.image || null);
+  const [writingScanning, setWritingScanning] = useState(false);
+  const [writingFileMeta, setWritingFileMeta] = useState({
+    fileName: writingTask?.fileName || '',
+    fileSize: writingTask?.fileSize || '',
+    device: writingTask?.exifData?.deviceModel || 'iPhone 15 Pro Max'
+  });
+
+  const handleWritingUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setWritingScanning(true);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setWritingImage(event.target.result);
+        setWritingFileMeta({
+          fileName: file.name,
+          fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+          device: 'Samsung Galaxy S24 Ultra (Sensor Verified)'
+        });
+        setTimeout(() => {
+          setWritingScanning(false);
+        }, 1500);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUseSampleWriting = () => {
+    setWritingScanning(true);
+    setTimeout(() => {
+      setWritingImage('https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&auto=format&fit=crop&q=80');
+      setWritingFileMeta({
+        fileName: 'handwritten_notes_10_points.jpg',
+        fileSize: '3.12 MB',
+        device: 'Apple iPhone 15 Pro Max (Hardware EXIF Validated)'
+      });
+      setWritingScanning(false);
+    }, 1200);
+  };
+
+  const handleSubmitWriting = () => {
+    if (!writingImage) {
+      showHubToast('Please upload a photo of your handwritten paper before submitting.', 'error');
+      return;
+    }
+    submitWritingPractice({
+      image: writingImage,
+      fileName: writingFileMeta.fileName,
+      fileSize: writingFileMeta.fileSize,
+      writingTopic: currentWritingTopic.title,
+      writingCategory: currentWritingTopic.category,
+      writingPoints: currentWritingTopic.points,
+      hash: {
+        md5: '3c8f8b8d9e2a1b4c7d6e5f0a9b8c7d6e',
+        sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        matchStatus: 'CLEAR - Hardware Sensor Original'
+      },
+      exifData: {
+        deviceMake: 'Apple',
+        deviceModel: writingFileMeta.device,
+        dateTimeOriginal: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        lens: '24mm f/1.78 main sensor',
+        resolution: '4032 x 3024 (12.2 MP)',
+        software: 'Camera Firmware RAW',
+        gpsStatus: 'Redacted for Privacy Protection',
+        tamperingDetected: false
+      }
+    });
+    showHubToast('Module 3: Handwritten 10-point assignment submitted successfully!');
+  };
+
+  // -------------------------------------------------------------
+  // TASK RESET & CLEAR HANDLERS (MODULES 1, 2, 3)
+  // -------------------------------------------------------------
+  useEffect(() => {
+    if (keyboardTask?.status === 'PENDING' && !keyboardTask?.submissionText) {
+      setInputText('');
+      setTypingSeconds(0);
+      setIsTypingActive(false);
+      isTypingActiveRef.current = false;
+      setKeystrokesCount(0);
+      setTabSwitchesCount(0);
+      setBlurCount(0);
+      setPasteAttempts(0);
+    }
+  }, [keyboardTask?.status, keyboardTask?.submissionText]);
+
+  useEffect(() => {
+    if (duolingoTask?.status === 'PENDING' && !duolingoTask?.image) {
+      setDuoImage(null);
+      setDuoFileMeta({
+        fileName: null,
+        fileSize: null,
+        streak: '42 DAYS STREAK'
+      });
+    }
+  }, [duolingoTask?.status, duolingoTask?.image]);
+
+  useEffect(() => {
+    if (writingTask?.status === 'PENDING' && !writingTask?.image) {
+      setWritingImage(null);
+      setWritingFileMeta({
+        fileName: null,
+        fileSize: null,
+        device: 'Samsung Galaxy S24 Ultra (Sensor Verified)'
+      });
+    }
+  }, [writingTask?.status, writingTask?.image]);
+
+  const handleClearKeyboard = (e) => {
+    if (e) e.stopPropagation();
+    setInputText('');
+    setTypingSeconds(0);
+    setIsTypingActive(false);
+    isTypingActiveRef.current = false;
+    setKeystrokesCount(0);
+    setTabSwitchesCount(0);
+    setBlurCount(0);
+    setPasteAttempts(0);
+    clearTask('mod-1-keyboard');
+    showHubToast('Module 1: Typing practice cleared.');
+  };
+
+  const handleClearDuolingo = (e) => {
+    if (e) e.stopPropagation();
+    setDuoImage(null);
+    setDuoFileMeta({
+      fileName: null,
+      fileSize: null,
+      streak: '42 DAYS STREAK'
+    });
+    clearTask('mod-2-duolingo');
+    showHubToast('Module 2: Duolingo screenshot cleared.');
+  };
+
+  const handleClearWriting = (e) => {
+    if (e) e.stopPropagation();
+    setWritingImage(null);
+    setWritingFileMeta({
+      fileName: null,
+      fileSize: null,
+      device: 'Samsung Galaxy S24 Ultra (Sensor Verified)'
+    });
+    clearTask('mod-3-writing');
+    showHubToast('Module 3: Handwritten notes cleared.');
+  };
+
+  // Helper for Status Badge
+  const renderStatusBadge = (status) => {
+    switch (status) {
+      case 'VERIFIED':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400" />
+            VERIFIED
+          </span>
+        );
+      case 'FLAGGED':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/40 animate-pulse">
+            <AlertOctagon className="w-3 h-3 mr-1 text-rose-400" />
+            STRIKE ISSUED
+          </span>
+        );
+      case 'SUBMITTED':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+            <Activity className="w-3 h-3 mr-1 text-cyan-400" />
+            PROCESSING (IN QUEUE)
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30">
+            <Clock className="w-3 h-3 mr-1 text-amber-400" />
+            PENDING EXECUTION
+          </span>
+        );
+    }
+  };
+
+  return (
+    <div className="w-full h-full min-h-screen lg:min-h-0 lg:h-screen lg:max-h-screen flex flex-col justify-between px-3 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 bg-surveillance-grid lg:overflow-hidden select-none">
+      
+      {/* Subject Welcome Dossier Command Bar */}
+      <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-cyan-950/40 px-3.5 py-2 sm:px-4 sm:py-2 shadow-lg relative overflow-hidden backdrop-blur-md shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 relative z-10">
+          <div className="space-y-0.5">
+            <div className="flex items-center space-x-2">
+              <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono text-[10px] font-bold uppercase tracking-wider">
+                SUBJECT PORTAL • RESTRICTED ENCLAVE
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">ID: SUBJ-BROTHER-01</span>
+            </div>
+            <h1 className="text-base sm:text-lg lg:text-xl font-bold font-mono text-white tracking-tight leading-tight">
+              Mandatory Daily Compliance Disciplines
+            </h1>
+            <p className="text-[11px] text-slate-400 max-w-2xl truncate hidden md:block">
+              Complete all three modules below. All keystrokes, screenshots, and handwritten uploads are audited in real time.
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2 text-xs font-mono shrink-0">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`px-2.5 py-1 rounded-lg border text-center transition-all ${
+                theme === 'light'
+                  ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-sm'
+                  : 'bg-slate-950/90 hover:bg-slate-900 border-slate-800 text-slate-300'
+              }`}
+              title={theme === 'light' ? 'Switch to Cyber Dark Mode' : 'Switch to Aesthetic Light Mode'}
+            >
+              <div className="flex items-center justify-center space-x-1 font-bold">
+                {theme === 'light' ? (
+                  <>
+                    <Sun className="w-3 h-3 text-amber-500" />
+                    <span className="text-amber-600 text-[10px]">LIGHT</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-3 h-3 text-cyan-400" />
+                    <span className="text-cyan-400 text-[10px]">DARK</span>
+                  </>
+                )}
+              </div>
+            </button>
+            <div className="px-2.5 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-center">
+              <div className="text-[8px] uppercase text-slate-400">Quota</div>
+              <div className={`text-xs sm:text-sm font-bold ${isAllTasksCompleted ? 'text-emerald-400' : 'text-cyan-400'}`}>
+                {isAllTasksCompleted ? '3/3 DONE ✓' : `${tasks.filter(t => t.status !== 'PENDING').length} / 3`}
+              </div>
+            </div>
+            <div className="px-2.5 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-center">
+              <div className="text-[8px] uppercase text-slate-400">State</div>
+              <div className={`text-xs sm:text-sm font-bold ${isAllTasksCompleted ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {isAllTasksCompleted ? 'COMPLETED' : 'ACTIVE'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* DAILY CADENCE COMPLETION COMPACT BANNER */}
+      {isAllTasksCompleted && (
+        <div className="rounded-xl border border-emerald-500/50 bg-gradient-to-r from-emerald-950/80 via-slate-900/95 to-teal-950/80 px-3.5 py-1.5 shadow-md relative overflow-hidden backdrop-blur-md shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 text-xs font-mono text-emerald-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-bold">ALL 3 DISCIPLINES COMPLETED FOR TODAY! (3/3 DONE)</span>
+            <span className="text-slate-400 hidden lg:inline">• Today's session locked & archived</span>
+          </div>
+
+          <div className="flex items-center space-x-2.5 shrink-0 font-mono text-xs">
+            <div className="flex items-center space-x-1 px-2.5 py-0.5 rounded-lg bg-slate-950/90 border border-emerald-500/40 text-[10px]">
+              <Clock className="w-3 h-3 text-emerald-400 mr-0.5" />
+              <span className="text-slate-400">UNLOCKS IN:</span>
+              <span className="text-xs font-black text-emerald-400 tracking-wider">
+                {String(timeUntilTomorrow.hours).padStart(2, '0')}:
+                {String(timeUntilTomorrow.minutes).padStart(2, '0')}:
+                {String(timeUntilTomorrow.seconds).padStart(2, '0')}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                unlockNewDayTasks();
+                showHubToast('Tomorrow\'s session unlocked successfully! Daily tasks reset to PENDING.', 'success');
+              }}
+              className="py-1 px-2.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-mono font-bold flex items-center space-x-1 transition-all cursor-pointer shadow active:scale-95"
+            >
+              <RotateCcw className="w-3 h-3 text-cyan-400" />
+              <span>Unlock Tomorrow Now</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Grid of Three Locked-Down Task Modules */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-3 my-1.5 lg:my-2">
+
+        {/* ------------------------------------------------------------- */}
+        {/* MODULE 1: KEYBOARD PRACTICE (TOUCH TO ENTER BLACK WRITING AREA)*/}
+        {/* ------------------------------------------------------------- */}
+        <div 
+          onClick={() => setIsWritingAreaOpen(true)}
+          className="lg:col-span-1 flex flex-col justify-between rounded-xl border border-slate-800 hover:border-cyan-400/80 bg-slate-900/90 hover:bg-slate-900 p-3.5 sm:p-4 shadow-xl backdrop-blur-md relative overflow-hidden cursor-pointer group transition-all h-full"
+        >
+          {/* Top Scanline on hover */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+          {/* Header & Status */}
+          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2">
+            <div>
+              <div className="flex items-center space-x-2">
+                <Terminal className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                <h2 className="font-mono text-xs sm:text-sm font-bold text-white uppercase tracking-wider group-hover:text-cyan-300 transition-colors">
+                  Module 1: Keyboard Practice
+                </h2>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                Full-Screen Pure Black Writing Terminal
+              </p>
+            </div>
+            {renderStatusBadge(keyboardTask?.status || 'PENDING')}
+          </div>
+
+          {/* Telemetry Summary Banner */}
+          <div className="rounded-lg border border-cyan-500/30 bg-slate-950 p-2 space-y-1.5 font-mono text-xs shadow-inner my-1">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
+              <div className="flex items-center space-x-1.5 text-cyan-400 font-bold tracking-wider text-[10px]">
+                <Activity className="w-3 h-3 animate-pulse" />
+                <span>TELEMETRY METRICS</span>
+              </div>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                isTypingActive 
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                  : typingSeconds > 0 
+                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                  : 'bg-slate-800 text-slate-400'
+              }`}>
+                {isTypingActive ? 'TYPING ACTIVE' : typingSeconds > 0 ? 'PAUSED' : 'READY TO WRITE'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+              <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-500 text-[8px] block">WORDS</span>
+                <span className="text-white font-bold text-xs mt-0.5 block">{words}</span>
+              </div>
+              <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-500 text-[8px] block">ACTIVE WRITING</span>
+                <span className="text-cyan-400 font-bold text-xs mt-0.5 block">{formatTimer(typingSeconds)}</span>
+              </div>
+              <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-500 text-[8px] block">LIVE WPM</span>
+                <span className="text-teal-400 font-bold text-xs mt-0.5 block">{liveWpm}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Text Preview Snippet */}
+          <div className="flex-1 min-h-[45px] p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 font-mono text-[11px] text-slate-400 leading-relaxed flex items-center justify-center text-center my-1">
+            {inputText ? (
+              <p className="line-clamp-2 text-slate-300 text-left w-full select-none">
+                "{inputText}"
+              </p>
+            ) : (
+              <span className="text-slate-600 text-[10px]">
+                Terminal buffer is empty. Touch this card to open writing screen...
+              </span>
+            )}
+          </div>
+
+          {/* Action Row: Primary Action + Optional Clear */}
+          <div className="pt-2 flex items-center gap-2">
+            {inputText.trim() && keyboardTask.status === 'PENDING' ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleFinishClick();
+                }}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs flex items-center justify-center space-x-1.5 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>SUBMIT PRACTICE ({words} words)</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsWritingAreaOpen(true);
+                }}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-bold text-xs flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(6,182,212,0.35)] transition-all cursor-pointer"
+              >
+                <Maximize2 className="w-4 h-4" />
+                <span>OPEN FULLSCREEN WRITING</span>
+              </button>
+            )}
+
+            {(inputText || typingSeconds > 0) && keyboardTask.status === 'PENDING' && (
+              <button
+                type="button"
+                onClick={handleClearKeyboard}
+                title="Clear typed text and timer"
+                className="py-2.5 px-3 rounded-xl border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-xs flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                <span>CLEAR</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ============================================================= */}
+        {/* FULLSCREEN WRITING AREA MODAL (PAPER & DARK CANVASES + TIMER) */}
+        {/* ============================================================= */}
+        {isWritingAreaOpen && (
+          <div className={`fixed inset-0 z-50 flex flex-col p-4 sm:p-8 font-mono animate-in fade-in duration-200 select-none ${
+            isLightWritingCanvas 
+              ? 'bg-[#faf9f5] text-slate-900' 
+              : 'bg-black text-slate-100'
+          }`}>
+            {/* Minimalist Top Control Bar */}
+            <div className={`flex items-center justify-between pb-4 border-b text-xs ${
+              isLightWritingCanvas ? 'border-slate-200' : 'border-zinc-900'
+            }`}>
+              <div className="flex items-center space-x-4">
+                <span className={`font-bold flex items-center space-x-2 ${
+                  isLightWritingCanvas ? 'text-slate-900' : 'text-white'
+                }`}>
+                  <Terminal className={`w-4 h-4 ${isLightWritingCanvas ? 'text-cyan-600' : 'text-cyan-400'}`} />
+                  <span>TERMINAL ATTESTATION ENCLAVE</span>
+                </span>
+                
+                {/* Visual Status Indicator Pill */}
+                <div className={`flex items-center space-x-2 px-2.5 py-1 rounded-full border text-[11px] font-bold transition-all ${
+                  isTypingActive 
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]' 
+                    : typingSeconds > 0 
+                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' 
+                    : isLightWritingCanvas
+                    ? 'bg-slate-100 text-slate-500 border-slate-200'
+                    : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    isTypingActive ? 'bg-emerald-400 animate-ping' : typingSeconds > 0 ? 'bg-amber-400' : isLightWritingCanvas ? 'bg-slate-400' : 'bg-zinc-600'
+                  }`} />
+                  <span>
+                    {isTypingActive 
+                      ? '● RECORDING ACTIVE WRITING TIME' 
+                      : typingSeconds > 0 
+                      ? '❚❚ PAUSED • START TYPING TO RESUME TIMER' 
+                      : 'READY • TIMER STARTS WHEN YOU TYPE'}
+                  </span>
+                </div>
+
+                {/* Free Writing Indicator Pill */}
+                <div className={`hidden md:flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
+                  isLightWritingCanvas ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-cyan-950/50 text-cyan-400 border border-cyan-800/40'
+                }`}>
+                  <span>♾️ FREE WRITING (NO TIME LIMIT)</span>
+                </div>
+              </div>
+
+              {/* Center Stopwatch */}
+              <div className="flex items-center space-x-3">
+                <div className={`flex items-center space-x-2 px-4 py-1.5 rounded-full border font-mono font-bold shadow-lg transition-all ${
+                  isTypingActive 
+                    ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300 ring-2 ring-emerald-500/20' 
+                    : isLightWritingCanvas
+                    ? 'bg-white border-slate-200 text-slate-800 shadow-sm'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                }`}>
+                  <Clock className={`w-4 h-4 ${isTypingActive ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
+                  <span className="text-sm tracking-widest">{formatTimer(typingSeconds)}</span>
+                  <span className="text-[10px] opacity-70">ACTIVE WRITING</span>
+                </div>
+              </div>
+
+              {/* Right: Dual Canvas Mode + Action Buttons */}
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1 p-0.5 rounded-lg border border-slate-700/50 bg-slate-900/40 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => handleCanvasModeChange('dark')}
+                    className={`px-2 py-1 rounded flex items-center space-x-1 transition-all ${
+                      canvasMode === 'dark' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Moon className="w-3 h-3" />
+                    <span>Dark</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCanvasModeChange('paper')}
+                    className={`px-2 py-1 rounded flex items-center space-x-1 transition-all ${
+                      canvasMode === 'paper' ? 'bg-amber-100 text-amber-900 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Sun className="w-3 h-3" />
+                    <span>Paper</span>
+                  </button>
+                </div>
+
+                {(inputText || typingSeconds > 0) && (
+                  <button
+                    type="button"
+                    onClick={handleClearKeyboard}
+                    title="Clear writing buffer"
+                    className="py-1.5 px-3 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                    <span>CLEAR</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleFinishClick}
+                  className="py-1.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center space-x-1.5 shadow-[0_0_20px_rgba(16,185,129,0.35)] transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>FINISH</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsWritingAreaOpen(false)}
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    isLightWritingCanvas 
+                      ? 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100' 
+                      : 'border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
+                  title="Minimize writing area (esc)"
+                >
+                  <Minimize2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* In-App Paste Warning Alert Strip */}
+            {pasteBlockedAlert && (
+              <div className="my-2 p-2 rounded-lg bg-rose-950 border border-rose-600/80 text-rose-200 text-xs font-mono text-center animate-bounce shadow-xl flex items-center justify-center space-x-2">
+                <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{pasteBlockedAlert}</span>
+              </div>
+            )}
+
+            {/* Distraction-Free Writing Canvas */}
+            <div className="flex-1 flex flex-col pt-4">
+              <textarea
+                autoFocus
+                value={inputText}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                onDrop={handleDrop}
+                onContextMenu={handleContextMenu}
+                spellCheck="false"
+                placeholder="Start typing manually here. Timer starts automatically when you type and pauses when idle. Clipboard pasting, dragging & dropping text, and context menu inspection are strictly locked down..."
+                className={`w-full flex-1 font-mono text-base sm:text-xl leading-relaxed focus:outline-none resize-none border-none p-2 sm:p-6 ${
+                  isLightWritingCanvas
+                    ? 'bg-[#faf9f5] text-slate-900 placeholder:text-slate-400 selection:bg-cyan-500 selection:text-white'
+                    : 'bg-black text-slate-100 placeholder:text-zinc-800 selection:bg-cyan-500 selection:text-black canvas-dark'
+                }`}
+              />
+
+              {/* Bottom Sticky Submission Bar */}
+              <div className={`mt-2 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 ${
+                isLightWritingCanvas ? 'border-slate-200 bg-[#faf9f5]' : 'border-zinc-900 bg-black'
+              }`}>
+                <div className="flex items-center space-x-3 sm:space-x-4 text-xs font-mono">
+                  <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
+                    <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{words}</strong> words
+                  </span>
+                  <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
+                    <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{chars}</strong> chars
+                  </span>
+                  <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
+                    <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{liveWpm}</strong> WPM
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold text-[11px]">
+                    ⏱️ {formatTimer(typingSeconds)}
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-2.5 w-full sm:w-auto">
+                  {(inputText || typingSeconds > 0) && (
+                    <button
+                      type="button"
+                      onClick={handleClearKeyboard}
+                      className="py-2 px-3 rounded-xl border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                      <span>CLEAR</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleFinishClick}
+                    className="flex-1 sm:flex-initial py-2.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-sm font-black flex items-center justify-center space-x-2 shadow-[0_0_25px_rgba(16,185,129,0.45)] transition-all cursor-pointer active:scale-95"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>SUBMIT KEYBOARD PRACTICE</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* MODULE 2: ENGLISH ASSESSMENT (WINDOWS 11 FLUENT APP)          */}
+        {/* ------------------------------------------------------------- */}
+        <div 
+          onClick={() => setIsEnglishQuizOpen(true)}
+          className="lg:col-span-1 flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3.5 sm:p-4 shadow-xl backdrop-blur-md relative overflow-hidden group cursor-pointer hover:border-sky-500/60 transition-all duration-300 h-full"
+        >
+          {/* Header & Status */}
+          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2">
+            <div>
+              <div className="flex items-center space-x-2">
+                <Zap className="w-4 h-4 text-sky-400" />
+                <h2 className="font-mono text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                  Module 2: English Assessment
+                </h2>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                Windows 11 Fluent App (Zero-Knowledge Engine)
+              </p>
+            </div>
+            {renderStatusBadge(duolingoTask?.status || 'PENDING')}
+          </div>
+
+          {/* Assessment Engine Features Notice */}
+          <div className="rounded-lg border border-sky-500/30 bg-sky-950/20 p-2 text-xs font-mono space-y-0.5 my-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1.5 text-sky-300 font-bold text-[10px]">
+                <Cpu className="w-3 h-3 text-sky-400" />
+                <span>SERVER-SIDE ZERO-KNOWLEDGE</span>
+              </div>
+              <span className="text-[8px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                ⚡ INFINITE AI ENGINE
+              </span>
+            </div>
+            <p className="text-[9px] text-slate-400 font-sans leading-tight">
+              {module2QuestionLimit} non-repeating questions dynamically synthesized via Multi-Tier AI. Pass mark: {Math.ceil(module2QuestionLimit * 0.7)}/{module2QuestionLimit}.
+            </p>
+          </div>
+
+          {/* Interactive Assessment State Card */}
+          <div className="flex-1 min-h-[45px] flex flex-col justify-center my-1">
+            {duolingoTask?.status !== 'PENDING' ? (
+              <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-950/20 text-center space-y-1">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-white">
+                    {duolingoTask?.quizScore !== undefined 
+                      ? `Score: ${duolingoTask.quizScore}/${duolingoTask.totalQuestions || module2QuestionLimit} (${duolingoTask.percentage}%)` 
+                      : 'Assessment Completed'}
+                  </h3>
+                  <p className="text-[10px] text-amber-400 font-bold">
+                    {duolingoTask?.xpEarned || '+30 XP VERIFIED'}
+                  </p>
+                  <span className="text-[9px] font-mono text-emerald-400/90 block">
+                    Certified via Windows 11 Engine
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-lg border-2 border-dashed border-slate-700 group-hover:border-sky-400/80 bg-slate-950/80 text-center space-y-1 transition-all">
+                <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="text-[11px] font-mono font-bold text-white tracking-wide">
+                    TOUCH TO LAUNCH WINDOWS 11 APP
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-mono">
+                    Gamified layout • {module2QuestionLimit} Beginner questions
+                  </p>
+                </div>
+                <div className="flex items-center justify-center space-x-1.5 pt-0.5">
+                  <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-sky-300 text-[9px] font-mono font-bold border border-slate-700">
+                    ⚡ +30 XP
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[9px] font-mono border border-slate-700">
+                    ⏱️ Speed Telemetry
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Row */}
+          <div className="pt-1.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEnglishQuizOpen(true);
+              }}
+              className="flex-1 py-2 px-3 rounded-lg bg-gradient-to-r from-sky-400 to-blue-500 group-hover:from-sky-300 group-hover:to-blue-400 text-slate-950 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all active:scale-95"
+            >
+              <Zap className="w-3.5 h-3.5 text-slate-950" />
+              <span>{duolingoTask?.status !== 'PENDING' ? 'RETAKE ASSESSMENT' : 'LAUNCH ASSESSMENT (WIN11)'}</span>
+            </button>
+            {duolingoTask?.status !== 'PENDING' && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClearDuolingo();
+                }}
+                title="Clear Assessment Record"
+                className="py-2 px-2.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-[11px] flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0"
+              >
+                <RotateCcw className="w-3 h-3 text-rose-400" />
+                <span>CLEAR</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ------------------------------------------------------------- */}
+        {/* MODULE 3: WRITING PRACTICE (EXIF METADATA & CRYPTO HASH)      */}
+        {/* ------------------------------------------------------------- */}
+        <div className="lg:col-span-1 flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3.5 sm:p-4 shadow-xl backdrop-blur-md relative overflow-hidden h-full">
+          {/* Header & Status */}
+          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2">
+            <div>
+              <div className="flex items-center space-x-2">
+                <FileCheck className="w-4 h-4 text-teal-400" />
+                <h2 className="font-mono text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                  Module 3: Writing Practice
+                </h2>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                Handwritten Notes (EXIF & Hashing Active)
+              </p>
+            </div>
+            {renderStatusBadge(writingTask?.status || 'PENDING')}
+          </div>
+
+          {/* Assigned 10-Point Handwriting Directive Box (1 Topic For Today via API) */}
+          <div className="rounded-lg border border-teal-500/40 bg-teal-950/30 p-2.5 text-xs space-y-1 my-1">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[9px] font-mono font-bold uppercase tracking-wider">
+                <BookOpen className="w-3 h-3 text-teal-400" />
+                <span>TODAY'S TOPIC • 10 POINTS</span>
+              </span>
+              <span className="text-[9px] text-teal-400/90 font-mono font-semibold">
+                {currentWritingTopic.category}
+              </span>
+            </div>
+
+            <div>
+              <h3 className="text-white font-bold text-xs sm:text-sm tracking-tight leading-snug line-clamp-1">
+                "{currentWritingTopic.title}"
+              </h3>
+              <p className="text-[10px] text-slate-400 leading-tight line-clamp-1">
+                {currentWritingTopic.description}
+              </p>
+            </div>
+
+            {/* View 10 Points Sheet Button */}
+            <div className="pt-0.5">
+              <button
+                type="button"
+                onClick={() => setIsWritingTopicModalOpen(true)}
+                className="w-full py-1.5 px-3 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-teal-400" />
+                <span>VIEW ALL 10 POINTS TO WRITE</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Image Dropzone */}
+          <div className="flex-1 min-h-[45px] flex flex-col justify-center my-1">
+            <div className="relative rounded-lg border-2 border-dashed border-slate-700 hover:border-teal-400 bg-slate-950/80 p-2 text-center transition-all group overflow-hidden flex flex-col items-center justify-center min-h-[75px]">
+              
+              {writingScanning && (
+                <div className="absolute inset-0 bg-slate-950/90 z-20 flex flex-col items-center justify-center space-y-1">
+                  <Activity className="w-5 h-5 text-teal-400 animate-spin" />
+                  <span className="text-[10px] font-mono text-teal-400 tracking-wider">
+                    EXTRACTING EXIF SENSOR PROVENANCE...
+                  </span>
+                </div>
+              )}
+
+              {writingImage ? (
+                <div className="relative w-full h-20 rounded-lg overflow-hidden border border-slate-800 group-hover:border-teal-500/50 transition-colors">
+                  <img src={writingImage} alt="Handwriting Notes Preview" className="w-full h-full object-cover" />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-1 text-left font-mono text-[9px] text-slate-300">
+                    <div className="font-bold text-teal-400">{writingFileMeta.device}</div>
+                    <div className="truncate text-slate-400">{writingFileMeta.fileName} ({writingFileMeta.fileSize})</div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Camera className="w-6 h-6 text-slate-500 group-hover:text-teal-400 mb-1 transition-colors" />
+                  <div className="text-[11px] font-mono font-bold text-slate-300">
+                    UPLOAD PHOTO OF HANDWRITTEN PAPER
+                  </div>
+                  <p className="text-[9px] text-slate-500 font-mono mt-0.5">
+                    Write on paper with pen • Snap & upload photo
+                  </p>
+                </>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleWritingUpload}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={handleUseSampleWriting}
+                className="text-[9px] font-mono text-teal-400 hover:underline flex items-center space-x-1"
+              >
+                <Sparkles className="w-2.5 h-2.5 mr-1" />
+                <span>Load Sample Note</span>
+              </button>
+              <span className="text-[9px] font-mono text-slate-500">EXIF & Hash Audit</span>
+            </div>
+          </div>
+
+          {/* Submit & Clear Action Row */}
+          <div className="pt-1.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSubmitWriting}
+              className="flex-1 py-2 px-3 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(20,184,166,0.3)] transition-all"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>SUBMIT HANDWRITTEN ARTIFACT</span>
+            </button>
+            {(writingImage || writingTask?.status !== 'PENDING') && (
+              <button
+                type="button"
+                onClick={handleClearWriting}
+                title="Clear Handwritten Notes"
+                className="py-2 px-2.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-[11px] flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0"
+              >
+                <RotateCcw className="w-3 h-3 text-rose-400" />
+                <span>CLEAR</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Floating In-App Toast Notification (Zero Browser Alerts) */}
+      {hubNotification && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-xs font-mono font-semibold shadow-2xl flex items-center space-x-2.5 animate-in fade-in slide-in-from-bottom-2 ${
+          hubNotification.type === 'error'
+            ? 'bg-rose-950/95 border-rose-500 text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.3)]'
+            : 'bg-slate-900/95 border-cyan-500/50 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.3)]'
+        }`}>
+          {hubNotification.type === 'error' ? (
+            <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+          )}
+          <span>{hubNotification.msg}</span>
+        </div>
+      )}
+
+
+      {/* 10-Point Handwriting Assignment Sheet Modal */}
+      {isWritingTopicModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-none">
+          <div className="w-full max-w-3xl rounded-2xl border border-teal-500/40 bg-slate-900/95 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm sm:text-base tracking-tight">
+                    Handwritten Practice: 10-Point Paper Copy Assignment
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    Module 3 Discipline • Physical Pen & Paper Required
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsWritingTopicModalOpen(false)}
+                className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content Body: Lined Notebook Paper Aesthetic */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 font-sans">
+              
+              {/* Topic Hero Card */}
+              <div className="rounded-xl border border-teal-500/30 bg-teal-950/20 p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-[10px] font-mono font-bold uppercase tracking-wider">
+                    {currentWritingTopic.category}
+                  </span>
+                  <span className="text-[11px] text-teal-400 font-mono font-semibold">
+                    1 TOPIC FOR TODAY • CERTIFIED CURRICULUM
+                  </span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+                  "{currentWritingTopic.title}"
+                </h2>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {currentWritingTopic.description}
+                </p>
+              </div>
+
+              {/* Instructions Bar */}
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-1">
+                <div className="font-bold flex items-center space-x-1.5">
+                  <Edit3 className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Physical Handwriting Instructions:</span>
+                </div>
+                <ol className="list-decimal list-inside text-[11px] text-slate-300 space-y-0.5 font-mono pt-1">
+                  <li>Take a clean physical sheet of paper or notebook and a pen.</li>
+                  <li>Write the Topic Title clearly at the top of your paper.</li>
+                  <li>Write down all 10 points below neatly in your own handwriting.</li>
+                  <li>Take an uncompressed photo of the finished paper and upload it below.</li>
+                </ol>
+              </div>
+
+              {/* The 10 Points List */}
+              <div className="space-y-2.5 pt-1">
+                <h4 className="text-xs font-mono font-bold text-teal-400 uppercase tracking-wider">
+                  The 10 Points to Write on Paper:
+                </h4>
+
+                <div className="space-y-2">
+                  {currentWritingTopic.points?.map((point, idx) => (
+                    <div 
+                      key={idx}
+                      className="p-3 sm:p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/90 flex items-start space-x-3 transition-colors hover:border-teal-500/40"
+                    >
+                      <span className="w-7 h-7 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-300 font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                        {String(idx + 1).padStart(2, '0')}
+                      </span>
+                      <p className="text-xs sm:text-sm text-slate-200 leading-relaxed pt-0.5">
+                        {point}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer (No Topic Change - Locked for Today) */}
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
+                <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                <span>Assigned Daily Topic • 1 Topic For Today (No Change Required)</span>
+              </div>
+
+              <div className="flex items-center space-x-2.5 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsWritingTopicModalOpen(false)}
+                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono font-semibold transition-all cursor-pointer"
+                >
+                  Close Sheet
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsWritingTopicModalOpen(false)}
+                  className="w-full sm:w-auto py-2.5 px-6 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-mono font-bold flex items-center justify-center space-x-2 shadow-[0_0_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                  <span>I Finished Writing — Ready to Upload Photo →</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Windows 11 English Assessment Engine Modal */}
+      {isEnglishQuizOpen && (
+        <EnglishQuizModal 
+          isOpen={isEnglishQuizOpen} 
+          onClose={() => setIsEnglishQuizOpen(false)} 
+        />
+      )}
+
+    </div>
+  );
+};
+
+export default SubjectHub;

@@ -1,0 +1,339 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #080c14;
+  overflow-x: hidden;
+}
+
+/* Cybernetic Surveillance Grid Background */
+.bg-surveillance-grid {
+  background-image: radial-gradient(rgba(6, 182, 212, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Brother Scanner Beam Animation */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(1000%);
+  }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* ==========================================================================
+   AESTHETIC LIGHT THEME ("Nordic Slate / Minimal Mist")
+   Soft warm slate canvas (#f6f8fb) - NEVER blinding hospital white.
+   Tactile dot matrix grid, crisp elevated surfaces, and refined typography.
+   ========================================================================== */
+
+[data-theme="light"],
+.theme-light {
+  color-scheme: light;
+}
+
+body:not(.lockdown-active) [data-theme="light"],
+body:not(.lockdown-active).theme-light {
+  background-color: #f6f8fb;
+  color: #1e293b;
+}
+
+body:not(.lockdown-active) [data-theme="light"] body,
+body:not(.lockdown-active).theme-light body {
+  background-color: #f6f8fb !important;
+  color: #1e293b !important;
+}
+
+/* Tactile Millimeter Blueprint Grid in Light Mode */
+body:not(.lockdown-active) [data-theme="light"] .bg-surveillance-grid,
+body:not(.lockdown-active).theme-light .bg-surveillance-grid {
+  background-image: radial-gradient(rgba(100, 116, 139, 0.16) 1.25px, transparent 1.25px) !important;
+  background-size: 24px 24px !important;
+}
+
+/* Scrollbars in Light Mode */
+body:not(.lockdown-active) [data-theme="light"] ::-webkit-scrollbar-track,
+body:not(.lockdown-active).theme-light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+body:not(.lockdown-active) [data-theme="light"] ::-webkit-scrollbar-thumb,
+body:not(.lockdown-active).theme-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+body:not(.lockdown-active) [data-theme="light"] ::-webkit-scrollbar-thumb:hover,
+body:not(.lockdown-active).theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Elevated Surfaces & Cards */
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-900,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-900\/95,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-900\/90,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-900\/80,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-900\/70,
+body:not(.lockdown-active).theme-light .bg-slate-900,
+body:not(.lockdown-active).theme-light .bg-slate-900\/95,
+body:not(.lockdown-active).theme-light .bg-slate-900\/90,
+body:not(.lockdown-active).theme-light .bg-slate-900\/80,
+body:not(.lockdown-active).theme-light .bg-slate-900\/70 {
+  background-color: #ffffff !important;
+}
+
+/* Inset Panels, Stat Boxes, Code & Inner Containers */
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-950,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-950\/95,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-950\/90,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-950\/80,
+body:not(.lockdown-active) [data-theme="light"] .bg-slate-950\/60,
+body:not(.lockdown-active).theme-light .bg-slate-950,
+body:not(.lockdown-active).theme-light .bg-slate-950\/95,
+body:not(.lockdown-active).theme-light .bg-slate-950\/90,
+body:not(.lockdown-active).theme-light .bg-slate-950\/80,
+body:not(.lockdown-active).theme-light .bg-slate-950\/60 {
+  background-color: #f8fafc !important;
+}
+
+/* Borders across Light Components */
+body:not(.lockdown-active) [data-theme="light"] .border-slate-800,
+body:not(.lockdown-active) [data-theme="light"] .border-slate-800\/90,
+body:not(.lockdown-active) [data-theme="light"] .border-slate-800\/80,
+body:not(.lockdown-active) [data-theme="light"] .border-slate-800\/60,
+body:not(.lockdown-active) [data-theme="light"] .border-slate-700,
+body:not(.lockdown-active) [data-theme="light"] .border-slate-700\/80,
+body:not(.lockdown-active) [data-theme="light"] .border-slate-700\/60,
+body:not(.lockdown-active).theme-light .border-slate-800,
+body:not(.lockdown-active).theme-light .border-slate-800\/90,
+body:not(.lockdown-active).theme-light .border-slate-800\/80,
+body:not(.lockdown-active).theme-light .border-slate-800\/60,
+body:not(.lockdown-active).theme-light .border-slate-700,
+body:not(.lockdown-active).theme-light .border-slate-700\/80,
+body:not(.lockdown-active).theme-light .border-slate-700\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Refined Soft Drop Shadow for Light Mode */
+body:not(.lockdown-active) [data-theme="light"] .shadow-2xl,
+body:not(.lockdown-active) [data-theme="light"] .shadow-xl,
+body:not(.lockdown-active) [data-theme="light"] .shadow-lg,
+body:not(.lockdown-active).theme-light .shadow-2xl,
+body:not(.lockdown-active).theme-light .shadow-xl,
+body:not(.lockdown-active).theme-light .shadow-lg {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 3px 0 rgba(15, 23, 42, 0.02) !important;
+}
+
+/* Hover States for Interactive Buttons and Elements */
+body:not(.lockdown-active) [data-theme="light"] .hover\:bg-slate-800:hover,
+body:not(.lockdown-active) [data-theme="light"] .hover\:bg-slate-900:hover,
+body:not(.lockdown-active) [data-theme="light"] .hover\:bg-slate-950:hover,
+body:not(.lockdown-active).theme-light .hover\:bg-slate-800:hover,
+body:not(.lockdown-active).theme-light .hover\:bg-slate-900:hover,
+body:not(.lockdown-active).theme-light .hover\:bg-slate-950:hover {
+  background-color: #f1f5f9 !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .hover\:border-slate-700:hover,
+body:not(.lockdown-active) [data-theme="light"] .hover\:border-slate-800:hover,
+body:not(.lockdown-active).theme-light .hover\:border-slate-700:hover,
+body:not(.lockdown-active).theme-light .hover\:border-slate-800:hover {
+  border-color: #cbd5e1 !important;
+}
+
+/* Typography Hierarchy in Light Mode */
+body:not(.lockdown-active) [data-theme="light"] h1,
+body:not(.lockdown-active) [data-theme="light"] h2,
+body:not(.lockdown-active) [data-theme="light"] h3,
+body:not(.lockdown-active) [data-theme="light"] h4,
+body:not(.lockdown-active).theme-light h1,
+body:not(.lockdown-active).theme-light h2,
+body:not(.lockdown-active).theme-light h3,
+body:not(.lockdown-active).theme-light h4 {
+  color: #0f172a !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .text-white:not(button):not(.keep-white):not([class*="bg-cyan"]):not([class*="bg-rose"]):not([class*="bg-emerald"]):not([class*="bg-amber"]),
+body:not(.lockdown-active).theme-light .text-white:not(button):not(.keep-white):not([class*="bg-cyan"]):not([class*="bg-rose"]):not([class*="bg-emerald"]):not([class*="bg-amber"]) {
+  color: #0f172a !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .text-slate-100:not(button):not(.keep-white),
+body:not(.lockdown-active).theme-light .text-slate-100:not(button):not(.keep-white) {
+  color: #1e293b !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .text-slate-200,
+body:not(.lockdown-active) [data-theme="light"] .text-slate-300,
+body:not(.lockdown-active).theme-light .text-slate-200,
+body:not(.lockdown-active).theme-light .text-slate-300 {
+  color: #334155 !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .text-slate-400,
+body:not(.lockdown-active).theme-light .text-slate-400 {
+  color: #64748b !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .text-slate-500,
+body:not(.lockdown-active).theme-light .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Header in Light Mode */
+body:not(.lockdown-active) [data-theme="light"] header,
+body:not(.lockdown-active).theme-light header {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-bottom-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Inputs, Textareas and Dropdowns in Light Mode */
+body:not(.lockdown-active) [data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+body:not(.lockdown-active) [data-theme="light"] textarea:not(.canvas-dark),
+body:not(.lockdown-active) [data-theme="light"] select,
+body:not(.lockdown-active).theme-light input:not([type="checkbox"]):not([type="radio"]),
+body:not(.lockdown-active).theme-light textarea:not(.canvas-dark),
+body:not(.lockdown-active).theme-light select {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] input::placeholder,
+body:not(.lockdown-active) [data-theme="light"] textarea::placeholder,
+body:not(.lockdown-active).theme-light input::placeholder,
+body:not(.lockdown-active).theme-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Banner Gradients in Light Mode */
+body:not(.lockdown-active) [data-theme="light"] .from-slate-900,
+body:not(.lockdown-active).theme-light .from-slate-900 {
+  --tw-gradient-from: #ffffff !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #f8fafc, var(--tw-gradient-to) !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .via-slate-900,
+body:not(.lockdown-active).theme-light .via-slate-900 {
+  --tw-gradient-stops: var(--tw-gradient-from), #f8fafc, var(--tw-gradient-to) !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .to-cyan-950\/40,
+body:not(.lockdown-active).theme-light .to-cyan-950\/40 {
+  --tw-gradient-to: rgba(207, 250, 254, 0.45) !important;
+}
+
+/* Jewel Badges in Light Mode */
+body:not(.lockdown-active) [data-theme="light"] .bg-cyan-500\/10,
+body:not(.lockdown-active).theme-light .bg-cyan-500\/10 {
+  background-color: #ecfeff !important;
+  border-color: #a5f3fc !important;
+  color: #0e7490 !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .bg-amber-500\/10,
+body:not(.lockdown-active).theme-light .bg-amber-500\/10 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .bg-emerald-500\/10,
+body:not(.lockdown-active) [data-theme="light"] .bg-emerald-500\/15,
+body:not(.lockdown-active) [data-theme="light"] .bg-emerald-500\/20,
+body:not(.lockdown-active).theme-light .bg-emerald-500\/10,
+body:not(.lockdown-active).theme-light .bg-emerald-500\/15,
+body:not(.lockdown-active).theme-light .bg-emerald-500\/20 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .bg-teal-500\/10,
+body:not(.lockdown-active).theme-light .bg-teal-500\/10 {
+  background-color: #f0fdfa !important;
+  border-color: #99f6e4 !important;
+  color: #0f766e !important;
+}
+
+body:not(.lockdown-active) [data-theme="light"] .bg-rose-500\/10,
+body:not(.lockdown-active).theme-light .bg-rose-500\/10 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
+}
+
+/* Live Stream Alert / Superchat Animation */
+@keyframes streamAlertPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20px) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, 4px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes streamAlertProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-stream-alert {
+  animation: streamAlertPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-alert-progress {
+  animation: streamAlertProgress 7.5s linear forwards;
+}
+
