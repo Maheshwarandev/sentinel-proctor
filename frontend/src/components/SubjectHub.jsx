@@ -545,34 +545,34 @@ export const SubjectHub = () => {
     showHubToast('Module 3: Handwritten notes cleared.');
   };
 
-  // Helper for Status Badge
+  // Helper for Status Badge - Modern Pill Design
   const renderStatusBadge = (status) => {
     switch (status) {
       case 'VERIFIED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-sm shadow-emerald-500/10">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
             VERIFIED
           </span>
         );
       case 'FLAGGED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/40 animate-pulse">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-sm shadow-rose-500/10 animate-pulse">
             <AlertOctagon className="w-3 h-3 mr-1 text-rose-400" />
             STRIKE ISSUED
           </span>
         );
       case 'SUBMITTED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-            <Activity className="w-3 h-3 mr-1 text-cyan-400" />
-            PROCESSING (IN QUEUE)
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-sm shadow-cyan-500/10">
+            <Activity className="w-3 h-3 mr-1 text-cyan-400 animate-spin" />
+            PROCESSING
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30">
-            <Clock className="w-3 h-3 mr-1 text-amber-400" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm shadow-amber-500/10">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5" />
             PENDING EXECUTION
           </span>
         );
@@ -580,61 +580,70 @@ export const SubjectHub = () => {
   };
 
   return (
-    <div className="w-full h-full min-h-screen lg:min-h-0 lg:h-screen lg:max-h-screen flex flex-col justify-between px-3 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 bg-surveillance-grid lg:overflow-hidden select-none">
+    <div className="w-full h-full min-h-screen lg:min-h-0 lg:h-screen lg:max-h-screen flex flex-col justify-between px-3 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 bg-[#080c14] relative lg:overflow-hidden select-none">
       
+      {/* Ambient Atmospheric Backdrop Glows */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/15 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[550px] h-[550px] bg-sky-500/10 rounded-full blur-[140px]" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-500/12 rounded-full blur-[120px]" />
+      </div>
+
       {/* Subject Welcome Dossier Command Bar */}
-      <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-cyan-950/40 px-3.5 py-2 sm:px-4 sm:py-2 shadow-lg relative overflow-hidden backdrop-blur-md shrink-0">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 relative z-10">
-          <div className="space-y-0.5">
-            <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono text-[10px] font-bold uppercase tracking-wider">
+      <div className="rounded-2xl border border-white/[0.08] bg-slate-900/70 shadow-2xl px-4 py-2.5 sm:px-5 sm:py-3 relative overflow-hidden backdrop-blur-2xl shrink-0 z-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2.5">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 text-[10px] font-semibold tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-1.5 animate-pulse" />
                 SUBJECT PORTAL • RESTRICTED ENCLAVE
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">ID: SUBJ-BROTHER-01</span>
+              <span className="text-[11px] text-slate-400 font-mono">ID: SUBJ-BROTHER-01</span>
             </div>
-            <h1 className="text-base sm:text-lg lg:text-xl font-bold font-mono text-white tracking-tight leading-tight">
-              Mandatory Daily Compliance Disciplines
+            <h1 className="text-lg sm:text-xl font-extrabold text-white tracking-tight leading-tight flex items-center space-x-2">
+              <span>Mandatory Daily Compliance Disciplines</span>
             </h1>
-            <p className="text-[11px] text-slate-400 max-w-2xl truncate hidden md:block">
+            <p className="text-[12px] text-slate-400 max-w-2xl truncate hidden md:block">
               Complete all three modules below. All keystrokes, screenshots, and handwritten uploads are audited in real time.
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-mono shrink-0">
+          <div className="flex items-center space-x-2 text-xs shrink-0">
             <button
               type="button"
               onClick={toggleTheme}
-              className={`px-2.5 py-1 rounded-lg border text-center transition-all ${
+              className={`px-3 py-1.5 rounded-xl border text-center transition-all ${
                 theme === 'light'
                   ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-sm'
-                  : 'bg-slate-950/90 hover:bg-slate-900 border-slate-800 text-slate-300'
+                  : 'bg-slate-950/80 hover:bg-slate-800/80 border-white/[0.08] text-slate-300'
               }`}
               title={theme === 'light' ? 'Switch to Cyber Dark Mode' : 'Switch to Aesthetic Light Mode'}
             >
-              <div className="flex items-center justify-center space-x-1 font-bold">
+              <div className="flex items-center justify-center space-x-1.5 font-medium text-xs">
                 {theme === 'light' ? (
                   <>
-                    <Sun className="w-3 h-3 text-amber-500" />
-                    <span className="text-amber-600 text-[10px]">LIGHT</span>
+                    <Sun className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-slate-700 text-[11px] font-semibold">Light</span>
                   </>
                 ) : (
                   <>
-                    <Moon className="w-3 h-3 text-cyan-400" />
-                    <span className="text-cyan-400 text-[10px]">DARK</span>
+                    <Moon className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="text-slate-300 text-[11px] font-semibold">Dark</span>
                   </>
                 )}
               </div>
             </button>
-            <div className="px-2.5 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-center">
-              <div className="text-[8px] uppercase text-slate-400">Quota</div>
-              <div className={`text-xs sm:text-sm font-bold ${isAllTasksCompleted ? 'text-emerald-400' : 'text-cyan-400'}`}>
-                {isAllTasksCompleted ? '3/3 DONE ✓' : `${tasks.filter(t => t.status !== 'PENDING').length} / 3`}
+            <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[75px]">
+              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">Quota</div>
+              <div className={`text-xs sm:text-sm font-bold font-mono ${isAllTasksCompleted ? 'text-emerald-400' : 'text-cyan-400'}`}>
+                {isAllTasksCompleted ? '3 / 3 ✓' : `${tasks.filter(t => t.status !== 'PENDING').length} / 3`}
               </div>
             </div>
-            <div className="px-2.5 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-center">
-              <div className="text-[8px] uppercase text-slate-400">State</div>
-              <div className={`text-xs sm:text-sm font-bold ${isAllTasksCompleted ? 'text-emerald-400' : 'text-amber-400'}`}>
-                {isAllTasksCompleted ? 'COMPLETED' : 'ACTIVE'}
+            <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[85px]">
+              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">State</div>
+              <div className={`text-xs sm:text-sm font-bold flex items-center justify-center space-x-1 ${isAllTasksCompleted ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isAllTasksCompleted ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
+                <span>{isAllTasksCompleted ? 'DONE' : 'ACTIVE'}</span>
               </div>
             </div>
           </div>
@@ -684,76 +693,80 @@ export const SubjectHub = () => {
         {/* ------------------------------------------------------------- */}
         <div 
           onClick={() => setIsWritingAreaOpen(true)}
-          className="lg:col-span-1 flex flex-col justify-between rounded-xl border border-slate-800 hover:border-cyan-400/80 bg-slate-900/90 hover:bg-slate-900 p-3.5 sm:p-4 shadow-xl backdrop-blur-md relative overflow-hidden cursor-pointer group transition-all h-full"
+          className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
         >
-          {/* Top Scanline on hover */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          {/* Subtle Ambient Hover Glow & Top Scan Accent */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           {/* Header & Status */}
-          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2">
-            <div>
-              <div className="flex items-center space-x-2">
-                <Terminal className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-                <h2 className="font-mono text-xs sm:text-sm font-bold text-white uppercase tracking-wider group-hover:text-cyan-300 transition-colors">
+          <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
+                <Terminal className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-cyan-300 transition-colors">
                   Module 1: Keyboard Practice
                 </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Full-Screen Distraction-Free Terminal
+                </p>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                Full-Screen Pure Black Writing Terminal
-              </p>
             </div>
             {renderStatusBadge(keyboardTask?.status || 'PENDING')}
           </div>
 
           {/* Telemetry Summary Banner */}
-          <div className="rounded-lg border border-cyan-500/30 bg-slate-950 p-2 space-y-1.5 font-mono text-xs shadow-inner my-1">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
-              <div className="flex items-center space-x-1.5 text-cyan-400 font-bold tracking-wider text-[10px]">
-                <Activity className="w-3 h-3 animate-pulse" />
+          <div className="rounded-xl border border-white/[0.06] bg-slate-950/70 p-2.5 space-y-2 text-xs shadow-inner my-1.5 relative z-10">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5">
+              <div className="flex items-center space-x-1.5 text-cyan-400 font-semibold tracking-wide text-[11px]">
+                <Activity className="w-3.5 h-3.5 animate-pulse" />
                 <span>TELEMETRY METRICS</span>
               </div>
-              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wide ${
                 isTypingActive 
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
                   : typingSeconds > 0 
-                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                   : 'bg-slate-800 text-slate-400'
               }`}>
-                {isTypingActive ? 'TYPING ACTIVE' : typingSeconds > 0 ? 'PAUSED' : 'READY TO WRITE'}
+                {isTypingActive ? '● TYPING ACTIVE' : typingSeconds > 0 ? '❚❚ PAUSED' : 'READY TO WRITE'}
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-              <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
-                <span className="text-slate-500 text-[8px] block">WORDS</span>
-                <span className="text-white font-bold text-xs mt-0.5 block">{words}</span>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
+                <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Words</span>
+                <span className="text-white font-bold font-mono text-sm mt-0.5 block">{words}</span>
               </div>
-              <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
-                <span className="text-slate-500 text-[8px] block">ACTIVE WRITING</span>
-                <span className="text-cyan-400 font-bold text-xs mt-0.5 block">{formatTimer(typingSeconds)}</span>
+              <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
+                <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Active Writing</span>
+                <span className="text-cyan-400 font-bold font-mono text-sm mt-0.5 block">{formatTimer(typingSeconds)}</span>
               </div>
-              <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
-                <span className="text-slate-500 text-[8px] block">LIVE WPM</span>
-                <span className="text-teal-400 font-bold text-xs mt-0.5 block">{liveWpm}</span>
+              <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
+                <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Live WPM</span>
+                <span className="text-teal-400 font-bold font-mono text-sm mt-0.5 block">{liveWpm}</span>
               </div>
             </div>
           </div>
 
           {/* Text Preview Snippet */}
-          <div className="flex-1 min-h-[45px] p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 font-mono text-[11px] text-slate-400 leading-relaxed flex items-center justify-center text-center my-1">
+          <div className="flex-1 min-h-[50px] p-3 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-slate-300 leading-relaxed flex flex-col justify-center text-center my-1 relative overflow-hidden group-hover:border-cyan-500/30 transition-colors z-10">
             {inputText ? (
-              <p className="line-clamp-2 text-slate-300 text-left w-full select-none">
+              <p className="line-clamp-2 text-slate-200 text-left w-full select-none italic font-mono text-[11px]">
                 "{inputText}"
               </p>
             ) : (
-              <span className="text-slate-600 text-[10px]">
-                Terminal buffer is empty. Touch this card to open writing screen...
-              </span>
+              <div className="flex items-center justify-center space-x-2 text-slate-500 text-[11px]">
+                <span className="font-mono text-cyan-400/80">&gt;_</span>
+                <span>Terminal buffer empty. Touch card to enter typing terminal...</span>
+              </div>
             )}
           </div>
 
-          {/* Action Row: Primary Action + Optional Clear */}
-          <div className="pt-2 flex items-center gap-2">
+          {/* Action Row */}
+          <div className="pt-2 flex items-center gap-2 relative z-10">
             {inputText.trim() && keyboardTask.status === 'PENDING' ? (
               <button
                 type="button"
@@ -761,7 +774,7 @@ export const SubjectHub = () => {
                   e.stopPropagation();
                   handleFinishClick();
                 }}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs flex items-center justify-center space-x-1.5 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer active:scale-[0.98]"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>SUBMIT PRACTICE ({words} words)</span>
@@ -773,7 +786,7 @@ export const SubjectHub = () => {
                   e.stopPropagation();
                   setIsWritingAreaOpen(true);
                 }}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-bold text-xs flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(6,182,212,0.35)] transition-all cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all cursor-pointer active:scale-[0.98]"
               >
                 <Maximize2 className="w-4 h-4" />
                 <span>OPEN FULLSCREEN WRITING</span>
@@ -785,7 +798,7 @@ export const SubjectHub = () => {
                 type="button"
                 onClick={handleClearKeyboard}
                 title="Clear typed text and timer"
-                className="py-2.5 px-3 rounded-xl border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-xs flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0 cursor-pointer"
+                className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center space-x-1 transition-all shrink-0 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
                 <span>CLEAR</span>
@@ -998,80 +1011,86 @@ export const SubjectHub = () => {
         {/* ------------------------------------------------------------- */}
         <div 
           onClick={() => setIsEnglishQuizOpen(true)}
-          className="lg:col-span-1 flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3.5 sm:p-4 shadow-xl backdrop-blur-md relative overflow-hidden group cursor-pointer hover:border-sky-500/60 transition-all duration-300 h-full"
+          className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-sky-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden group cursor-pointer transition-all duration-300 h-full"
         >
+          {/* Ambient Glow */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-sky-400/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
           {/* Header & Status */}
-          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2">
-            <div>
-              <div className="flex items-center space-x-2">
-                <Zap className="w-4 h-4 text-sky-400" />
-                <h2 className="font-mono text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+          <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-sky-300 transition-colors">
                   Module 2: English Assessment
                 </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Windows 11 Fluent App (Zero-Knowledge Engine)
+                </p>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                Windows 11 Fluent App (Zero-Knowledge Engine)
-              </p>
             </div>
             {renderStatusBadge(duolingoTask?.status || 'PENDING')}
           </div>
 
           {/* Assessment Engine Features Notice */}
-          <div className="rounded-lg border border-sky-500/30 bg-sky-950/20 p-2 text-xs font-mono space-y-0.5 my-1">
+          <div className="rounded-xl border border-sky-500/20 bg-sky-950/25 p-2.5 text-xs space-y-1 my-1.5 relative z-10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5 text-sky-300 font-bold text-[10px]">
-                <Cpu className="w-3 h-3 text-sky-400" />
+              <div className="flex items-center space-x-1.5 text-sky-300 font-semibold text-[11px]">
+                <Cpu className="w-3.5 h-3.5 text-sky-400" />
                 <span>SERVER-SIDE ZERO-KNOWLEDGE</span>
               </div>
-              <span className="text-[8px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                ⚡ INFINITE AI ENGINE
+              <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1">
+                <span>⚡ GEMINI AI ENGINE</span>
               </span>
             </div>
-            <p className="text-[9px] text-slate-400 font-sans leading-tight">
-              {module2QuestionLimit} non-repeating questions dynamically synthesized via Multi-Tier AI. Pass mark: {Math.ceil(module2QuestionLimit * 0.7)}/{module2QuestionLimit}.
+            <p className="text-[10px] text-slate-400 leading-tight">
+              {module2QuestionLimit} non-repeating questions dynamically synthesized via Google Gemini AI. Pass mark: {Math.ceil(module2QuestionLimit * 0.7)}/{module2QuestionLimit}.
             </p>
           </div>
 
           {/* Interactive Assessment State Card */}
-          <div className="flex-1 min-h-[45px] flex flex-col justify-center my-1">
+          <div className="flex-1 min-h-[50px] flex flex-col justify-center my-1 relative z-10">
             {duolingoTask?.status !== 'PENDING' ? (
-              <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-950/20 text-center space-y-1">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+              <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-center space-y-1.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/35 text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-white">
+                  <h3 className="text-xs sm:text-sm font-bold text-white">
                     {duolingoTask?.quizScore !== undefined 
                       ? `Score: ${duolingoTask.quizScore}/${duolingoTask.totalQuestions || module2QuestionLimit} (${duolingoTask.percentage}%)` 
                       : 'Assessment Completed'}
                   </h3>
-                  <p className="text-[10px] text-amber-400 font-bold">
+                  <p className="text-[11px] text-amber-400 font-bold">
                     {duolingoTask?.xpEarned || '+30 XP VERIFIED'}
                   </p>
-                  <span className="text-[9px] font-mono text-emerald-400/90 block">
+                  <span className="text-[10px] text-emerald-400/90 font-mono block mt-0.5">
                     Certified via Windows 11 Engine
                   </span>
                 </div>
               </div>
             ) : (
-              <div className="p-2.5 rounded-lg border-2 border-dashed border-slate-700 group-hover:border-sky-400/80 bg-slate-950/80 text-center space-y-1 transition-all">
-                <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-3.5 h-3.5" />
+              <div className="p-3 rounded-xl border border-white/[0.08] group-hover:border-sky-400/60 bg-slate-950/60 group-hover:bg-sky-950/15 text-center space-y-1.5 transition-all">
+                <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-inner">
+                  <Sparkles className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-[11px] font-mono font-bold text-white tracking-wide">
-                    TOUCH TO LAUNCH WINDOWS 11 APP
+                  <div className="text-xs font-bold text-white tracking-wide">
+                    TOUCH TO LAUNCH ASSESSMENT
                   </div>
-                  <p className="text-[9px] text-slate-400 font-mono">
+                  <p className="text-[10px] text-slate-400">
                     Gamified layout • {module2QuestionLimit} Beginner questions
                   </p>
                 </div>
-                <div className="flex items-center justify-center space-x-1.5 pt-0.5">
-                  <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-sky-300 text-[9px] font-mono font-bold border border-slate-700">
-                    ⚡ +30 XP
+                <div className="flex items-center justify-center space-x-2 pt-0.5">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-sky-300 text-[9px] font-semibold border border-slate-700">
+                    ⚡ +30 XP Reward
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[9px] font-mono border border-slate-700">
-                    ⏱️ Speed Telemetry
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[9px] font-semibold border border-slate-700">
+                    ⏱️ Speed Telemetry Active
                   </span>
                 </div>
               </div>
@@ -1079,16 +1098,16 @@ export const SubjectHub = () => {
           </div>
 
           {/* Action Row */}
-          <div className="pt-1.5 flex items-center gap-2">
+          <div className="pt-2 flex items-center gap-2 relative z-10">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsEnglishQuizOpen(true);
               }}
-              className="flex-1 py-2 px-3 rounded-lg bg-gradient-to-r from-sky-400 to-blue-500 group-hover:from-sky-300 group-hover:to-blue-400 text-slate-950 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all active:scale-95"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all active:scale-[0.98]"
             >
-              <Zap className="w-3.5 h-3.5 text-slate-950" />
+              <Zap className="w-4 h-4" />
               <span>{duolingoTask?.status !== 'PENDING' ? 'RETAKE ASSESSMENT' : 'LAUNCH ASSESSMENT (WIN11)'}</span>
             </button>
             {duolingoTask?.status !== 'PENDING' && (
@@ -1099,9 +1118,9 @@ export const SubjectHub = () => {
                   handleClearDuolingo();
                 }}
                 title="Clear Assessment Record"
-                className="py-2 px-2.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-[11px] flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0"
+                className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center space-x-1 transition-all shrink-0"
               >
-                <RotateCcw className="w-3 h-3 text-rose-400" />
+                <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
                 <span>CLEAR</span>
               </button>
             )}
@@ -1111,31 +1130,37 @@ export const SubjectHub = () => {
         {/* ------------------------------------------------------------- */}
         {/* MODULE 3: WRITING PRACTICE (EXIF METADATA & CRYPTO HASH)      */}
         {/* ------------------------------------------------------------- */}
-        <div className="lg:col-span-1 flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3.5 sm:p-4 shadow-xl backdrop-blur-md relative overflow-hidden h-full">
+        <div className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-emerald-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all duration-300 h-full group">
+          {/* Ambient Glow */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
           {/* Header & Status */}
-          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2">
-            <div>
-              <div className="flex items-center space-x-2">
-                <FileCheck className="w-4 h-4 text-teal-400" />
-                <h2 className="font-mono text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+          <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shadow-inner shrink-0 group-hover:scale-105 transition-transform">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-sm text-white tracking-tight">
                   Module 3: Writing Practice
                 </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Handwritten Notes (EXIF & Hashing Active)
+                </p>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                Handwritten Notes (EXIF & Hashing Active)
-              </p>
             </div>
             {renderStatusBadge(writingTask?.status || 'PENDING')}
           </div>
 
-          {/* Assigned 10-Point Handwriting Directive Box (1 Topic For Today via API) */}
-          <div className="rounded-lg border border-teal-500/40 bg-teal-950/30 p-2.5 text-xs space-y-1 my-1">
+          {/* Assigned 10-Point Handwriting Directive Box */}
+          <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/25 p-2.5 text-xs space-y-1.5 my-1.5 relative z-10">
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[9px] font-mono font-bold uppercase tracking-wider">
-                <BookOpen className="w-3 h-3 text-teal-400" />
+              <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[9px] font-semibold uppercase tracking-wider">
+                <BookOpen className="w-3 h-3 text-emerald-400" />
                 <span>TODAY'S TOPIC • 10 POINTS</span>
               </span>
-              <span className="text-[9px] text-teal-400/90 font-mono font-semibold">
+              <span className="text-[10px] text-emerald-400/90 font-medium">
                 {currentWritingTopic.category}
               </span>
             </div>
@@ -1144,7 +1169,7 @@ export const SubjectHub = () => {
               <h3 className="text-white font-bold text-xs sm:text-sm tracking-tight leading-snug line-clamp-1">
                 "{currentWritingTopic.title}"
               </h3>
-              <p className="text-[10px] text-slate-400 leading-tight line-clamp-1">
+              <p className="text-[10px] text-slate-400 leading-tight line-clamp-1 mt-0.5">
                 {currentWritingTopic.description}
               </p>
             </div>
@@ -1154,25 +1179,25 @@ export const SubjectHub = () => {
               <button
                 type="button"
                 onClick={() => setIsWritingTopicModalOpen(true)}
-                className="w-full py-1.5 px-3 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                className="w-full py-1.5 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
               >
-                <BookOpen className="w-3.5 h-3.5 text-teal-400" />
+                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
                 <span>VIEW ALL 10 POINTS TO WRITE</span>
               </button>
             </div>
           </div>
 
           {/* Multiple Photo Slots Container (Up to 5 Pages) */}
-          <div className="flex-1 min-h-[50px] flex flex-col justify-center my-1 space-y-1.5">
+          <div className="flex-1 min-h-[50px] flex flex-col justify-center my-1 space-y-1.5 relative z-10">
             {/* Slot Header Counter */}
             <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-mono font-bold text-slate-400 flex items-center space-x-1.5">
-                <Camera className="w-3 h-3 text-teal-400" />
-                <span>PHOTO SLOTS (1 TO 5 PAGES)</span>
+              <span className="text-[11px] font-semibold text-slate-300 flex items-center space-x-1.5">
+                <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Photo Slots (1 to 5 Pages)</span>
               </span>
-              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
                 writingSlots.length > 0
-                  ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
                   : 'bg-slate-800 text-slate-400 border-slate-700'
               }`}>
                 📸 {writingSlots.length} / 5 Slots Filled
@@ -1181,26 +1206,24 @@ export const SubjectHub = () => {
 
             {/* Slots Grid / Active Dropzone */}
             {writingScanning && (
-              <div className="rounded-lg border border-teal-500/40 bg-slate-950/90 p-4 z-20 flex flex-col items-center justify-center space-y-1 text-center">
-                <Activity className="w-5 h-5 text-teal-400 animate-spin" />
-                <span className="text-[10px] font-mono text-teal-400 tracking-wider">
-                  EXTRACTING EXIF METADATA & MULTI-PAGE SENSOR PROVENANCE...
+              <div className="rounded-xl border border-emerald-500/30 bg-slate-950/90 p-4 z-20 flex flex-col items-center justify-center space-y-1.5 text-center">
+                <Activity className="w-5 h-5 text-emerald-400 animate-spin" />
+                <span className="text-[11px] font-mono text-emerald-400 tracking-wider font-semibold">
+                  EXTRACTING EXIF METADATA & MULTI-PAGE AUDIT...
                 </span>
               </div>
             )}
 
             {!writingScanning && writingSlots.length > 0 ? (
               <div className="space-y-1.5">
-                {/* Horizontal Scrollable Multi-Slot Tray */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto p-1 bg-slate-950/60 rounded-lg border border-slate-800">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto p-1.5 bg-slate-950/60 rounded-xl border border-white/[0.06]">
                   {writingSlots.map((slot) => (
                     <div 
                       key={slot.id} 
-                      className="relative rounded-lg border border-teal-500/40 bg-slate-900/90 overflow-hidden group shadow-md flex flex-col justify-between"
+                      className="relative rounded-xl border border-emerald-500/30 bg-slate-900/90 overflow-hidden group/slot shadow-md flex flex-col justify-between"
                     >
-                      {/* Page Badge & Delete Button */}
                       <div className="absolute top-1 inset-x-1 flex items-center justify-between z-10">
-                        <span className="px-1.5 py-0.5 rounded bg-teal-950/90 border border-teal-500/50 text-teal-300 font-mono font-bold text-[8px]">
+                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-[8px]">
                           PAGE {slot.pageNumber}
                         </span>
                         <button
@@ -1213,7 +1236,6 @@ export const SubjectHub = () => {
                         </button>
                       </div>
 
-                      {/* Thumbnail with Click to Zoom */}
                       <div 
                         onClick={() => setActiveSlotZoom(slot)}
                         className="relative w-full h-16 bg-black cursor-pointer overflow-hidden group/img"
@@ -1221,25 +1243,23 @@ export const SubjectHub = () => {
                       >
                         <img src={slot.dataUrl} alt={`Handwritten Page ${slot.pageNumber}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
-                          <Maximize2 className="w-3.5 h-3.5 text-white" />
+                          <Maximize2 className="w-4 h-4 text-white" />
                         </div>
                       </div>
 
-                      {/* Slot Caption */}
-                      <div className="p-1 bg-slate-950 border-t border-slate-800/80 font-mono text-[8px] text-slate-400 truncate">
-                        <span className="text-teal-400 font-bold">{slot.fileName || `Page ${slot.pageNumber}`}</span> ({slot.fileSize})
+                      <div className="p-1 bg-slate-950 border-t border-white/[0.06] text-[8px] text-slate-400 truncate">
+                        <span className="text-emerald-400 font-bold">{slot.fileName || `Page ${slot.pageNumber}`}</span> ({slot.fileSize})
                       </div>
                     </div>
                   ))}
 
-                  {/* Add Slot Card (if fewer than 5 slots) */}
                   {writingSlots.length < 5 && (
-                    <div className="relative rounded-lg border-2 border-dashed border-teal-500/30 hover:border-teal-400 bg-slate-950/70 p-2 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group min-h-[64px]">
-                      <Plus className="w-4 h-4 text-teal-400 mb-0.5 group-hover:scale-110 transition-transform" />
-                      <span className="text-[9px] font-mono font-bold text-teal-300">
+                    <div className="relative rounded-xl border-2 border-dashed border-emerald-500/30 hover:border-emerald-400 bg-slate-950/70 p-2 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group min-h-[64px]">
+                      <Plus className="w-4 h-4 text-emerald-400 mb-0.5 group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-semibold text-emerald-300">
                         + Add Slot
                       </span>
-                      <span className="text-[7px] font-mono text-slate-500">
+                      <span className="text-[8px] text-slate-500">
                         (Page {writingSlots.length + 1} of 5)
                       </span>
                       <input
@@ -1254,13 +1274,14 @@ export const SubjectHub = () => {
                 </div>
               </div>
             ) : !writingScanning && (
-              /* Empty Initial Dropzone */
-              <div className="relative rounded-lg border-2 border-dashed border-slate-700 hover:border-teal-400 bg-slate-950/80 p-3 text-center transition-all group overflow-hidden flex flex-col items-center justify-center min-h-[85px]">
-                <Camera className="w-6 h-6 text-slate-500 group-hover:text-teal-400 mb-1 transition-colors" />
-                <div className="text-[11px] font-mono font-bold text-slate-300">
+              <div className="relative rounded-xl border-2 border-dashed border-white/[0.12] hover:border-emerald-400/80 bg-slate-950/60 hover:bg-emerald-950/15 p-3 text-center transition-all group overflow-hidden flex flex-col items-center justify-center min-h-[85px] cursor-pointer">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-1.5 group-hover:scale-105 transition-transform shadow-inner">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div className="text-xs font-bold text-slate-200">
                   UPLOAD PHOTOS OF HANDWRITTEN PAPER
                 </div>
-                <p className="text-[9px] text-slate-500 font-mono mt-0.5">
+                <p className="text-[10px] text-slate-400 mt-0.5">
                   Supports multiple pages (up to 5 photo slots) • Tap or select photos
                 </p>
                 <input
@@ -1278,23 +1299,23 @@ export const SubjectHub = () => {
               <button
                 type="button"
                 onClick={handleUseSampleWriting}
-                className="text-[9px] font-mono text-teal-400 hover:underline flex items-center space-x-1 cursor-pointer"
+                className="text-[10px] text-emerald-400 hover:text-emerald-300 font-medium hover:underline flex items-center space-x-1 cursor-pointer"
               >
-                <Sparkles className="w-2.5 h-2.5 mr-1" />
+                <Sparkles className="w-3 h-3 mr-1 text-emerald-400" />
                 <span>Load Sample Notes (2 Pages)</span>
               </button>
-              <span className="text-[9px] font-mono text-slate-500">EXIF & Multi-Page Audit</span>
+              <span className="text-[10px] text-slate-500 font-mono">EXIF & Multi-Page Audit</span>
             </div>
           </div>
 
           {/* Submit & Clear Action Row */}
-          <div className="pt-1.5 flex items-center gap-2">
+          <div className="pt-2 flex items-center gap-2 relative z-10">
             <button
               type="button"
               onClick={handleSubmitWriting}
-              className="flex-1 py-2 px-3 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(20,184,166,0.3)] transition-all cursor-pointer active:scale-95"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all cursor-pointer active:scale-[0.98]"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
               <span>SUBMIT HANDWRITTEN ARTIFACT {writingSlots.length > 0 ? `(${writingSlots.length} PAGES)` : ''}</span>
             </button>
             {(writingSlots.length > 0 || writingTask?.status !== 'PENDING') && (
@@ -1302,9 +1323,9 @@ export const SubjectHub = () => {
                 type="button"
                 onClick={handleClearWriting}
                 title="Clear Handwritten Notes"
-                className="py-2 px-2.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-[11px] flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0 cursor-pointer"
+                className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center space-x-1 transition-all shrink-0 cursor-pointer"
               >
-                <RotateCcw className="w-3 h-3 text-rose-400" />
+                <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
                 <span>CLEAR</span>
               </button>
             )}
