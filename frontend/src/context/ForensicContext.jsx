@@ -510,6 +510,7 @@ export const ForensicProvider = ({ children }) => {
 
   // SYSTEM THEME IS PERMANENTLY LOCKED TO CYBER DARK
   const [theme] = useState('dark');
+  const setTheme = () => {};
 
   const [isSirenMuted, setIsSirenMuted] = useState(false);
 
@@ -659,10 +660,6 @@ export const ForensicProvider = ({ children }) => {
           if (data.archive) {
             setArchive(data.archive);
           }
-        } else if (data?.type === 'THEME_CHANGED') {
-          if (data.theme) {
-            setTheme(data.theme);
-          }
         } else if (data?.type === 'NEW_DAY_UNLOCKED') {
           if (data.tasks) {
             setTasks(data.tasks);
@@ -696,11 +693,6 @@ export const ForensicProvider = ({ children }) => {
         try {
           setArchive(e.newValue ? JSON.parse(e.newValue) : []);
         } catch (err) {}
-      }
-      if (e.key === 'forensic_theme') {
-        if (e.newValue) {
-          setTheme(e.newValue);
-        }
       }
       if (e.key === 'forensic_module2_question_limit') {
         const val = e.newValue ? parseInt(e.newValue, 10) : 50;
