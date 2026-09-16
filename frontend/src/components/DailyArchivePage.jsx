@@ -1117,28 +1117,83 @@ export const DailyArchivePage = () => {
                             {/* MODULE 3: WRITING PRACTICE ARCHIVED CONTENT */}
                             {item.type === 'image_exif' && (
                               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                                <div 
-                                  className="md:col-span-4 relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden group cursor-pointer min-h-[160px] flex items-center justify-center"
-                                  onClick={() => item.image && setZoomImage(item.image)}
-                                >
-                                  {item.image ? (
-                                    <>
-                                      <img 
-                                        src={item.image} 
-                                        alt="Handwritten notes"
-                                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
-                                      />
-                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-1.5 text-xs text-cyan-300 font-medium">
-                                        <Maximize2 className="w-4 h-4" />
-                                        <span>View Full Image</span>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <div className="p-6 text-center text-slate-600 text-xs">No Photo Available</div>
-                                  )}
-                                </div>
+                                {item.images && Array.isArray(item.images) && item.images.length > 1 ? (
+                                  <div className="md:col-span-5 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-slate-300 font-semibold flex items-center space-x-1.5">
+                                        <Camera className="w-3.5 h-3.5 text-teal-400" />
+                                        <span>Archived Pages ({item.images.length})</span>
+                                      </span>
+                                      <span className="text-[10px] font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+                                        {item.fileSize || `${item.images.length} Pages`}
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {item.images.map((slot, sIdx) => {
+                                        const slotImg = typeof slot === 'string' ? slot : (slot.dataUrl || slot.image);
+                                        const pageNum = slot.pageNumber || (sIdx + 1);
+                                        return (
+                                          <div
+                                            key={slot.id || sIdx}
+                                            onClick={() => slotImg && setZoomImage(slotImg)}
+                                            className="group relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden cursor-pointer h-24 hover:border-teal-400/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-end"
+                                            title={`Click to zoom Page ${pageNum}`}
+                                          >
+                                            {slotImg ? (
+                                              <>
+                                                <img
+                                                  src={slotImg}
+                                                  alt={`Page ${pageNum}`}
+                                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0"
+                                                />
+                                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-teal-300">
+                                                  <Maximize2 className="w-4 h-4" />
+                                                </div>
+                                                <div className="relative z-10 bg-black/80 px-2 py-0.5 flex items-center justify-between text-[9px] font-mono text-teal-300 border-t border-slate-800/80">
+                                                  <span>Page {pageNum}</span>
+                                                </div>
+                                              </>
+                                            ) : (
+                                              <div className="p-2 text-center text-slate-600 text-[10px]">Empty Slot</div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 italic">Click any page to zoom.</p>
+                                  </div>
+                                ) : (
+                                  <div 
+                                    className="md:col-span-4 relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden group cursor-pointer min-h-[160px] flex items-center justify-center"
+                                    onClick={() => item.image && setZoomImage(item.image)}
+                                  >
+                                    {item.image ? (
+                                      <>
+                                        <img 
+                                          src={item.image} 
+                                          alt="Handwritten notes"
+                                          className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-1.5 text-xs text-cyan-300 font-medium">
+                                          <Maximize2 className="w-4 h-4" />
+                                          <span>View Full Image</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="p-6 text-center text-slate-600 text-xs">No Photo Available</div>
+                                    )}
+                                  </div>
+                                )}
 
-                                <div className="md:col-span-8 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 text-xs space-y-2.5">
+                                <div className={`${item.images && Array.isArray(item.images) && item.images.length > 1 ? 'md:col-span-7' : 'md:col-span-8'} bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 text-xs space-y-2.5`}>
+                                  {item.images && Array.isArray(item.images) && item.images.length > 1 && (
+                                    <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                      <span className="text-slate-400">Total Uploaded Pages:</span>
+                                      <span className="text-teal-300 font-bold font-mono">
+                                        {item.images.length} Pages Verified ({item.fileSize || `${item.images.length * 2} MB`})
+                                      </span>
+                                    </div>
+                                  )}
                                   <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
                                     <span className="text-slate-400">Camera Model:</span>
                                     <span className="text-teal-300 font-semibold">

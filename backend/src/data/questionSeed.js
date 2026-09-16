@@ -1,8 +1,4 @@
-/**
- * Question Seed - Deprecated
- * The previous static question bank has been removed.
- * Questions are generated and served via Google Gemini AI.
- */
+import { CURATED_QUESTIONS } from './curatedQuestionBank.js';
 
-export const SEED_QUESTIONS = [];
+export const SEED_QUESTIONS = CURATED_QUESTIONS;
 export default SEED_QUESTIONS;

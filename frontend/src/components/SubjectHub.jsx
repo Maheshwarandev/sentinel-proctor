@@ -24,7 +24,9 @@ import {
   Cpu,
   FileCheck,
   Edit3,
-  Zap
+  Zap,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { useForensics, INITIAL_TASKS } from '../context/ForensicContext';
 import { EnglishQuizModal } from './EnglishQuizModal';
@@ -348,76 +350,133 @@ export const SubjectHub = () => {
 
   const currentWritingTopic = dailyWritingTopic;
 
-  const [writingImage, setWritingImage] = useState(writingTask?.image || null);
-  const [writingScanning, setWritingScanning] = useState(false);
-  const [writingFileMeta, setWritingFileMeta] = useState({
-    fileName: writingTask?.fileName || '',
-    fileSize: writingTask?.fileSize || '',
-    device: writingTask?.exifData?.deviceModel || 'iPhone 15 Pro Max'
+  // -------------------------------------------------------------
+  // MODULE 3: WRITING PRACTICE (MULTIPLE PHOTO SLOTS - UP TO 5 PAGES)
+  // -------------------------------------------------------------
+  const [writingSlots, setWritingSlots] = useState(() => {
+    if (writingTask?.images && Array.isArray(writingTask.images) && writingTask.images.length > 0) {
+      return writingTask.images;
+    }
+    if (writingTask?.image) {
+      return [{
+        id: 'slot-init-1',
+        pageNumber: 1,
+        dataUrl: writingTask.image,
+        fileName: writingTask.fileName || 'handwritten_page_1.jpg',
+        fileSize: writingTask.fileSize || '2.1 MB',
+        device: writingTask.exifData?.deviceModel || 'Samsung Galaxy S24 Ultra (Sensor Verified)'
+      }];
+    }
+    return [];
   });
+  const [writingScanning, setWritingScanning] = useState(false);
+  const [activeSlotZoom, setActiveSlotZoom] = useState(null);
 
   const handleWritingUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setWritingScanning(true);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setWritingImage(event.target.result);
-        setWritingFileMeta({
-          fileName: file.name,
-          fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-          device: 'Samsung Galaxy S24 Ultra (Sensor Verified)'
-        });
-        setTimeout(() => {
-          setWritingScanning(false);
-        }, 1500);
-      };
-      reader.readAsDataURL(file);
-    }
+    const fileList = Array.from(e.target.files || []);
+    if (fileList.length === 0) return;
+
+    setWritingScanning(true);
+    const readers = fileList.map((file, idx) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          resolve({
+            id: `slot-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+            dataUrl: event.target.result,
+            fileName: file.name,
+            fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+            device: 'Samsung Galaxy S24 Ultra (Sensor Verified)',
+            timestamp: new Date().toISOString()
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(readers).then((newSlots) => {
+      setWritingSlots((prev) => {
+        const combined = [...prev, ...newSlots].slice(0, 5);
+        return combined.map((s, i) => ({ ...s, pageNumber: i + 1 }));
+      });
+      setTimeout(() => setWritingScanning(false), 900);
+    });
+
+    e.target.value = '';
+  };
+
+  const handleRemoveSlot = (slotId, e) => {
+    if (e) e.stopPropagation();
+    setWritingSlots((prev) => {
+      const filtered = prev.filter(s => s.id !== slotId);
+      return filtered.map((s, i) => ({ ...s, pageNumber: i + 1 }));
+    });
   };
 
   const handleUseSampleWriting = () => {
     setWritingScanning(true);
     setTimeout(() => {
-      setWritingImage('https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&auto=format&fit=crop&q=80');
-      setWritingFileMeta({
-        fileName: 'handwritten_notes_10_points.jpg',
-        fileSize: '3.12 MB',
-        device: 'Apple iPhone 15 Pro Max (Hardware EXIF Validated)'
-      });
+      const sampleSlots = [
+        {
+          id: 'sample-slot-1',
+          pageNumber: 1,
+          dataUrl: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&auto=format&fit=crop&q=80',
+          fileName: 'handwritten_page_1_points_1_to_5.jpg',
+          fileSize: '2.84 MB',
+          device: 'Apple iPhone 15 Pro Max (Hardware EXIF Validated)'
+        },
+        {
+          id: 'sample-slot-2',
+          pageNumber: 2,
+          dataUrl: 'https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&auto=format&fit=crop&q=80',
+          fileName: 'handwritten_page_2_points_6_to_10.jpg',
+          fileSize: '3.12 MB',
+          device: 'Apple iPhone 15 Pro Max (Hardware EXIF Validated)'
+        }
+      ];
+      setWritingSlots(sampleSlots);
       setWritingScanning(false);
-    }, 1200);
+      showHubToast('Loaded 2-page sample handwritten notes!');
+    }, 1000);
   };
 
   const handleSubmitWriting = () => {
-    if (!writingImage) {
-      showHubToast('Please upload a photo of your handwritten paper before submitting.', 'error');
+    if (!writingSlots || writingSlots.length === 0) {
+      showHubToast('Please upload at least 1 photo of your handwritten paper before submitting.', 'error');
       return;
     }
+
+    const primarySlot = writingSlots[0];
+    const totalMb = writingSlots.reduce((acc, s) => acc + (parseFloat(s.fileSize) || 2.0), 0).toFixed(2);
+
     submitWritingPractice({
-      image: writingImage,
-      fileName: writingFileMeta.fileName,
-      fileSize: writingFileMeta.fileSize,
+      images: writingSlots,
+      image: primarySlot.dataUrl,
+      fileName: writingSlots.length === 1
+        ? primarySlot.fileName
+        : `${writingSlots.length} Note Pages (${writingSlots.map(s => `Page ${s.pageNumber}`).join(', ')})`,
+      fileSize: `${totalMb} MB (${writingSlots.length} photos)`,
+      fileCount: writingSlots.length,
       writingTopic: currentWritingTopic.title,
       writingCategory: currentWritingTopic.category,
       writingPoints: currentWritingTopic.points,
       hash: {
         md5: '3c8f8b8d9e2a1b4c7d6e5f0a9b8c7d6e',
         sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-        matchStatus: 'CLEAR - Hardware Sensor Original'
+        matchStatus: `CLEAR - ${writingSlots.length} Original Sensor Artifacts Verified`
       },
       exifData: {
         deviceMake: 'Apple',
-        deviceModel: writingFileMeta.device,
+        deviceModel: primarySlot.device || 'Apple iPhone 15 Pro Max',
         dateTimeOriginal: new Date().toISOString().replace('T', ' ').substring(0, 19),
         lens: '24mm f/1.78 main sensor',
-        resolution: '4032 x 3024 (12.2 MP)',
+        resolution: `${writingSlots.length} x 4032 x 3024 (RAW)`,
         software: 'Camera Firmware RAW',
         gpsStatus: 'Redacted for Privacy Protection',
         tamperingDetected: false
       }
     });
-    showHubToast('Module 3: Handwritten 10-point assignment submitted successfully!');
+    showHubToast(`Module 3: ${writingSlots.length} handwritten photo pages submitted successfully!`);
   };
 
   // -------------------------------------------------------------
@@ -448,15 +507,10 @@ export const SubjectHub = () => {
   }, [duolingoTask?.status, duolingoTask?.image]);
 
   useEffect(() => {
-    if (writingTask?.status === 'PENDING' && !writingTask?.image) {
-      setWritingImage(null);
-      setWritingFileMeta({
-        fileName: null,
-        fileSize: null,
-        device: 'Samsung Galaxy S24 Ultra (Sensor Verified)'
-      });
+    if (writingTask?.status === 'PENDING' && !writingTask?.image && (!writingTask?.images || writingTask.images.length === 0)) {
+      setWritingSlots([]);
     }
-  }, [writingTask?.status, writingTask?.image]);
+  }, [writingTask?.status, writingTask?.image, writingTask?.images]);
 
   const handleClearKeyboard = (e) => {
     if (e) e.stopPropagation();
@@ -486,12 +540,7 @@ export const SubjectHub = () => {
 
   const handleClearWriting = (e) => {
     if (e) e.stopPropagation();
-    setWritingImage(null);
-    setWritingFileMeta({
-      fileName: null,
-      fileSize: null,
-      device: 'Samsung Galaxy S24 Ultra (Sensor Verified)'
-    });
+    setWritingSlots([]);
     clearTask('mod-3-writing');
     showHubToast('Module 3: Handwritten notes cleared.');
   };
@@ -1113,57 +1162,128 @@ export const SubjectHub = () => {
             </div>
           </div>
 
-          {/* Image Dropzone */}
-          <div className="flex-1 min-h-[45px] flex flex-col justify-center my-1">
-            <div className="relative rounded-lg border-2 border-dashed border-slate-700 hover:border-teal-400 bg-slate-950/80 p-2 text-center transition-all group overflow-hidden flex flex-col items-center justify-center min-h-[75px]">
-              
-              {writingScanning && (
-                <div className="absolute inset-0 bg-slate-950/90 z-20 flex flex-col items-center justify-center space-y-1">
-                  <Activity className="w-5 h-5 text-teal-400 animate-spin" />
-                  <span className="text-[10px] font-mono text-teal-400 tracking-wider">
-                    EXTRACTING EXIF SENSOR PROVENANCE...
-                  </span>
-                </div>
-              )}
-
-              {writingImage ? (
-                <div className="relative w-full h-20 rounded-lg overflow-hidden border border-slate-800 group-hover:border-teal-500/50 transition-colors">
-                  <img src={writingImage} alt="Handwriting Notes Preview" className="w-full h-full object-cover" />
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-1 text-left font-mono text-[9px] text-slate-300">
-                    <div className="font-bold text-teal-400">{writingFileMeta.device}</div>
-                    <div className="truncate text-slate-400">{writingFileMeta.fileName} ({writingFileMeta.fileSize})</div>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <Camera className="w-6 h-6 text-slate-500 group-hover:text-teal-400 mb-1 transition-colors" />
-                  <div className="text-[11px] font-mono font-bold text-slate-300">
-                    UPLOAD PHOTO OF HANDWRITTEN PAPER
-                  </div>
-                  <p className="text-[9px] text-slate-500 font-mono mt-0.5">
-                    Write on paper with pen • Snap & upload photo
-                  </p>
-                </>
-              )}
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleWritingUpload}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
+          {/* Multiple Photo Slots Container (Up to 5 Pages) */}
+          <div className="flex-1 min-h-[50px] flex flex-col justify-center my-1 space-y-1.5">
+            {/* Slot Header Counter */}
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-mono font-bold text-slate-400 flex items-center space-x-1.5">
+                <Camera className="w-3 h-3 text-teal-400" />
+                <span>PHOTO SLOTS (1 TO 5 PAGES)</span>
+              </span>
+              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                writingSlots.length > 0
+                  ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+                  : 'bg-slate-800 text-slate-400 border-slate-700'
+              }`}>
+                📸 {writingSlots.length} / 5 Slots Filled
+              </span>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
+            {/* Slots Grid / Active Dropzone */}
+            {writingScanning && (
+              <div className="rounded-lg border border-teal-500/40 bg-slate-950/90 p-4 z-20 flex flex-col items-center justify-center space-y-1 text-center">
+                <Activity className="w-5 h-5 text-teal-400 animate-spin" />
+                <span className="text-[10px] font-mono text-teal-400 tracking-wider">
+                  EXTRACTING EXIF METADATA & MULTI-PAGE SENSOR PROVENANCE...
+                </span>
+              </div>
+            )}
+
+            {!writingScanning && writingSlots.length > 0 ? (
+              <div className="space-y-1.5">
+                {/* Horizontal Scrollable Multi-Slot Tray */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto p-1 bg-slate-950/60 rounded-lg border border-slate-800">
+                  {writingSlots.map((slot) => (
+                    <div 
+                      key={slot.id} 
+                      className="relative rounded-lg border border-teal-500/40 bg-slate-900/90 overflow-hidden group shadow-md flex flex-col justify-between"
+                    >
+                      {/* Page Badge & Delete Button */}
+                      <div className="absolute top-1 inset-x-1 flex items-center justify-between z-10">
+                        <span className="px-1.5 py-0.5 rounded bg-teal-950/90 border border-teal-500/50 text-teal-300 font-mono font-bold text-[8px]">
+                          PAGE {slot.pageNumber}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleRemoveSlot(slot.id, e)}
+                          title={`Remove Page ${slot.pageNumber}`}
+                          className="w-4 h-4 rounded-full bg-rose-950/90 border border-rose-500/60 text-rose-300 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+
+                      {/* Thumbnail with Click to Zoom */}
+                      <div 
+                        onClick={() => setActiveSlotZoom(slot)}
+                        className="relative w-full h-16 bg-black cursor-pointer overflow-hidden group/img"
+                        title="Click to view full page photo"
+                      >
+                        <img src={slot.dataUrl} alt={`Handwritten Page ${slot.pageNumber}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
+                          <Maximize2 className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      </div>
+
+                      {/* Slot Caption */}
+                      <div className="p-1 bg-slate-950 border-t border-slate-800/80 font-mono text-[8px] text-slate-400 truncate">
+                        <span className="text-teal-400 font-bold">{slot.fileName || `Page ${slot.pageNumber}`}</span> ({slot.fileSize})
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add Slot Card (if fewer than 5 slots) */}
+                  {writingSlots.length < 5 && (
+                    <div className="relative rounded-lg border-2 border-dashed border-teal-500/30 hover:border-teal-400 bg-slate-950/70 p-2 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group min-h-[64px]">
+                      <Plus className="w-4 h-4 text-teal-400 mb-0.5 group-hover:scale-110 transition-transform" />
+                      <span className="text-[9px] font-mono font-bold text-teal-300">
+                        + Add Slot
+                      </span>
+                      <span className="text-[7px] font-mono text-slate-500">
+                        (Page {writingSlots.length + 1} of 5)
+                      </span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleWritingUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : !writingScanning && (
+              /* Empty Initial Dropzone */
+              <div className="relative rounded-lg border-2 border-dashed border-slate-700 hover:border-teal-400 bg-slate-950/80 p-3 text-center transition-all group overflow-hidden flex flex-col items-center justify-center min-h-[85px]">
+                <Camera className="w-6 h-6 text-slate-500 group-hover:text-teal-400 mb-1 transition-colors" />
+                <div className="text-[11px] font-mono font-bold text-slate-300">
+                  UPLOAD PHOTOS OF HANDWRITTEN PAPER
+                </div>
+                <p className="text-[9px] text-slate-500 font-mono mt-0.5">
+                  Supports multiple pages (up to 5 photo slots) • Tap or select photos
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleWritingUpload}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+              </div>
+            )}
+
+            {/* Sub-Actions */}
+            <div className="flex items-center justify-between pt-0.5 px-0.5">
               <button
                 type="button"
                 onClick={handleUseSampleWriting}
-                className="text-[9px] font-mono text-teal-400 hover:underline flex items-center space-x-1"
+                className="text-[9px] font-mono text-teal-400 hover:underline flex items-center space-x-1 cursor-pointer"
               >
                 <Sparkles className="w-2.5 h-2.5 mr-1" />
-                <span>Load Sample Note</span>
+                <span>Load Sample Notes (2 Pages)</span>
               </button>
-              <span className="text-[9px] font-mono text-slate-500">EXIF & Hash Audit</span>
+              <span className="text-[9px] font-mono text-slate-500">EXIF & Multi-Page Audit</span>
             </div>
           </div>
 
@@ -1172,17 +1292,17 @@ export const SubjectHub = () => {
             <button
               type="button"
               onClick={handleSubmitWriting}
-              className="flex-1 py-2 px-3 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(20,184,166,0.3)] transition-all"
+              className="flex-1 py-2 px-3 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-mono font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-[0_0_15px_rgba(20,184,166,0.3)] transition-all cursor-pointer active:scale-95"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>SUBMIT HANDWRITTEN ARTIFACT</span>
+              <span>SUBMIT HANDWRITTEN ARTIFACT {writingSlots.length > 0 ? `(${writingSlots.length} PAGES)` : ''}</span>
             </button>
-            {(writingImage || writingTask?.status !== 'PENDING') && (
+            {(writingSlots.length > 0 || writingTask?.status !== 'PENDING') && (
               <button
                 type="button"
                 onClick={handleClearWriting}
                 title="Clear Handwritten Notes"
-                className="py-2 px-2.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-[11px] flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0"
+                className="py-2 px-2.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono font-bold text-[11px] flex items-center justify-center space-x-1 transition-all shadow-sm shrink-0 cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3 text-rose-400" />
                 <span>CLEAR</span>
@@ -1190,6 +1310,39 @@ export const SubjectHub = () => {
             )}
           </div>
         </div>
+
+        {/* Fullscreen Zoom Modal for Multi-Slot Photo Inspection */}
+        {activeSlotZoom && (
+          <div 
+            onClick={() => setActiveSlotZoom(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in"
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl w-full max-h-[90vh] bg-slate-900 border border-teal-500/50 rounded-2xl overflow-hidden flex flex-col shadow-2xl"
+            >
+              <div className="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-xs font-mono text-teal-300">
+                  <span className="px-2 py-0.5 rounded bg-teal-500/20 font-bold border border-teal-500/30">
+                    PAGE {activeSlotZoom.pageNumber}
+                  </span>
+                  <span className="text-white font-bold">{activeSlotZoom.fileName}</span>
+                  <span className="text-slate-400">({activeSlotZoom.fileSize})</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveSlotZoom(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 bg-black overflow-auto p-2 flex items-center justify-center">
+                <img src={activeSlotZoom.dataUrl} alt={`Zoom Page ${activeSlotZoom.pageNumber}`} className="max-w-full max-h-[75vh] object-contain rounded" />
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
 

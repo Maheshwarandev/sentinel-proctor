@@ -231,7 +231,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 18000);
 
       const res = await fetch(`/api/quiz/session?limit=${limit}`, {
         signal: controller.signal
@@ -242,8 +242,20 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
       if (!data.success || !data.questions?.length) {
         throw new Error(data.message || 'Could not load quiz questions.');
       }
+
+      // Deduplicate questions as a fail-safe guarantee
+      const seen = new Set();
+      const uniqueQuestions = [];
+      for (const q of data.questions) {
+        const textKey = (q.text || '').trim().toLowerCase();
+        if (!seen.has(textKey)) {
+          seen.add(textKey);
+          uniqueQuestions.push(q);
+        }
+      }
+
       setSessionId(data.sessionId);
-      setQuestions(data.questions);
+      setQuestions(uniqueQuestions);
       setQuestionStartTime(Date.now());
       setQuestionSeconds(0);
       setLoading(false);

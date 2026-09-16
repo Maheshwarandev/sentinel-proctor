@@ -17,6 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const PORT = ENV.PORT;
 
 // Initialize MongoDB connection
 connectDB();
@@ -78,17 +79,22 @@ app.get('/api/network-info', (req, res) => {
   const detectedUrl = `${isHttps ? 'https' : 'http'}://${host}`;
   const cloudUrl = process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL || process.env.TUNNEL_URL;
   const baseUrl = (cloudUrl || detectedUrl).replace(/\/+$/, '');
-  const onlineTestUrl = `${baseUrl}/test`;
-  const onlineHubUrl = `${baseUrl}/candidate`;
+  // In development the React application is served by Vite, not Express.  A
+  // link using the API port would otherwise land on an API 404 page instead of
+  // the candidate application on another device in the same network.
+  const isProduction = ENV.NODE_ENV === 'production';
+  const candidateBaseUrl = isProduction ? baseUrl : `http://${lanIp}:${clientPort}`;
+  const onlineTestUrl = `${candidateBaseUrl}/test`;
+  const onlineHubUrl = `${candidateBaseUrl}/candidate`;
 
   res.status(200).json({
     success: true,
     lanIp,
     onlineCandidateUrl: onlineTestUrl,
-    lanCandidateUrl: onlineTestUrl,
+    lanCandidateUrl: `http://${lanIp}:${clientPort}/test`,
     onlineHubUrl,
-    localCandidateUrl: process.env.NODE_ENV === 'production' ? `${baseUrl}/test` : `http://localhost:${clientPort}/test`,
-    localAdminUrl: process.env.NODE_ENV === 'production' ? `${baseUrl}/` : `http://localhost:${clientPort}/`,
+    localCandidateUrl: isProduction ? `${baseUrl}/test` : `http://localhost:${clientPort}/test`,
+    localAdminUrl: isProduction ? `${baseUrl}/` : `http://localhost:${clientPort}/`,
     serverLanUrl: `http://${lanIp}:${serverPort}`
   });
 });
@@ -134,7 +140,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start listening
-const PORT = ENV.PORT;
 const server = app.listen(PORT, () => {
   console.log(`
   ======================================================

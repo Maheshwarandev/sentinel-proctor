@@ -5,18 +5,30 @@ import { getOrGenerateBatch, generateGeminiQuestions } from '../services/aiQuest
 // In-memory active quiz sessions map: sessionId -> { questionMap, startedAt }
 const activeQuizSessions = new Map();
 
-// Helper to clean up any legacy static seed bank questions so only Gemini AI questions exist
-let isLegacyCleaned = false;
-async function purgeLegacySeedBank() {
-  if (isLegacyCleaned || !getIsConnected()) return;
+import { CURATED_QUESTIONS } from '../data/curatedQuestionBank.js';
+
+// Helper to seed initial curated questions if database is empty
+let isInitialSeeded = false;
+async function seedCuratedQuestionsIfEmpty() {
+  if (isInitialSeeded || !getIsConnected()) return;
   try {
-    const deleted = await Question.deleteMany({ source: { $ne: 'gemini-ai' } });
-    if (deleted?.deletedCount > 0) {
-      console.log(`[Brother Quiz Bank] Removed ${deleted.deletedCount} legacy static questions. Active questions are 100% Gemini AI.`);
+    const count = await Question.countDocuments();
+    if (count === 0) {
+      console.log('[Brother Quiz Bank] Database is empty. Seeding 120 curated non-repeating questions...');
+      await Question.insertMany(CURATED_QUESTIONS.map(q => ({
+        text: q.text,
+        options: q.options,
+        correctAnswerIndex: q.correctAnswerIndex,
+        category: q.category,
+        difficulty: q.difficulty,
+        explanation: q.explanation,
+        source: 'curated'
+      })));
+      console.log('[Brother Quiz Bank] Successfully seeded curated questions.');
     }
-    isLegacyCleaned = true;
+    isInitialSeeded = true;
   } catch (err) {
-    console.warn('[Brother Quiz Bank] Cleanup notice:', err.message);
+    console.warn('[Brother Quiz Bank] Seeding notice:', err.message);
   }
 }
 
@@ -61,7 +73,7 @@ export const updateQuizSettings = (req, res) => {
  */
 export const startQuizSession = async (req, res) => {
   try {
-    await purgeLegacySeedBank();
+    await seedCuratedQuestionsIfEmpty();
 
     const limit = Math.max(3, Math.min(100, parseInt(req.query.limit, 10) || currentQuestionLimit));
 

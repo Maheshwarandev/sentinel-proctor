@@ -593,18 +593,77 @@ export const AntiCheatPage = () => {
           ) : (selectedTask.type === 'image_ocr' || selectedTask.type === 'image_exif') && (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
               <div className="md:col-span-5 space-y-1.5">
-                <span className="text-xs text-slate-400 font-medium">Uploaded Evidence Image:</span>
-                <div className="rounded-xl border border-slate-800 overflow-hidden bg-slate-950 min-h-[180px] flex items-center justify-center">
-                  {selectedTask.image ? (
-                    <img src={selectedTask.image} alt="Artifact" className="w-full h-52 object-cover" />
-                  ) : (
-                    <div className="p-6 text-center space-y-2 text-slate-600">
-                      <Camera className="w-8 h-8 mx-auto text-slate-700" />
-                      <div className="text-xs font-medium text-slate-500">No Image Uploaded</div>
-                      <p className="text-[10px] text-slate-600">Awaiting brother submission</p>
+                <span className="text-xs text-slate-400 font-medium">
+                  {selectedTask.images && selectedTask.images.length > 1 
+                    ? `Uploaded Evidence Pages (${selectedTask.images.length}):` 
+                    : 'Uploaded Evidence Image:'}
+                </span>
+                {selectedTask.images && Array.isArray(selectedTask.images) && selectedTask.images.length > 1 ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedTask.images.map((slot, sIdx) => {
+                        const slotImg = typeof slot === 'string' ? slot : (slot.dataUrl || slot.image);
+                        const pageNum = slot.pageNumber || (sIdx + 1);
+                        return (
+                          <div
+                            key={slot.id || sIdx}
+                            onClick={() => slotImg && setInspectSnapshot({
+                              image: slotImg,
+                              timeStr: `Page ${pageNum} of ${selectedTask.images.length}`,
+                              reason: slot.fileName || 'Module 3 Handwriting Note'
+                            })}
+                            className="group relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden cursor-pointer h-28 hover:border-teal-400/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-end"
+                            title={`Click to zoom Page ${pageNum}`}
+                          >
+                            {slotImg ? (
+                              <>
+                                <img
+                                  src={slotImg}
+                                  alt={`Page ${pageNum}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0"
+                                />
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-teal-300">
+                                  <Maximize2 className="w-4 h-4" />
+                                </div>
+                                <div className="relative z-10 bg-black/80 px-2 py-1 flex items-center justify-between text-[10px] font-mono text-teal-300 border-t border-slate-800/80">
+                                  <span>Page {pageNum}</span>
+                                  {slot.fileSize && <span className="text-slate-400 text-[9px]">{slot.fileSize}</span>}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="p-2 text-center text-slate-600 text-[10px]">Empty Slot</div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
+                    <p className="text-[10px] text-slate-500 italic">Click any page thumbnail to open forensic inspection.</p>
+                  </div>
+                ) : (
+                  <div 
+                    className="rounded-xl border border-slate-800 overflow-hidden bg-slate-950 min-h-[180px] flex items-center justify-center cursor-pointer group relative"
+                    onClick={() => selectedTask.image && setInspectSnapshot({
+                      image: selectedTask.image,
+                      timeStr: selectedTask.submittedAt ? new Date(selectedTask.submittedAt).toLocaleTimeString() : 'Submitted Artifact',
+                      reason: selectedTask.fileName || 'Handwritten Evidence'
+                    })}
+                  >
+                    {selectedTask.image ? (
+                      <>
+                        <img src={selectedTask.image} alt="Artifact" className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-teal-300">
+                          <Maximize2 className="w-5 h-5" />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-6 text-center space-y-2 text-slate-600">
+                        <Camera className="w-8 h-8 mx-auto text-slate-700" />
+                        <div className="text-xs font-medium text-slate-500">No Image Uploaded</div>
+                        <p className="text-[10px] text-slate-600">Awaiting brother submission</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="md:col-span-7 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 text-xs space-y-2.5">
@@ -613,6 +672,14 @@ export const AntiCheatPage = () => {
                 </span>
                 {selectedTask.type === 'image_exif' ? (
                   <>
+                    {selectedTask.images && Array.isArray(selectedTask.images) && selectedTask.images.length > 1 && (
+                      <div className="flex items-center justify-between text-slate-400">
+                        <span>Total Note Pages:</span>
+                        <span className="text-teal-300 font-bold font-mono">
+                          {selectedTask.images.length} Pages Verified ({selectedTask.fileSize || `${selectedTask.images.length * 2} MB`})
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between text-slate-400">
                       <span>Camera Hardware:</span>
                       <span className="text-teal-300 font-semibold">
