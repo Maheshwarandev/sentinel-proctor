@@ -61,16 +61,7 @@ export const SubjectHub = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const [canvasMode, setCanvasMode] = useState(() => {
-    return localStorage.getItem('forensic_canvas_mode') || 'auto';
-  });
-
-  const handleCanvasModeChange = (mode) => {
-    setCanvasMode(mode);
-    localStorage.setItem('forensic_canvas_mode', mode);
-  };
-
-  const isLightWritingCanvas = canvasMode === 'paper';
+  const isLightWritingCanvas = false;
 
   const keyboardTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-1-keyboard')) || INITIAL_TASKS[0];
   const duolingoTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-2-duolingo')) || INITIAL_TASKS[1];
@@ -845,30 +836,8 @@ export const SubjectHub = () => {
                 </div>
               </div>
 
-              {/* Right: Dual Canvas Mode + Action Buttons */}
+              {/* Right: Action Buttons */}
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1 p-0.5 rounded-lg border border-slate-700/50 bg-slate-900/40 text-[10px]">
-                  <button
-                    type="button"
-                    onClick={() => handleCanvasModeChange('dark')}
-                    className={`px-2 py-1 rounded flex items-center space-x-1 transition-all ${
-                      canvasMode === 'dark' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Moon className="w-3 h-3" />
-                    <span>Dark</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCanvasModeChange('paper')}
-                    className={`px-2 py-1 rounded flex items-center space-x-1 transition-all ${
-                      canvasMode === 'paper' ? 'bg-amber-100 text-amber-900 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Sun className="w-3 h-3" />
-                    <span>Paper</span>
-                  </button>
-                </div>
 
                 {(inputText || typingSeconds > 0) && (
                   <button

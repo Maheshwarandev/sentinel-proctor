@@ -373,11 +373,13 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
             body: JSON.stringify({ candidate: event.candidate, sender: 'candidate' })
           }).catch(() => {});
 
-          broadcastChannelRef.current?.postMessage({
-            type: 'WEBRTC_ICE',
-            candidate: event.candidate,
-            sender: 'candidate'
-          });
+          try {
+            broadcastChannelRef.current?.postMessage({
+              type: 'WEBRTC_ICE',
+              candidate: event.candidate.toJSON ? event.candidate.toJSON() : JSON.parse(JSON.stringify(event.candidate)),
+              sender: 'candidate'
+            });
+          } catch (err) {}
         }
       };
 
