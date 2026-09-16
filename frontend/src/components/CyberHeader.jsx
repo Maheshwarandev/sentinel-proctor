@@ -1,22 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   ShieldCheck, 
   LayoutDashboard, 
   Inbox, 
-  Copy, 
-  Check, 
-  LogOut, 
-  Share2, 
   Activity, 
   Archive, 
-  Wifi,
-  Laptop,
-  ChevronDown,
-  X,
-  ExternalLink,
-  Sparkles,
-  Radio,
-  Sliders
+  LogOut 
 } from 'lucide-react';
 import { useForensics } from '../context/ForensicContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -34,52 +23,13 @@ export const CyberHeader = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const [copied, setCopied] = useState(false);
-  const [copiedType, setCopiedType] = useState(null); // 'lan' | 'local' | 'test' | 'hub'
-  const [networkInfo, setNetworkInfo] = useState(null);
-  const [showShareDropdown, setShowShareDropdown] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/network-info')
-      .then(r => r.json())
-      .then(d => {
-        if (d?.success) setNetworkInfo(d);
-      })
-      .catch(() => {});
-  }, []);
 
   const isDashboard = location.pathname === '/admin' || location.pathname === '/';
   const isSubmissions = location.pathname.startsWith('/admin/submissions') || location.pathname.startsWith('/admin/finished-tasks');
   const isAntiCheat = location.pathname.startsWith('/admin/anti-cheat') || location.pathname.startsWith('/admin/telemetry');
   const isArchive = location.pathname.startsWith('/admin/archive');
 
-  const unreadCount = notifications.filter(n => !n.read).length;
   const completedCount = tasks.filter(t => t.status === 'SUBMITTED' || t.status === 'VERIFIED').length;
-
-  const getCandidateTestLink = () => {
-    if (networkInfo?.onlineCandidateUrl) return networkInfo.onlineCandidateUrl;
-    return `${window.location.origin}/test`;
-  };
-
-  const getCandidateHubLink = () => {
-    return `${window.location.origin}/candidate`;
-  };
-
-  const copyLink = (type = 'test') => {
-    const url = type === 'hub' ? getCandidateHubLink() : getCandidateTestLink();
-    navigator.clipboard.writeText(url);
-    setCopiedType(type);
-    setCopied(true);
-    setTimeout(() => {
-      setCopied(false);
-      setCopiedType(null);
-    }, 2400);
-  };
-
-  const handleQuickShare = () => {
-    copyLink('test');
-    setShowShareDropdown(prev => !prev);
-  };
 
   const handleAdminGateClick = () => {
     navigate('/admin');
@@ -211,132 +161,26 @@ export const CyberHeader = () => {
 
         </div>
 
-        {/* Right Section: Quick Share Pill, Admin Profile */}
+        {/* Right Section: User Profile & Lock Button */}
         <div className="flex items-center space-x-2 sm:space-x-3">
           
           {isAdminAuthenticated ? (
-            <>
-              {/* Dispatch Link Share Popover */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleQuickShare}
-                  className="flex items-center space-x-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/10 via-cyan-500/15 to-indigo-500/10 hover:from-cyan-500/20 hover:to-indigo-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]"
-                  title="Share candidate assessment link"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400 font-bold">Link Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="w-3.5 h-3.5 text-cyan-400" />
-                      <span className="hidden sm:inline">Dispatch Link</span>
-                      <ChevronDown className="w-3 h-3 text-cyan-400/80" />
-                    </>
-                  )}
-                </button>
-
-                {/* Modern Glass Popover for Link Sharing */}
-                {showShareDropdown && (
-                  <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-3xl bg-slate-950/95 border border-white/[0.1] p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85)] z-50 animate-in fade-in slide-in-from-top-2 backdrop-blur-2xl">
-                    <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-3.5">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
-                          <Wifi className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="text-xs font-bold text-white tracking-tight">Multi-Device Assessment Links</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowShareDropdown(false)}
-                        className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/[0.06] transition-colors"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="space-y-3 text-left">
-                      {/* Option 1: Direct Assessment Test Link */}
-                      <div className="p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-500/40 space-y-2 relative overflow-hidden">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-cyan-300 flex items-center space-x-1.5">
-                            <Laptop className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>Direct Brother Assessment</span>
-                          </span>
-                          <span className="text-[9px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold border border-cyan-500/30">
-                            PRIMARY
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={getCandidateTestLink()}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/[0.08] text-[11px] font-mono text-cyan-200 select-all focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => copyLink('test')}
-                            className="px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center space-x-1.5 transition-all flex-shrink-0 cursor-pointer shadow-sm active:scale-95"
-                          >
-                            {copied && copiedType === 'test' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                            <span>{copied && copiedType === 'test' ? 'Done' : 'Copy'}</span>
-                          </button>
-                        </div>
-                        <p className="text-[10px] text-slate-400 leading-tight">
-                          Starts test directly with live camera feed and anti-cheat proctoring.
-                        </p>
-                      </div>
-
-                      {/* Option 2: Candidate Hub (All 3 Modules) */}
-                      <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-medium text-slate-300">
-                            Candidate Hub (All 3 Modules)
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={getCandidateHubLink()}
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-white/[0.06] text-[10px] font-mono text-slate-300 select-all focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => copyLink('hub')}
-                            className="px-2.5 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] text-slate-200 text-[11px] font-semibold flex items-center space-x-1 transition-all flex-shrink-0 cursor-pointer active:scale-95"
-                          >
-                            {copied && copiedType === 'hub' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                            <span>{copied && copiedType === 'hub' ? 'Done' : 'Copy'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* User Profile Pill & Lock Button */}
-              <div className="flex items-center space-x-2 pl-2 border-l border-white/[0.08]">
-                <div className="flex items-center space-x-2 px-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-                  <div className="w-6 h-6 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300 text-[11px] font-black">
-                    A
-                  </div>
-                  <span className="text-xs font-semibold text-slate-200 hidden md:inline">Admin</span>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                <div className="w-6 h-6 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300 text-[11px] font-black">
+                  A
                 </div>
-                
-                <button
-                  onClick={logoutAdmin}
-                  title="Lock Admin Console"
-                  className="p-2 rounded-xl bg-white/[0.03] hover:bg-rose-500/15 hover:text-rose-400 text-slate-400 border border-white/[0.06] hover:border-rose-500/30 transition-all cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </button>
+                <span className="text-xs font-semibold text-slate-200">Admin</span>
               </div>
-            </>
+              
+              <button
+                onClick={logoutAdmin}
+                title="Lock Admin Console"
+                className="p-2 rounded-xl bg-white/[0.03] hover:bg-rose-500/15 hover:text-rose-400 text-slate-400 border border-white/[0.06] hover:border-rose-500/30 transition-all cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
           ) : (
             <button
               onClick={handleAdminGateClick}
