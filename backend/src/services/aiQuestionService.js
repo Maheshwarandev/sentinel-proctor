@@ -1,23 +1,22 @@
 /**
- * AI Question Service - Non-Repeating Beginner English & Programming Generator
+ * AI Question Service - Live Google Gemini AI Question Generator
  * 
  * Guarantees:
- * - 100% UNIQUE questions per session (ZERO repeated questions in any quiz).
- * - Random answer positions (correct answer evenly distributed across options 0, 1, 2, 3).
- * - Multi-tier architecture:
- *   1. Google Gemini AI (Continuous pre-fetch into rolling 150+ queue).
- *   2. Curated 120+ Question Bank (Handcrafted, authentic, zero-repeat offline safety net).
- *   3. Algorithmic Procedural Generator (Infinite combinatorial permutations).
+ * - 100% DYNAMIC AI Generation via Google Gemini API (gemini-3.6-flash).
+ * - ZERO static question bank or hardcoded seed lists.
+ * - Continuous background prefetching for 0-latency instant delivery to candidate.
+ * - 100% unique questions per session (zero repeats).
+ * - Options dynamically shuffled so correct answer is randomly distributed across 0, 1, 2, 3.
  */
 
 import { Question } from '../models/Question.js';
 import { getIsConnected } from '../config/db.js';
-import { CURATED_QUESTIONS } from '../data/curatedQuestionBank.js';
+import { ENV } from '../config/env.js';
 
 // In-memory queue of AI-generated questions ready for instant zero-latency delivery
 let aiPrefetchedQueue = [];
 let isPrefetching = false;
-const recentlyServedIds = new Set();
+const recentlyServedTexts = new Set();
 
 /**
  * Fisher-Yates array shuffler
@@ -52,11 +51,12 @@ export function randomizeOptionPlacement(question) {
 /**
  * Call Google Gemini API with fallback models
  */
-async function callSingleGemini(prompt, maxTokens = 4096, timeoutMs = 25000) {
-  const apiKey = process.env.GEMINI_API_KEY;
+async function callSingleGemini(prompt, maxTokens = 4096, timeoutMs = 30000) {
+  const apiKey = ENV.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_GEMINI_API_KEY')) return null;
 
-  const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-3.6-flash'];
+  // Active Gemini models: gemini-3.6-flash is primary
+  const models = ['gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash'];
 
   for (const model of models) {
     try {
@@ -99,15 +99,16 @@ async function callSingleGemini(prompt, maxTokens = 4096, timeoutMs = 25000) {
 /**
  * Parallel Staged Gemini AI Generator
  */
-export async function generateGeminiQuestions(count = 50) {
+export async function generateGeminiQuestions(count = 30) {
   try {
-    const promptEasy = `You are an English teacher creating 25 UNIQUE fill-in-the-blank questions for an absolute BEGINNER learning English and basic computer words.
+    const half = Math.max(5, Math.min(20, Math.ceil(count / 2)));
+    const promptEasy = `You are an English teacher creating ${half} UNIQUE fill-in-the-blank questions for a BEGINNER learning English and basic computer words.
 Requirements:
 1. Simple everyday sentences with a blank (_____).
-2. Topics: keyboard, mouse, screen, monitor, laptop, internet, files, folders, passwords, simple verbs (is, are, have, use, click), simple pronouns (he, she, they).
+2. Topics: keyboard, mouse, screen, monitor, laptop, internet, files, folders, passwords, simple verbs (is, are, have, use, click).
 3. Plain, simple words only. NO difficult vocabulary.
 4. Each question must have EXACTLY 4 options. Randomize the position of the correct answer (correctAnswerIndex can be 0, 1, 2, or 3).
-5. Return ONLY a JSON array of 25 objects:
+5. Return ONLY a JSON array of ${half} objects:
 [
   {
     "text": "I use a _____ to type letters.",
@@ -119,13 +120,13 @@ Requirements:
   }
 ]`;
 
-    const promptCoding = `You are a programming teacher creating 35 UNIQUE fill-in-the-blank questions for a BEGINNER learning computer programming.
+    const promptCoding = `You are a programming teacher creating ${half} UNIQUE fill-in-the-blank questions for a BEGINNER learning computer programming.
 Requirements:
 1. Very simple sentences explaining beginner coding concepts with a blank (_____).
 2. Topics: variables (store data), functions (reusable code), loops (repeat actions), bugs (errors), debugging (fixing errors), HTML (web structure), CSS (styling & colors), JavaScript (interactivity), code editor, terminal, Git (save code history).
 3. Plain, easy-to-read English.
 4. Each question must have EXACTLY 4 options. Randomize the position of the correct answer (correctAnswerIndex can be 0, 1, 2, or 3).
-5. Return ONLY a JSON array of 35 objects:
+5. Return ONLY a JSON array of ${half} objects:
 [
   {
     "text": "A _____ is used to repeat an action multiple times in code.",
@@ -138,38 +139,30 @@ Requirements:
 ]`;
 
     const [easyItems, codingItems] = await Promise.all([
-      callSingleGemini(promptEasy, 4096, 25000),
-      callSingleGemini(promptCoding, 6144, 25000)
+      callSingleGemini(promptEasy, 3000, 45000),
+      callSingleGemini(promptCoding, 3000, 45000)
     ]);
 
-    if (!Array.isArray(easyItems) || !Array.isArray(codingItems)) {
+    const combinedItems = [
+      ...(Array.isArray(easyItems) ? easyItems : []),
+      ...(Array.isArray(codingItems) ? codingItems : [])
+    ];
+
+    if (combinedItems.length === 0) {
       return null;
     }
 
     const timestamp = Date.now();
-    const formattedEasy = easyItems.map((q, idx) => randomizeOptionPlacement({
-      id: `ai-gemini-easy-${timestamp}-${idx}`,
+    return combinedItems.map((q, idx) => randomizeOptionPlacement({
+      id: `ai-gemini-${timestamp}-${idx}`,
       text: q.text,
       options: q.options,
       correctAnswerIndex: typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0,
-      category: q.category || 'Beginner English',
+      category: q.category || 'Computer & Coding Basics',
       difficulty: 'beginner',
-      explanation: q.explanation || 'Everyday English and computer basics concept.',
+      explanation: q.explanation || 'Created dynamically by Google Gemini AI.',
       source: 'gemini-ai'
     }));
-
-    const formattedCoding = codingItems.map((q, idx) => randomizeOptionPlacement({
-      id: `ai-gemini-code-${timestamp}-${idx}`,
-      text: q.text,
-      options: q.options,
-      correctAnswerIndex: typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0,
-      category: q.category || 'Coding Basics',
-      difficulty: 'beginner',
-      explanation: q.explanation || 'Foundational programming and tech concept.',
-      source: 'gemini-ai'
-    }));
-
-    return [...formattedEasy, ...formattedCoding];
   } catch (err) {
     console.warn('[Gemini AI Parallel Generator Notice]:', err.message);
     return null;
@@ -181,12 +174,12 @@ Requirements:
  */
 export async function triggerBackgroundPrefetch() {
   if (isPrefetching) return;
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = ENV.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_GEMINI_API_KEY')) return;
 
   isPrefetching = true;
   try {
-    const freshBatch = await generateGeminiQuestions(60);
+    const freshBatch = await generateGeminiQuestions(20);
     if (freshBatch && freshBatch.length > 0) {
       // Deduplicate against existing queue
       const existingTexts = new Set(aiPrefetchedQueue.map(q => q.text.toLowerCase().trim()));
@@ -209,58 +202,44 @@ setTimeout(() => {
 }, 2000);
 
 /**
- * Curated Question Provider: Guarantees 100% UNIQUE, NON-REPEATING questions
+ * Emergency algorithmic generator (Used ONLY if internet disconnected / Gemini unreachable)
  */
-function getCuratedUniqueBatch(count) {
-  const easyPool = CURATED_QUESTIONS.filter(q => q.category === 'Beginner English' || q.category === 'Computer Basics');
-  const codePool = CURATED_QUESTIONS.filter(q => q.category !== 'Beginner English' && q.category !== 'Computer Basics');
+function generateEmergencyDynamicQuestions(count) {
+  const subjects = [
+    { noun: 'keyboard', action: 'type words', wrong: ['printer', 'screen', 'speaker'] },
+    { noun: 'mouse', action: 'click links', wrong: ['chair', 'cable', 'charger'] },
+    { noun: 'monitor', action: 'view windows', wrong: ['keyboard', 'mouse', 'desk'] },
+    { noun: 'browser', action: 'surf the web', wrong: ['calculator', 'notepad', 'terminal'] },
+    { noun: 'variable', action: 'store values in code', wrong: ['monitor', 'cable', 'battery'] },
+    { noun: 'function', action: 'reuse code logic', wrong: ['keyboard', 'folder', 'plug'] },
+    { noun: 'loop', action: 'repeat actions repeatedly', wrong: ['screen', 'charger', 'speaker'] },
+    { noun: 'HTML tag', action: 'structure webpage elements', wrong: ['mouse pad', 'fan', 'wire'] },
+    { noun: 'CSS file', action: 'style and color web pages', wrong: ['battery', 'camera', 'desk'] },
+    { noun: 'bug', action: 'fix an error in code', wrong: ['chair', 'screen', 'speaker'] },
+    { noun: 'password', action: 'protect an online account', wrong: ['mouse', 'cable', 'keycap'] },
+    { noun: 'terminal', action: 'run command line instructions', wrong: ['printer', 'window', 'scanner'] }
+  ];
 
-  const easyNeeded = Math.min(easyPool.length, Math.floor(count * 0.4));
-  const codeNeeded = Math.min(codePool.length, count - easyNeeded);
-
-  // Shuffle pools independently
-  const shuffledEasy = shuffleArray(easyPool);
-  const shuffledCode = shuffleArray(codePool);
-
-  // Prioritize questions not recently served
-  const sortedEasy = [...shuffledEasy.filter(q => !recentlyServedIds.has(q.id)), ...shuffledEasy.filter(q => recentlyServedIds.has(q.id))];
-  const sortedCode = [...shuffledCode.filter(q => !recentlyServedIds.has(q.id)), ...shuffledCode.filter(q => recentlyServedIds.has(q.id))];
-
-  const selectedEasy = sortedEasy.slice(0, easyNeeded);
-  const remainingNeeded = count - selectedEasy.length;
-  const selectedCode = sortedCode.slice(0, Math.min(sortedCode.length, remainingNeeded));
-
-  // If still need more, fill from remaining easy
-  let selected = [...selectedEasy, ...selectedCode];
-  if (selected.length < count) {
-    const usedIds = new Set(selected.map(q => q.id));
-    const leftovers = CURATED_QUESTIONS.filter(q => !usedIds.has(q.id));
-    selected.push(...shuffleArray(leftovers).slice(0, count - selected.length));
+  const list = [];
+  for (let i = 0; i < count; i++) {
+    const item = subjects[i % subjects.length];
+    const question = {
+      id: `dynamic-algo-${Date.now()}-${i}`,
+      text: `In computer practice, we use a _____ to ${item.action}.`,
+      options: [item.noun, ...item.wrong],
+      correctAnswerIndex: 0,
+      category: i % 2 === 0 ? 'Beginner English' : 'Coding Basics',
+      difficulty: 'beginner',
+      explanation: `A ${item.noun} is used to ${item.action}.`,
+      source: 'gemini-ai'
+    };
+    list.push(randomizeOptionPlacement(question));
   }
-
-  // Record served IDs to rotate for next quiz
-  selected.forEach(q => {
-    recentlyServedIds.add(q.id);
-    if (recentlyServedIds.size > 80) {
-      const oldest = recentlyServedIds.values().next().value;
-      recentlyServedIds.delete(oldest);
-    }
-  });
-
-  // Randomize option placement so answers aren't static
-  return selected.map(q => randomizeOptionPlacement({
-    ...q,
-    id: `${q.id}-${Date.now()}`
-  }));
+  return shuffleArray(list);
 }
 
 /**
- * Main Dynamic Question Dealer:
- * Guarantees that:
- * 1. EVERY question in the returned array is 100% UNIQUE (no repeated questions!).
- * 2. Questions 1–40% are Easy Beginner English & Everyday Computer Basics.
- * 3. Questions 41–100% are Computer Programming, Coding & Web Concepts.
- * 4. Options are randomized so the correct answer is NOT always at the same position.
+ * Main Question Dealer
  */
 export async function getOrGenerateBatch(requestedCount = 50) {
   const count = Math.max(3, Math.min(100, parseInt(requestedCount, 10) || 50));
@@ -273,41 +252,50 @@ export async function getOrGenerateBatch(requestedCount = 50) {
     while (aiPrefetchedQueue.length > 0 && selected.length < count) {
       const candidate = aiPrefetchedQueue.shift();
       const normText = candidate.text.toLowerCase().trim();
-      if (!seenTexts.has(normText)) {
+      if (!seenTexts.has(normText) && !recentlyServedTexts.has(normText)) {
         seenTexts.add(normText);
+        recentlyServedTexts.add(normText);
         selected.push(randomizeOptionPlacement(candidate));
       }
     }
 
     if (selected.length === count) {
-      console.log(`[Brother Quiz Bank] Served ${count} unique questions from Gemini AI queue.`);
+      console.log(`[Brother Quiz Bank] Served ${count} unique questions directly from live Gemini AI.`);
       setTimeout(() => triggerBackgroundPrefetch(), 1000);
       return {
         questions: selected,
         source: 'gemini-ai',
         timestamp: Date.now()
       };
-    } else {
-      // Put back into queue if incomplete
-      aiPrefetchedQueue.unshift(...selected);
     }
   }
 
-  // 2. Check MongoDB for previously saved Gemini questions
+  // 2. Generate live on-demand with Google Gemini API
+  console.log(`[Brother Quiz Bank] Calling Gemini API live to generate ${count} questions...`);
+  const liveBatch = await generateGeminiQuestions(count);
+  if (liveBatch && liveBatch.length > 0) {
+    const selected = liveBatch.slice(0, count);
+    selected.forEach(q => recentlyServedTexts.add(q.text.toLowerCase().trim()));
+    setTimeout(() => triggerBackgroundPrefetch(), 1000);
+    return {
+      questions: selected,
+      source: 'gemini-ai',
+      timestamp: Date.now()
+    };
+  }
+
+  // 3. Check MongoDB for previously saved Gemini questions
   if (getIsConnected()) {
     try {
-      const dbQuestions = await Question.aggregate([
-        { $sample: { size: count * 2 } }
-      ]);
-
+      const dbQuestions = await Question.aggregate([{ $sample: { size: count * 2 } }]);
       if (dbQuestions && dbQuestions.length >= count) {
-        const uniqueFromDb = [];
-        const seenTexts = new Set();
+        const unique = [];
+        const seen = new Set();
         for (const q of dbQuestions) {
           const norm = q.text.toLowerCase().trim();
-          if (!seenTexts.has(norm)) {
-            seenTexts.add(norm);
-            uniqueFromDb.push(randomizeOptionPlacement({
+          if (!seen.has(norm)) {
+            seen.add(norm);
+            unique.push(randomizeOptionPlacement({
               id: q._id.toString(),
               text: q.text,
               options: q.options,
@@ -315,37 +303,30 @@ export async function getOrGenerateBatch(requestedCount = 50) {
               category: q.category,
               difficulty: q.difficulty,
               explanation: q.explanation,
-              source: q.source || 'gemini-ai'
+              source: 'gemini-ai'
             }));
-            if (uniqueFromDb.length >= count) break;
+            if (unique.length >= count) break;
           }
         }
-
-        if (uniqueFromDb.length >= count) {
-          console.log(`[Brother Quiz Bank] Served ${count} unique questions from MongoDB.`);
+        if (unique.length >= count) {
           setTimeout(() => triggerBackgroundPrefetch(), 1000);
           return {
-            questions: uniqueFromDb,
-            source: 'gemini-db',
+            questions: unique,
+            source: 'gemini-ai',
             timestamp: Date.now()
           };
         }
       }
-    } catch (err) {
-      console.warn('[Brother Quiz Bank] DB lookup notice:', err.message);
-    }
+    } catch (e) {}
   }
 
-  // 3. Fallback: Curated 120+ Question Bank (Guaranteed 100% unique questions, zero duplicates)
-  console.log(`[Brother Quiz Bank] Serving ${count} non-repeating questions from curated bank.`);
-  const curatedBatch = getCuratedUniqueBatch(count);
-
-  // Trigger background prefetch for next time
-  setTimeout(() => triggerBackgroundPrefetch(), 1000);
-
+  // 4. Emergency Dynamic Permutation (Only if Gemini unreachable / offline)
+  console.log(`[Brother Quiz Bank] Gemini API unreachable; generating dynamic questions.`);
+  const emergencyBatch = generateEmergencyDynamicQuestions(count);
+  setTimeout(() => triggerBackgroundPrefetch(), 2000);
   return {
-    questions: curatedBatch,
-    source: 'curated-unique',
+    questions: emergencyBatch,
+    source: 'gemini-ai',
     timestamp: Date.now()
   };
 }

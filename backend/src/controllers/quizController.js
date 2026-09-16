@@ -5,33 +5,6 @@ import { getOrGenerateBatch, generateGeminiQuestions } from '../services/aiQuest
 // In-memory active quiz sessions map: sessionId -> { questionMap, startedAt }
 const activeQuizSessions = new Map();
 
-import { CURATED_QUESTIONS } from '../data/curatedQuestionBank.js';
-
-// Helper to seed initial curated questions if database is empty
-let isInitialSeeded = false;
-async function seedCuratedQuestionsIfEmpty() {
-  if (isInitialSeeded || !getIsConnected()) return;
-  try {
-    const count = await Question.countDocuments();
-    if (count === 0) {
-      console.log('[Brother Quiz Bank] Database is empty. Seeding 120 curated non-repeating questions...');
-      await Question.insertMany(CURATED_QUESTIONS.map(q => ({
-        text: q.text,
-        options: q.options,
-        correctAnswerIndex: q.correctAnswerIndex,
-        category: q.category,
-        difficulty: q.difficulty,
-        explanation: q.explanation,
-        source: 'curated'
-      })));
-      console.log('[Brother Quiz Bank] Successfully seeded curated questions.');
-    }
-    isInitialSeeded = true;
-  } catch (err) {
-    console.warn('[Brother Quiz Bank] Seeding notice:', err.message);
-  }
-}
-
 // Configurable question limit (defaults to 50, but can be set by Admin to 5, 10, 15, 20, 25, etc.)
 let currentQuestionLimit = 50;
 
@@ -73,8 +46,6 @@ export const updateQuizSettings = (req, res) => {
  */
 export const startQuizSession = async (req, res) => {
   try {
-    await seedCuratedQuestionsIfEmpty();
-
     const limit = Math.max(3, Math.min(100, parseInt(req.query.limit, 10) || currentQuestionLimit));
 
     // Call Multi-Tier AI Generator to deal requested unique questions
