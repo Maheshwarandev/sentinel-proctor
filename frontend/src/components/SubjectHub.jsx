@@ -15,8 +15,6 @@ import {
   Image as ImageIcon,
   ArrowLeft,
   RotateCcw,
-  Sun,
-  Moon,
   BookOpen,
   X,
   Maximize2,
@@ -40,8 +38,6 @@ export const SubjectHub = () => {
     submitWritingPractice, 
     clearTask,
     triggerRedLockdown,
-    theme,
-    toggleTheme,
     isAllTasksCompleted,
     unlockNewDayTasks,
     module2QuestionLimit = 50
@@ -74,7 +70,7 @@ export const SubjectHub = () => {
     localStorage.setItem('forensic_canvas_mode', mode);
   };
 
-  const isLightWritingCanvas = canvasMode === 'paper' || (canvasMode === 'auto' && theme === 'light');
+  const isLightWritingCanvas = canvasMode === 'paper';
 
   const keyboardTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-1-keyboard')) || INITIAL_TASKS[0];
   const duolingoTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-2-duolingo')) || INITIAL_TASKS[1];
@@ -609,30 +605,6 @@ export const SubjectHub = () => {
           </div>
 
           <div className="flex items-center space-x-2 text-xs shrink-0">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className={`px-3 py-1.5 rounded-xl border text-center transition-all ${
-                theme === 'light'
-                  ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-sm'
-                  : 'bg-slate-950/80 hover:bg-slate-800/80 border-white/[0.08] text-slate-300'
-              }`}
-              title={theme === 'light' ? 'Switch to Cyber Dark Mode' : 'Switch to Aesthetic Light Mode'}
-            >
-              <div className="flex items-center justify-center space-x-1.5 font-medium text-xs">
-                {theme === 'light' ? (
-                  <>
-                    <Sun className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-slate-700 text-[11px] font-semibold">Light</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-3.5 h-3.5 text-cyan-400" />
-                    <span className="text-slate-300 text-[11px] font-semibold">Dark</span>
-                  </>
-                )}
-              </div>
-            </button>
             <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[75px]">
               <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">Quota</div>
               <div className={`text-xs sm:text-sm font-bold font-mono ${isAllTasksCompleted ? 'text-emerald-400' : 'text-cyan-400'}`}>

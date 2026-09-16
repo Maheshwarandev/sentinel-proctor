@@ -9,7 +9,7 @@ import { EnglishQuizModal } from './components/EnglishQuizModal';
 
 function AppLayout() {
   const location = useLocation();
-  const { isRedLockdownActive, theme } = useForensics();
+  const { isRedLockdownActive } = useForensics();
   // Candidate routes are strictly isolated for Brother - distraction-free, zero upper navbar
   const candidateRoutes = ['/candidate', '/test', '/brother', '/quiz', '/exercise', '/subject'];
   const isCandidateRoute = candidateRoutes.some(path => 
@@ -22,8 +22,6 @@ function AppLayout() {
     <div className={`${!isAdminRoute ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'} flex flex-col font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-500 relative ${
       isAdminRoute && isRedLockdownActive
         ? 'bg-[#150205] text-rose-100 selection:bg-rose-600 selection:text-white'
-        : theme === 'light'
-        ? 'bg-[#f6f8fb] text-slate-800 selection:bg-cyan-600 selection:text-white'
         : 'bg-[#080c14] text-slate-100 selection:bg-cyan-500 selection:text-black'
     }`}>
       {/* Ominous Flashing Red Border & Siren Ambient Glow across Admin Dashboard */}

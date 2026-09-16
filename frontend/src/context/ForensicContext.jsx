@@ -508,10 +508,8 @@ export const ForensicProvider = ({ children }) => {
     }
   });
 
-  // AESTHETIC THEME STATE ('dark' | 'light')
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('forensic_theme') || 'dark';
-  });
+  // SYSTEM THEME IS PERMANENTLY LOCKED TO CYBER DARK
+  const [theme] = useState('dark');
 
   const [isSirenMuted, setIsSirenMuted] = useState(false);
 
@@ -540,18 +538,13 @@ export const ForensicProvider = ({ children }) => {
     localStorage.setItem('forensic_archive_state', JSON.stringify(archive));
   }, [archive]);
 
-  // Sync Theme to HTML and localStorage
+  // Permanently enforce dark theme on HTML root
   useEffect(() => {
-    localStorage.setItem('forensic_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    if (theme === 'light') {
-      document.documentElement.classList.add('theme-light');
-      document.documentElement.classList.remove('theme-dark');
-    } else {
-      document.documentElement.classList.add('theme-dark');
-      document.documentElement.classList.remove('theme-light');
-    }
-  }, [theme]);
+    localStorage.setItem('forensic_theme', 'dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.classList.add('theme-dark');
+    document.documentElement.classList.remove('theme-light');
+  }, []);
 
   // Sync Red Lockdown flag to document.body
   useEffect(() => {
@@ -1403,18 +1396,7 @@ export const ForensicProvider = ({ children }) => {
   };
 
   const toggleTheme = () => {
-    setTheme(prev => {
-      const nextTheme = prev === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('forensic_theme', nextTheme);
-      playCyberChime();
-      if (broadcastChannelRef.current) {
-        broadcastChannelRef.current.postMessage({
-          type: 'THEME_CHANGED',
-          theme: nextTheme
-        });
-      }
-      return nextTheme;
-    });
+    // Theme is locked permanently to Cyber Dark
   };
 
   const resetAllData = () => {
