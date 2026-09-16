@@ -1294,17 +1294,10 @@ export const SubjectHub = () => {
               </div>
             )}
 
-            {/* Sub-Actions */}
+            {/* Audit Status Footer */}
             <div className="flex items-center justify-between pt-0.5 px-0.5">
-              <button
-                type="button"
-                onClick={handleUseSampleWriting}
-                className="text-[10px] text-emerald-400 hover:text-emerald-300 font-medium hover:underline flex items-center space-x-1 cursor-pointer"
-              >
-                <Sparkles className="w-3 h-3 mr-1 text-emerald-400" />
-                <span>Load Sample Notes (2 Pages)</span>
-              </button>
-              <span className="text-[10px] text-slate-500 font-mono">EXIF & Multi-Page Audit</span>
+              <span className="text-[10px] text-slate-400">Physical pen & paper photos</span>
+              <span className="text-[10px] text-slate-500 font-mono">EXIF & Multi-Page Audit Active</span>
             </div>
           </div>
 
