@@ -55,8 +55,8 @@ async function callSingleGemini(prompt, maxTokens = 4096, timeoutMs = 30000) {
   const apiKey = ENV.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_GEMINI_API_KEY')) return null;
 
-  // Active Gemini models: gemini-3.6-flash is primary
-  const models = ['gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash'];
+  // Active high-quota Gemini models: gemini-flash-lite-latest is primary (3s response, high quota)
+  const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash'];
 
   for (const model of models) {
     try {
