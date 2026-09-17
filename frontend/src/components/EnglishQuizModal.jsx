@@ -767,7 +767,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
 
     // Record this answer
     const currentAnswerRecord = {
-      questionId: currentQ.id,
+      questionId: currentQ?.id,
       selectedOptionIndex: selectedOption,
       timeSpentSec: +timeSpentSec.toFixed(2)
     };
@@ -775,10 +775,15 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
     setUserAnswers(prev => [...prev, currentAnswerRecord]);
     setHasChecked(true);
 
-    // Instant local gamified feel:
-    // (Note: full cryptographic verification happens on the server at the end)
-    setIsAnswerCorrect(true); // placeholder animation
-    playSound(true);
+    // Dynamic evaluation of correct vs wrong
+    const isCorrect = typeof currentQ?.correctAnswerIndex === 'number'
+      ? selectedOption === currentQ.correctAnswerIndex
+      : true;
+
+    setIsAnswerCorrect(isCorrect);
+    setCurrentExplanation(currentQ?.explanation || '');
+    setRevealedCorrectIndex(typeof currentQ?.correctAnswerIndex === 'number' ? currentQ.correctAnswerIndex : null);
+    playSound(isCorrect);
   };
 
   // Advance to next question or trigger final grading
@@ -1129,16 +1134,40 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {currentQuestion.options.map((option, idx) => {
               const isSelected = selectedOption === idx;
+              const isCorrectOption = typeof currentQuestion.correctAnswerIndex === 'number' && currentQuestion.correctAnswerIndex === idx;
+
               let cardStyle = "border-[#E5E5E5] border-b-[#CECECE] bg-white text-[#4B4B4B] hover:bg-[#F7F7F7]";
               let chipStyle = "border-[#E5E5E5] text-[#AFAFAF] bg-white";
+              let statusIcon = null;
 
               if (isSelected && !hasChecked) {
                 cardStyle = "border-[#1CB0F6] border-b-[#1899D6] bg-[#DDF4FF] text-[#1899D6]";
                 chipStyle = "border-[#1CB0F6] text-white bg-[#1CB0F6]";
               } else if (hasChecked) {
-                if (isSelected) {
-                  cardStyle = "border-[#58CC02] border-b-[#46A302] bg-[#D7FFB8] text-[#46A302]";
-                  chipStyle = "border-[#58CC02] text-white bg-[#58CC02]";
+                if (isAnswerCorrect) {
+                  // Candidate answered CORRECTLY
+                  if (isSelected) {
+                    cardStyle = "border-[#58CC02] border-b-[#46A302] bg-[#D7FFB8] text-[#46A302]";
+                    chipStyle = "border-[#58CC02] text-white bg-[#58CC02]";
+                    statusIcon = <CheckCircle2 className="w-6 h-6 text-[#58CC02] shrink-0" />;
+                  } else {
+                    cardStyle = "border-[#E5E5E5] border-b-[#E5E5E5] bg-white text-[#AFAFAF] opacity-40";
+                    chipStyle = "border-[#E5E5E5] text-[#AFAFAF] bg-[#F7F7F7]";
+                  }
+                } else {
+                  // Candidate answered WRONGLY -> Put RED on selected, and show GREEN on correct
+                  if (isSelected) {
+                    cardStyle = "border-[#FF4B4B] border-b-[#EA2B2B] bg-[#FFDFE0] text-[#EA2B2B]";
+                    chipStyle = "border-[#FF4B4B] text-white bg-[#FF4B4B]";
+                    statusIcon = <X className="w-6 h-6 text-[#EA2B2B] stroke-[3] shrink-0" />;
+                  } else if (isCorrectOption) {
+                    cardStyle = "border-[#58CC02] border-b-[#46A302] bg-[#F4FFE8] text-[#46A302] ring-2 ring-[#58CC02]/40";
+                    chipStyle = "border-[#58CC02] text-white bg-[#58CC02]";
+                    statusIcon = <CheckCircle2 className="w-6 h-6 text-[#58CC02] shrink-0" />;
+                  } else {
+                    cardStyle = "border-[#E5E5E5] border-b-[#E5E5E5] bg-white text-[#AFAFAF] opacity-40";
+                    chipStyle = "border-[#E5E5E5] text-[#AFAFAF] bg-[#F7F7F7]";
+                  }
                 }
               }
 
@@ -1156,6 +1185,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
                     </span>
                     <span className="text-left leading-snug">{option}</span>
                   </div>
+                  {statusIcon}
                 </button>
               );
             })}
@@ -1168,9 +1198,11 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
         <div className={`fixed bottom-0 inset-x-0 border-t-2 py-5 px-4 sm:px-8 z-30 transition-all duration-200 ${
           !hasChecked 
             ? 'bg-white border-[#E5E5E5]' 
-            : 'bg-[#D7FFB8] border-[#58CC02]/30'
+            : isAnswerCorrect
+            ? 'bg-[#D7FFB8] border-[#58CC02]/30'
+            : 'bg-[#FFDFE0] border-[#FF4B4B]/30'
         }`}>
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             {!hasChecked ? (
               <>
                 <div className="hidden sm:flex items-center space-x-2 text-sm font-bold text-[#AFAFAF]">
@@ -1192,19 +1224,22 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
                   </button>
                 </div>
               </>
-            ) : (
+            ) : isAnswerCorrect ? (
+              // -------------------------------------------------------------
+              // CORRECT ANSWER (GREEN FEEDBACK)
+              // -------------------------------------------------------------
               <>
-                <div className="flex items-center space-x-4">
-                  <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#58CC02] shadow-sm">
+                <div className="flex items-center space-x-4 w-full sm:w-auto">
+                  <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#58CC02] shadow-sm shrink-0">
                     <CheckCircle2 className="w-9 h-9 fill-[#58CC02] text-white" />
                   </div>
                   <div>
                     <h3 className="text-xl sm:text-2xl font-black text-[#58CC02]">
                       Nicely done!
                     </h3>
-                    <span className="text-xs font-bold text-[#46A302]">
-                      +30 XP • Practice in progress
-                    </span>
+                    <p className="text-xs sm:text-sm font-bold text-[#46A302]">
+                      {currentExplanation || '+30 XP • Practice in progress'}
+                    </p>
                   </div>
                 </div>
 
@@ -1212,7 +1247,42 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
                   type="button"
                   disabled={grading}
                   onClick={handleNextQuestion}
-                  className="w-full sm:w-44 py-3.5 px-8 rounded-2xl bg-[#58CC02] hover:bg-[#61E002] border-b-4 border-[#46A302] text-white font-black text-base uppercase tracking-wider transition-all active:border-b-0 active:translate-y-1 shadow-sm cursor-pointer"
+                  className="w-full sm:w-44 py-3.5 px-8 rounded-2xl bg-[#58CC02] hover:bg-[#61E002] border-b-4 border-[#46A302] text-white font-black text-base uppercase tracking-wider transition-all active:border-b-0 active:translate-y-1 shadow-sm cursor-pointer shrink-0"
+                >
+                  {currentIndex + 1 === questions.length ? (grading ? 'GRADING...' : 'FINISH') : 'CONTINUE'}
+                </button>
+              </>
+            ) : (
+              // -------------------------------------------------------------
+              // WRONG ANSWER (RED FEEDBACK) - Still advances to next question!
+              // -------------------------------------------------------------
+              <>
+                <div className="flex items-center space-x-4 w-full sm:w-auto">
+                  <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#FF4B4B] shadow-sm shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#FF4B4B] flex items-center justify-center">
+                      <X className="w-6 h-6 text-white stroke-[3]" />
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-xl sm:text-2xl font-black text-[#FF4B4B]">
+                      Incorrect
+                    </h3>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#EA2B2B]">
+                      Correct answer: <span className="underline">{currentQuestion.options[currentQuestion.correctAnswerIndex ?? 0]}</span>
+                    </p>
+                    {currentExplanation && (
+                      <p className="text-[11px] font-semibold text-[#EA2B2B]/90 mt-0.5 line-clamp-1">
+                        {currentExplanation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={grading}
+                  onClick={handleNextQuestion}
+                  className="w-full sm:w-44 py-3.5 px-8 rounded-2xl bg-[#FF4B4B] hover:bg-[#FF3838] border-b-4 border-[#EA2B2B] text-white font-black text-base uppercase tracking-wider transition-all active:border-b-0 active:translate-y-1 shadow-sm cursor-pointer shrink-0"
                 >
                   {currentIndex + 1 === questions.length ? (grading ? 'GRADING...' : 'FINISH') : 'CONTINUE'}
                 </button>

@@ -79,13 +79,15 @@ export const startQuizSession = async (req, res) => {
       activeQuizSessions.delete(sessionId);
     }, 60 * 60 * 1000);
 
-    // ZERO-KNOWLEDGE DTO: Strictly omit correctAnswerIndex and explanation!
+    // Deliver questions with correctAnswerIndex and explanation for instant learning feedback
     const clientQuestions = selected.map(q => ({
       id: q.id || q._id?.toString(),
       text: q.text,
       options: q.options,
       category: q.category,
-      difficulty: q.difficulty
+      difficulty: q.difficulty,
+      correctAnswerIndex: typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0,
+      explanation: q.explanation || ''
     }));
 
     return res.status(200).json({
