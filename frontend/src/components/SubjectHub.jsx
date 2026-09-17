@@ -63,6 +63,26 @@ export const SubjectHub = () => {
 
   const isLightWritingCanvas = false;
 
+  const [isPageClosed, setIsPageClosed] = useState(false);
+
+  const handleCloseWindow = () => {
+    setIsPageClosed(true);
+    try {
+      window.open('', '_self', '');
+      window.close();
+    } catch (e) {}
+    try {
+      window.close();
+    } catch (e) {}
+    setTimeout(() => {
+      try {
+        if (!window.closed) {
+          window.location.href = 'about:blank';
+        }
+      } catch (e) {}
+    }, 200);
+  };
+
   const keyboardTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-1-keyboard')) || INITIAL_TASKS[0];
   const duolingoTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-2-duolingo')) || INITIAL_TASKS[1];
   const writingTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-3-writing')) || INITIAL_TASKS[2];
@@ -566,6 +586,47 @@ export const SubjectHub = () => {
     }
   };
 
+  if (isPageClosed) {
+    return (
+      <div className="min-h-screen bg-[#06080d] flex items-center justify-center p-6 text-center select-none font-sans">
+        <div className="max-w-md w-full bg-[#0d121d] border border-rose-500/30 rounded-2xl p-8 shadow-[0_0_60px_rgba(244,63,94,0.15)] space-y-5">
+          <div className="w-16 h-16 mx-auto rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
+            <X className="w-8 h-8 text-rose-400 stroke-[2.5]" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-wide">Workstation Session Closed</h2>
+            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              Assessment session has been terminated. You can safely close this browser tab or window.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  window.open('', '_self', '');
+                  window.close();
+                } catch (e) {}
+              }}
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow cursor-pointer active:scale-95"
+            >
+              Close Tab Now
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = 'about:blank';
+              }}
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95"
+            >
+              Leave Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full min-h-screen lg:min-h-0 lg:h-screen lg:max-h-screen flex flex-col justify-between px-3 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 bg-[#080c14] relative lg:overflow-hidden select-none">
       
@@ -609,6 +670,17 @@ export const SubjectHub = () => {
                 <span>{isAllTasksCompleted ? 'DONE' : 'ACTIVE'}</span>
               </div>
             </div>
+
+            {/* Top Close Button for Brother */}
+            <button
+              type="button"
+              onClick={handleCloseWindow}
+              title="Close and exit workstation"
+              className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-600 active:scale-95 border border-rose-500/50 hover:border-rose-400 text-rose-200 hover:text-white text-xs font-bold flex items-center space-x-1.5 transition-all shadow-md shadow-rose-950/40 cursor-pointer ml-1"
+            >
+              <X className="w-4 h-4 text-rose-300 stroke-[2.5]" />
+              <span className="tracking-wide">Close</span>
+            </button>
           </div>
         </div>
       </div>
