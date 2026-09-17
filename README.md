@@ -1,437 +1,369 @@
-# Brother Compliance SaaS & Forensic Intelligence Portal 👁️🛡️
+# Sentinel Proctor • Brother Compliance SaaS & Forensic Intelligence Portal 🛡️👁️
 
-An enterprise-grade, anti-cheat compliance and continuous surveillance system built with the **MERN Stack** (React 18 + Vite + Tailwind CSS + Node.js + Express + MongoDB).
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 18" />
+  <img src="https://img.shields.io/badge/Vite-5.x-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/MongoDB-Atlas_Cloud-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB Atlas" />
+  <img src="https://img.shields.io/badge/WebRTC-P2P_Live_CCTV-333333?style=for-the-badge&logo=webrtc&logoColor=white" alt="WebRTC" />
+  <img src="https://img.shields.io/badge/Google_Gemini-AI_Engine-8E75B2?style=for-the-badge&logo=google&logoColor=white" alt="Google Gemini" />
+  <img src="https://img.shields.io/badge/Render-Deployed_Live-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render" />
+</p>
 
-Designed for strict remote oversight, authentic skill attestation, and anti-bypass proctoring.
+An enterprise-grade, anti-cheat compliance and continuous surveillance system engineered with the **MERN Stack** (MongoDB Atlas + Express + React 18 + Node.js) paired with **WebRTC P2P Video Streaming** and **Google Gemini AI**.
 
----
-
-## 🌟 System Overview & Dual-Portal Architecture
-
-The application is strictly partitioned into two isolated portals:
-
-### 1. 🎯 Subject / Brother Enclave (`/`, `/subject`, `/exercise`)
-* **Zero Distractions & Zero Navigation**: All upper navbars, admin headers, buttons, and dashboard links are **100% removed**.
-* **Clean 3-Module Dashboard**:
-  1. **Module 1: Keyboard Practice**: Pure black writing terminal with active keystroke stopwatch, anti-idling pauses, and locked clipboard/drag-drop.
-  2. **Module 2: English Assessment Engine (`/exercise/english`)**: In-app Windows 11 Fluent Design x Duolingo gamified testing engine with zero-knowledge dealer, server-side grading, cadence speed telemetry (<0.8s detection), sound chimes, and celebration screens.
-  3. **Module 3: Writing Practice (Handwritten Notes)**: Camera capture upload with EXIF hardware sensor provenance and duplicate hashing.
-* **↺ Independent Clear & Reset**: Every module includes an active `[ ↺ CLEAR ]` button allowing him to wipe what he has typed or uploaded and start over cleanly.
-
-### 2. 🛡️ Admin Surveillance & Intelligence Enclave (`/admin`)
-* **Passcode Gate**: Protected by biometric/passcode authentication (`admin123`).
-* **📊 Executive Dashboard (`/admin`)**: High-level KPIs, live compliance health status, active strikes, and 1-click candidate link generator.
-* **📥 Dedicated Submissions Box (`/admin/submissions`)**: Ledger of completed tasks, 1-click copy for typed essays, full-screen zoom preview for homework photos, and 1-click task approval/revision requests.
-* **📁 Daily Submission Archive (`/admin/archive`)**: Permanent chronological ledger of all approved compliance sessions. Grouped by day with search & filters, full-text review, typing duration metrics, Duolingo OCR proofs, camera EXIF tags, and JSON report export.
-* **🛡️ Anti-Cheat Forensic Console (`/admin/anti-cheat`)**: Deep forensic telemetry, human keystroke cadence scoring, tab switch counts, clipboard paste interceptions, camera sensor tags, and cryptographic hash verification.
-* **🚨 Emergency Red Lockdown & Tsunami Siren**: Full-dashboard emergency crimson takeover triggered if cheating is detected, requiring physical disarming by the supervisor.
+Engineered for strict remote candidate oversight, continuous authentic skill attestation, and anti-bypass proctoring.
 
 ---
 
-## ⌨️ Module 1: Keyboard Practice & Active Stopwatch
+## 🌐 Live Production Deployment
 
-### 1. Freedom to Write (Zero Time Limits)
-* **No Arbitrary Countdowns**: 5-minute or 10-minute limits and early blocking modals have been eliminated. He is free to write as much or as long as he needs.
-* **Starts at 00:00**: The timer rests at `00:00` with the status `READY • TIMER STARTS WHEN YOU TYPE`.
-
-### 2. Strict Active Typing Stopwatch
-* **Starts on First Keystroke**: The stopwatch begins counting up only when he strikes a key in the terminal (`● RECORDING ACTIVE WRITING TIME`).
-* **Anti-Idling Pause**: If he stops typing for more than ~3.5 seconds, the stopwatch immediately pauses (`❚❚ PAUSED • START TYPING TO RESUME TIMER`). He cannot sit idly and accumulate time.
-* **Resumes Instantly**: Typing any letter resumes the timer right where it paused.
-* **Direct Finish**: Single-click `[ ✓ FINISH ]` button submits the attestation directly with no warning modals.
-
-### 3. Anti-Paste & Injection Lockdown
-* 🚫 **Clipboard Paste (`Ctrl+V` / right-click)**: Prohibited. Triggers instant interception toast and the Red Lockdown alarm.
-* 🚫 **Drag & Drop**: Binary text and file drops are completely rejected.
-* 🚫 **Context Menu**: Right-click inspection shortcuts are disabled.
-* 🚫 **Tab Switching**: Navigating away from the writing screen is logged as a strike and triggers the Red Lockdown alarm.
-
-### 4. Reset & Clear Button
-* Both on the module card and inside the fullscreen writing modal, a `[ ↺ CLEAR ]` button resets typed text, sets the timer back to `00:00`, resets stroke counts, and reverts task status to `PENDING`.
+| Service | Direct URL | Description |
+| :--- | :--- | :--- |
+| **🛡️ Admin Surveillance Gate** | [brother-compliance-saas.onrender.com](https://brother-compliance-saas.onrender.com/) | Master control room, live CCTV, archives & forensics *(Passcode: `admin123`)* |
+| **🎯 Candidate Workstation** | [brother-compliance-saas.onrender.com/test](https://brother-compliance-saas.onrender.com/test) | Dedicated, distraction-free candidate portal for daily tasks |
+| **📡 Health Check API** | [brother-compliance-saas.onrender.com/api/health](https://brother-compliance-saas.onrender.com/api/health) | Live backend and gatekeeper operational status |
 
 ---
 
-## 🦉 Module 2: Windows 11 x Duolingo Native Assessment Engine (`/exercise/english`)
+## 🌟 Architecture & Dual-Enclave Partitioning
 
-The application features a custom in-app testing engine that eliminates screenshot spoofing by forcing candidates to complete live assessments directly inside an authenticated environment.
+```mermaid
+flowchart TB
+    subgraph CandidateEnclave["🎯 Candidate Portal (/test, /candidate)"]
+        M1["Module 1: Keyboard Practice\n(Active Keystroke Stopwatch)"]
+        M2["Module 2: English & Coding\n(Win11 x Duolingo + Webcam HUD)"]
+        M3["Module 3: Writing Practice\n(Handwritten Camera EXIF Tray)"]
+        CloseBtn["Top 'Close' Button\n(Dual-layer window/session exit)"]
+    end
 
-### 1. Windows 11 Fluent x Duolingo Aesthetic
-* **Acrylic Blur Window**: Mimics a native Windows 11 Fluent application window with `backdrop-blur-2xl`, rounded acrylic borders, drop-shadows, and native window control icons (minimize, maximize, close).
-* **Duolingo Gamified Bar**: Thick, animated green progress bar with smooth transitions and question step counter (`Question 15 of 50`).
-* **Interactive 2x2 Answer Grid**: Four tactile response cards with keyboard shortcuts (`1`, `2`, `3`, `4` and `Enter`), hover scaling, and vivid active selection states (`border-sky-400 bg-sky-500/15`).
-* **Audio Feedback**: Dual synthesized audio chimes for correct (`660Hz -> 880Hz`) and incorrect answers (`300Hz -> 220Hz`).
-* **Celebration Victory Screen**: Dynamic confetti bursts, accuracy badge, XP counter (`+30 XP`), and review breakdown before submission.
+    subgraph BackendGateway["⚡ Express REST & Real-Time Gateway (Render)"]
+        Auth["JWT Authentication"]
+        Gatekeepers["Gatekeepers:\nAnti-Paste • EXIF Audit • SHA-256 Collision • Telemetry"]
+        WebRTC["WebRTC Signaling Hub\n(/api/quiz/webrtc/*)"]
+        SSE["SSE Video & Superchat Stream\n(/api/quiz/live-*)"]
+        GeminiService["Google Gemini AI Engine\n(50 Qs Dynamic Generator & Deduplication)"]
+    end
 
-### 2. Beginner English & Programming Staged Curriculum
-* **100% Beginner-Friendly & Easy to Read**: Plain English, short sentences, and practical concepts with zero obscure or difficult grammar jargon.
-* **Guaranteed Staged Progression Every Session**:
-  * **Questions 1 – 20 (Easy Beginner English & Computer Basics)**: Keyboard, mouse, screen, internet, files, folders, simple verbs, and everyday vocabulary.
-  * **Questions 21 – 50 (Beginner Programming & Tech Skills)**: Variables, functions, loops, bugs, debugging, HTML, CSS, JavaScript, terminals, Git, and clean coding practices.
-* **Multi-Tier Infinite AI Engine**: Dynamically synthesizes fresh, non-repeating questions via Gemini AI (Tier 1) or procedural combinatorial templates (Tier 3), automatically saving new questions into MongoDB.
-* **Zero-Knowledge Dealer Route (`GET /api/quiz/session`)**: Selects 50 staged questions and **strictly scrubs answer keys and explanations** before sending payloads to the browser.
-* **Inspect-Proof**: Inspecting browser memory or network payloads reveals no correct answers.
+    subgraph SupervisorEnclave["🛡️ Supervisor Command Center (/admin)"]
+        AdminAuth["Biometric / Passcode Gate (admin123)"]
+        CCTV["Live P2P WebRTC CCTV & SSE Stream"]
+        Superchat["Live Superchat Broadcast Deck\n(Fanfare chimes & push alerts)"]
+        Submissions["Submissions Ledger & 1-Click Archive"]
+        Archive["Daily Archive (3-in-1 Consolidated Capsules)"]
+        Alarm["Emergency Red Lockdown & Tsunami Siren"]
+    end
 
-### 3. Server-Side Grader & Speed Telemetry
-* **Grader Route (`POST /api/quiz/grade`)**: Answers are evaluated entirely on the server against true database records.
-* **Speed Anomaly Detection**: Responses completed in `< 0.8 seconds` are flagged as rapid guesswork / automated scripting anomalies (`Rapid response anomaly (0.35s). Possible automated script or blind guesswork.`).
-* **Integrity Scoring**: Cadence violations drop the cadence integrity score (e.g. from 100% to 65%), alerting the supervisor.
-* **Tab-Switch Auditing**: Focus loss events during the assessment are logged and penalize the session.
+    subgraph CloudStorage["☁️ Cloud Database"]
+        Atlas[("MongoDB Atlas Cloud\n(Questions, Submissions, Archives)")]
+    end
 
-### 4. Real-Time Candidate Webcam Video Surveillance & Proctoring 📹👁️
-* **Live Picture-in-Picture Video HUD**: Real-time mirrored webcam surveillance stream rendered directly inside the Windows 11 Fluent assessment engine (`<video autoPlay playsInline muted />`).
-* **Biometric Reticle & Surveillance Watermark**: Displays cyan HUD corner reticles, live pulsing red recording beacon (`🔴 LIVE SURVEILLANCE`), detected camera device name, and real-time clock.
-* **Minimizable / Floating HUD**: Can be minimized to a floating pill (`🔴 LIVE PROCTOR (N)`) or expanded into full surveillance view without obstructing questions.
-* **Automatic Event-Driven Watermarked Snapshots**:
-  * 📸 `BASELINE_ASSESSMENT_START`: Warm-up baseline capture taken immediately after camera initialization.
-  * 📸 `PERIODIC_CHECK`: Automatic high-resolution proctor captures taken every 35 seconds throughout the assessment.
-  * 📸 `FOCUS_LOSS_TAB_SWITCH`: Triggered instantly the moment the candidate switches tabs or navigates away.
-  * 📸 `MANUAL_AUDIT_PROBE`: Clickable camera trigger for manual frame capture.
-* **Hard Biometric Watermarking**: Every snapshot is stamped on an off-screen canvas with a high-contrast cyber watermark (`PROCTOR REC: [time] | Q[number] | [trigger]`).
-* **Clean Hardware Release**: Camera tracks (`MediaStreamTrack.stop()`) are cleanly released from the hardware camera sensor upon test completion or modal exit.
-* **Supervisor Real-Time Video CCTV Monitor**:
-  * **Live Stream on Admin Dashboard (`/admin`)**: A dedicated surveillance CCTV monitor embeds directly on the Admin Dashboard, streaming the candidate's webcam video in real time (~1.2 FPS) while he is taking Module 2.
-  * **Dual-Channel Zero Latency**: Powered by dual Server-Sent Events (SSE: `GET /api/quiz/live-stream`) for remote/cross-network monitoring and `BroadcastChannel` (0ms delay) for local tabs.
-  * **Submissions Box (`/admin/submissions`)**: Displays the full gallery of captured candidate snapshots with click-to-zoom modals.
-  * **Anti-Cheat Console (`/admin/anti-cheat`)**: Audit trail matching captured frames with tab-blur incidents, plus active live CCTV stream.
-  * **Daily Archive (`/admin/archive`)**: Permanent biometric surveillance record archived alongside the exam score and XP.
-
-### 5. Comprehensive Supervisor Integration
-* **Submissions Box (`/admin/submissions`)**: Displays score pills (`42 / 50`), accuracy (`84%`), XP (`+30 XP`), avg speed per question, real-time webcam proctoring dossier with full-resolution zoom, and an expandable question-by-question breakdown table with candidate answers, server answer keys, and grammar explanations.
-* **Anti-Cheat Console (`/admin/anti-cheat`)**: Dedicated **Assessment Cadence Telemetry Inspector** and **Webcam Proctor Surveillance Dossier** auditing rapid responses, question timings, and focus loss.
-* **Daily Archive (`/admin/archive`)**: Single daily capsule cards display the assessment score, XP, and archived proctor frames, with full archived question breakdown in the expanded view.
-* **Direct Access**: Launchable via `[ 🚀 LAUNCH ASSESSMENT (WIN11) ]` on the Module 2 card or directly at `/exercise/english`.
-* **Legacy Fallback**: Backwards-compatible with historical screenshot OCR submissions.
-
-### 6. Interactive Live Streamer Alert / Superchat Broadcast 👑📢
-* **Live Broadcast Control Deck (Supervisor CCTV)**: An interactive Twitch/YouTube live stream broadcast console integrated directly into the Admin CCTV Surveillance Deck (`LiveProctorCCTV.jsx`).
-* **Instant 1-Click Preset Alert Chips**:
-  * 👀 *"I can see you!"*
-  * ⚡ *"Stay focused!"*
-  * 👏 *"Good job, keep it up!"*
-  * 📱 *"Put the phone away!"*
-  * 🛑 *"Don't look away from screen!"*
-  * 😂 *"Nice face, stay locked in!"*
-* **Custom Live Superchat Input**: Type any custom supervisor message with real-time dispatch and transmission feedback badge.
-* **Streamer Pop-In Alert Banner on Candidate Screen**:
-  * Appears instantaneously on candidate's English Assessment screen with smooth slide-and-pop physics (`animate-stream-alert`).
-  * Styled like a high-tier Twitch / YouTube live stream donation alert with glowing gold/rose gradient border, glowing crown avatar, pulsating broadcast badge, and automatic 7.5s progress bar countdown.
-  * 1-click dismiss button allows the candidate to acknowledge and dismiss the banner at any time.
-* **Webcam Feed Speech Bubble Overlay**: An animated speech bubble is anchored directly over the candidate's live proctor webcam HUD pointing to his camera feed (`"💬 PROCTOR NOTICE: [text]"`).
-* **Synthesized Streamer Fanfare Chime**: Uses the Web Audio API to synthesize an instant 4-tone ascending fanfare (`F5 -> A5 -> C6 -> F6`) requiring zero external audio assets.
-* **Dual-Channel High-Availability Delivery**:
-  * **BroadcastChannel (`forensic_sync_channel`)**: 0ms instant transmission for supervisor and candidate tabs running on the same machine.
-  * **Server-Sent Events (SSE: `POST /api/quiz/live-message` ➔ `GET /api/quiz/live-stream`)**: Fanned out across local networks or remote physical devices.
+    CandidateEnclave <-->|REST API + Telemetry| BackendGateway
+    CandidateEnclave <-->|P2P WebRTC HD Video Stream| SupervisorEnclave
+    SupervisorEnclave <-->|REST API + SSE Superchat| BackendGateway
+    BackendGateway <--> CloudStorage
+    BackendGateway <-->|Generative AI API| GeminiService
+```
 
 ---
 
-## ✍️ Module 3: Writing Practice (Hardware EXIF Provenance)
+## 🎯 The Candidate Enclave (`/test`, `/candidate`, `/brother`)
 
-* **Camera Hardware EXIF Extraction**: Audits physical camera metadata:
-  * 📱 **Device Model**: Validates phone camera hardware (e.g., `Apple iPhone 15 Pro Max` or `Samsung Galaxy S24 Ultra Sensor Verified`).
-  * 🕒 **DateTimeOriginal Timestamp Delta**: Verifies that the photo was taken **today during the active session**, preventing the use of older photos.
-  * 📷 **Lens & Focal Length**: Reads hardware optic specifications.
-  * 🛡️ **Firmware & Tampering Audit**: Confirms image was produced directly by `Camera Firmware RAW` without digital manipulation tools (Photoshop, Canva, web compressors).
-* **Hash Collision Check**: MD5 & SHA-256 fingerprinting prevents re-uploading duplicate pages.
-* **Action Row & Reset**: High-res photo upload dropzone, sample handwriting loader, and `[ ↺ CLEAR ]` button.
+* **Zero Distraction Isolation**: All supervisor headers, admin links, dispatch buttons, and theme toggles are **100% removed** for the candidate.
+* **Top "Close" Button**: A prominent, rose-tinted `[ ✕ Close ]` button is pinned to the header command bar.
+  * **Dual-Layer Close Mechanism**: Executes programmatic script closure (`window.close()`). If the browser security model blocks direct window closure (e.g. tab was opened manually), it immediately unmounts the workspace and presents a clean **Workstation Session Closed** screen with one-click fallback exit (`about:blank`).
+* **Permanent Cyber Dark Aesthetics**: Military-grade obsidian backdrop (`#080c14`) with glassmorphic cards, luminous cyan accents, and high-contrast monospace typography.
+* **3 Mandatory Disciplines**: Complete and verify all three daily modules before midnight.
 
 ---
 
-## 🚨 Emergency Red Lockdown & Tsunami Siren System
+## 📋 The 3 Mandatory Daily Disciplines
 
-### 1. The Red Alarm Concept
-If the subject attempts any prohibited anti-cheat action (pasting, tab switching, injection), the Admin Dashboard transforms into an emergency **Full Red Crimson Theme** (`#150205`).
-
-### 2. Authentic Tsunami Civil Defense Siren
-* Features a synthesized **10:12 dual-port rotary motor acoustic chord**.
-* 2.4-second motor spool-up, undulating wail cycles, resonant outdoor horn filtering, and smooth rotational spindown on disarm.
-* Integrated audio mute toggle (`🔇 Mute Audio`) for quiet environments.
-
-### 3. Physical Disarm Requirement
-* The alarm **cannot be bypassed by refreshing the page**; state is persisted in `localStorage`.
-* The supervisor must physically click **`[ 🛑 PHYSICALLY DISARM ALARM ]`** to silence the siren and restore the standard interface.
-
-### 4. Active Strike Management
-* Infractions increment violation strikes.
-* **Clear Strikes Button (`[ Clear Strikes ]`)**: Available on the Dashboard, Submissions Box, and Anti-Cheat pages to reset strikes back to 0.
-
-### 5. Real-Time Cross-Tab Synchronization
-* Powered by `BroadcastChannel('forensic_sync_channel')`: breaches, task submissions, clears, and disarms synchronize across all browser tabs instantly with zero page reloads.
+### ⌨️ Module 1: Keyboard Practice & Active Stopwatch
+* **Zero Arbitrary Time Limits**: No countdown timers or sudden cut-offs. The candidate has the freedom to type as much or as long as necessary.
+* **Starts at `00:00`**: The stopwatch begins counting up only on the first physical keystroke (`● RECORDING ACTIVE WRITING TIME`).
+* **Strict Anti-Idling Grace Detector**: If the candidate stops typing for more than **3.5 seconds**, the stopwatch instantly pauses (`❚❚ PAUSED`). Idle minutes cannot be accumulated.
+* **Anti-Paste & Injection Shield**:
+  * 🚫 `Ctrl+V` and right-click paste events are intercepted and rejected.
+  * 🚫 Drag-and-drop text/file insertion is prohibited.
+  * 🚫 Tab switches and window blur trigger an immediate security strike and sound the Red Lockdown Alarm on the supervisor's console.
+* **Dynamic Telemetry HUD**: Displays real-time words typed, active duration, and live calculated Words Per Minute (WPM).
+* **Reset & Clear**: Includes a `[ ↺ CLEAR ]` button to wipe the buffer and restart cleanly.
 
 ---
 
-## 🎨 Aesthetic Light Theme & Theme Switcher ("Nordic Slate / Minimal Mist")
+### 🦉 Module 2: Windows 11 Fluent x Duolingo English & Coding Engine
+A custom in-app examination environment powered by **Google Gemini AI** and native **WebRTC Video CCTV Surveillance**:
 
-### 1. Aesthetic, Eye-Friendly Palette (Not Blinding Hospital White)
-* **Warm Slate Mist Base (`#f6f8fb`)**: Avoids stark, eye-straining `#ffffff` glare by using a warm, calming slate/zinc off-white tone.
-* **Tactile Dot-Matrix Grid**: Renders an engineering blueprint dot matrix (`radial-gradient(rgba(100, 116, 139, 0.16) 1.25px)`) for depth and sophistication.
-* **Elevated Surfaces**: Pure white cards (`#ffffff`) with subtle slate borders (`#e2e8f0`) and soft diffused elevation shadows.
-* **High-Contrast Deep Ink Typography**: Deep slate `#0f172a` for headings and `#334155` for body text for effortless legibility.
-* **Jewel Accent Pills**: Polished cyan, amber, emerald, teal, and rose badges that stand out cleanly.
+1. **100% Dynamic Gemini AI Question Engine**:
+   * **Zero Static Files**: Legacy static question banks were purged. Every question is dynamically synthesized via the Google Gemini API (`gemini-2.5-flash` / `gemini-1.5-flash`).
+   * **Staged 50-Question Curriculum**:
+     * **Questions 1 – 25**: Everyday beginner English, workplace vocabulary, and practical grammar.
+     * **Questions 26 – 50**: Beginner computer science, HTML/CSS/JavaScript, loops, variables, functions, and debugging.
+   * **Zero Duplicates Between Consecutive Tests**: A FIFO sliding-window cache (`recentlyServedTexts` up to 500 questions) guarantees that consecutive test sessions never repeat any previously encountered questions.
+   * **Zero-Knowledge Dealer (`GET /api/quiz/session`)**: Answer keys, correct option indexes, and explanations are strictly scrubbed server-side before delivering the payload to the browser. Inspecting network payloads reveals zero answers.
 
-### 2. Universal Theme Switcher
-* **Admin Header (`CyberHeader`)**: Click the **`[ ☀️ Light / 🌙 Dark ]`** toggle next to "Share Brother Link" to switch themes instantly.
-* **Brother Portal (`SubjectHub`)**: Brother can toggle themes directly from the header counter bar on his screen.
-* **Synced Everywhere**: Persisted in `localStorage` (`forensic_theme`) and broadcast across tabs.
+2. **Server-Side Grader & Speed Anomaly Telemetry (`POST /api/quiz/grade`)**:
+   * Answers are validated entirely on the backend against server database records.
+   * **Bot Speed Detection**: Answers submitted in `< 0.8 seconds` are flagged as rapid guesswork or automated script anomalies, penalizing the cadence integrity score.
 
-### 3. Module 1 Dual-Canvas Freedom
-* In the Fullscreen Writing Terminal, Brother can click **`[ 📄 Paper Canvas / 🌙 Dark Canvas ]`** on the fly:
-  * **Paper Canvas**: Warm stationery ivory surface (`#faf9f5`) with dark graphite text for clean daytime typing.
-  * **Dark Canvas**: Deep OLED black canvas (`#000000`) for nighttime focus.
+3. **Real-Time WebRTC CCTV & Biometric Webcam HUD 📹**:
+   * **Candidate Picture-in-Picture**: Live webcam stream embedded inside the quiz interface with cyan HUD reticles, recording beacon (`🔴 LIVE SURVEILLANCE`), and hardware device detection.
+   * **Peer-to-Peer WebRTC**: Full 30 FPS ultra-low latency direct video stream to the supervisor's CCTV deck via STUN traversal (`stun.l.google.com:19302`) with ICE candidate serialization.
+   * **SSE Fallback**: Server-Sent Events stream snapshots (~1.2 FPS) if WebRTC UDP traffic is firewalled.
+   * **Event-Triggered Proctor Snapshots**: Automatic captures taken at assessment start, every 35 seconds, and instantly upon any tab-blur event with cybernetic timestamp watermarks.
 
-### 4. Strict Red Lockdown Immunity
-* Even when operating in Aesthetic Light mode, an anti-cheat breach **immediately overrides the UI with the full Crimson Red Lockdown** (`#150205`) and the sounding tsunami siren. Anti-cheat severity is never compromised by theme selection.
+4. **Live Streamer Alert / Superchat Broadcast Deck 👑📢**:
+   * The supervisor can push live notices directly onto the candidate's active quiz screen (e.g., *"I can see you!"*, *"Stay focused!"*, or custom text).
+   * Renders a glowing Twitch/YouTube style donation banner with an ascending 4-tone Web Audio synthesized fanfare chime (`F5 -> A5 -> C6 -> F6`).
 
 ---
 
-## 📁 Daily Submission Archive (`/admin/archive`)
+### ✍️ Module 3: Writing Practice & Hardware EXIF Provenance
+* **Daily 10-Point Deterministic Topic**: Serves a structured daily writing prompt covering diverse real-world subjects.
+* **100% Real Pen & Paper Enforcement**: Sample cheat loaders are completely removed. Candidates must upload actual photos of physical handwritten pages.
+* **Multi-Photo Page Tray**: Supports up to 5 individual handwritten pages per submission with page badges (`PAGE 1`, `PAGE 2`), delete controls, and click-to-zoom modal lightboxes.
+* **Hardware Sensor EXIF Extraction**:
+  * 📱 **Device Model**: Validates phone camera hardware (e.g., Apple iPhone, Samsung Galaxy).
+  * 🕒 **DateTimeOriginal Delta**: Confirms the photo was captured **today during the active session** rather than recycled from past work.
+  * 🛡️ **Tampering Audit**: Checks for uncompressed camera firmware origins to block Photoshop, Canva, or digital generator artifacts.
+* **Cryptographic Hash Collision Detection**: Evaluates MD5 and SHA-256 hashes against past submissions to reject duplicate file re-uploads.
 
-### 1. Automatic Archiving Upon Task Approval
-* When you review your brother's submission in the Submissions Box (`/admin/submissions`) and click **"Approve & Archive"**:
-  - The task status becomes `VERIFIED`.
-  - A permanent, immutable snapshot is automatically recorded into the **Daily Submission Archive**.
-  - Includes full text, active writing stopwatch duration, typing speed (WPM), total keystrokes, Duolingo screenshot with OCR streak, handwritten homework photo with EXIF camera tags, and your auditor evaluation notes.
+---
 
-### 2. Consolidated Daily Capsule Card (3-in-1 Container)
-* **Single Container Per Day**: Instead of scattering 3 large independent cards taking up thousands of pixels, all 3 modules for each date are cleanly consolidated into **ONE unified daily card/capsule**.
-* **Quick-Glance Summary Strip**: Even when collapsed, the card displays a compact 3-column glance showing Module 1 typing WPM & word count, Module 2 Duolingo streak & XP, and Module 3 writing camera model & timestamp.
-* **Date-Mentioned View Button**: Each daily card features a prominent action button that **explicitly mentions that day's date**:
-  - `[ 📅 View Thursday, Sep 10 Submissions (3 Modules) ▾ ]`
-  - `[ 📅 Hide Thursday, Sep 10 Submissions ▴ ]`
-* **1-Click Expansion**: Clicking the date-stamped button smoothly reveals all 3 verified modules inside that single card (complete with typed text, copy button, Duolingo screenshot lightbox, handwriting camera EXIF metadata, and auditor evaluation notes).
-* **Expand All / Collapse All**: Includes a toolbar toggle to expand or collapse all recorded days with 1 click.
+## 🛡️ Supervisor Enclaves (`/admin`)
 
-### 3. 1-Click Date Buttons ("Find By Date" Toolbar)
-* **Dedicated Date Buttons**: Every date recorded in the archive receives an individual filter button (e.g. `[ 📅 Today • 3/3 DONE ✓ ]`, `[ 📅 Sep 09 • 3/3 DONE ✓ ]`).
-* **Instant 3-Module Identification**: Any date where your brother completed all 3 disciplines (Keyboard, Duolingo, Writing) is immediately badged with a vibrant **`3/3 DONE ✓`** pill.
-* **1-Click Focus & Auto-Expansion**: Clicking any date button instantly isolates and auto-expands that day's complete records.
+* **Protected Gate**: Secured by a passcode gate (`admin123`) with persistent session tokens.
+* **📊 Executive Dashboard (`/admin`)**: Real-time compliance health, active strikes, 1-click candidate link generator, and live embedded CCTV monitor.
+* **📥 Dedicated Submissions Box (`/admin/submissions`)**:
+  * Complete ledger of submitted tasks awaiting review.
+  * 1-click copy for typed essays.
+  * Full-resolution zoom lightbox for handwritten homework photos.
+  * Webcam surveillance gallery displaying all watermarked captures.
+  * Question-by-question quiz answer review with accuracy metrics and grammar explanations.
+  * 1-Click **"Approve & Archive"** and **"Reset for Tomorrow"** actions.
+* **📁 Daily Submission Archive (`/admin/archive`)**:
+  * **3-in-1 Consolidated Daily Capsule Cards**: Consolidates all 3 modules of each date into a single clean card.
+  * **1-Click Date Filters**: Dedicated toolbar buttons badged with `[ 📅 Today • 3/3 DONE ✓ ]`.
+  * **JSON Export**: 1-click download of the complete compliance archive (`brother_compliance_archive_YYYY-MM-DD.json`).
+* **🛡️ Anti-Cheat Forensic Console (`/admin/anti-cheat`)**: Deep forensics inspecting keystroke intervals, focus loss history, paste interception logs, and camera sensor fingerprints.
+* **🚨 Emergency Red Lockdown & Tsunami Siren**:
+  * An intentional security breach transforms the supervisor interface into full **Crimson Alert** (`#150205`).
+  * Triggers an authentic synthesized **10:12 dual-port rotary motor acoustic siren chord** via the Web Audio API.
+  * State persists across refreshes and requires physical supervisor intervention: **`[ 🛑 PHYSICALLY DISARM ALARM ]`**.
 
-### 4. Today's 3-Module Complete Dossier Button
-* **Automated Recognition**: As soon as all 3 modules are approved for today, a prominent **Hero Completion Banner** appears at the top of the archive.
-* **1-Click Find**: Click **`[ 📅 View Today's 3 Modules (Find Easily) → ]`** to jump straight to today's 3 completed disciplines without searching.
-* **Submissions Box Shortcut**: When all 3 tasks are verified in the Submissions Box, an instant shortcut banner appears with **`[ View Today in Archive (3/3 Modules) → ]`**.
+---
 
-### 5. Reset Slot for Tomorrow
-* On the approved task card in the Submissions Box, click **"Reset for Tomorrow"**:
-  - Clears the active daily slot back to `PENDING` so your brother can submit the next day's practice.
-  - The previous approved session remains 100% safe and permanently preserved in the **Archive**.
+## 📡 Complete REST API Endpoint Inventory
 
-### 6. 1-Click Export JSON Report
-* Click **"Export JSON"** on the archive page to download a timestamped backup report file (`brother_compliance_archive_YYYY-MM-DD.json`).
+| # | Method | Endpoint | Pipeline / Access | Description | Status |
+|---|---|---|---|---|---|
+| **Core & Auth** | | | | | |
+| 1 | `GET` | `/api/health` | Public | Operational health check & gatekeeper statuses | ✅ 200 OK |
+| 2 | `GET` | `/api/network-info` | Public | LAN IP & cloud discovery URLs for multi-device testing | ✅ 200 OK |
+| 3 | `POST` | `/api/auth/login` | Public | Supervisor / Candidate authentication & JWT grant | ✅ 200 OK |
+| 4 | `POST` | `/api/auth/register` | Public | Registers user profile, hashes password, returns JWT | ✅ 201 Created |
+| 5 | `GET` | `/api/auth/me` | Bearer JWT | Decrypts token claims and returns authenticated profile | ✅ 200 OK |
+| **Tasks & Disciplines** | | | | | |
+| 6 | `GET` | `/api/tasks` | Public | Retrieves active compliance task definitions | ✅ 200 OK |
+| 7 | `GET` | `/api/tasks/:id` | Public | Retrieves single compliance task definition | ✅ 200 OK |
+| 8 | `POST` | `/api/tasks` | Public | Creates custom compliance tasks dynamically | ✅ 201 Created |
+| 9 | `GET` | `/api/tasks/daily-writing-topic` | Public | Returns deterministic 10-point daily handwriting topic | ✅ 200 OK |
+| **Quiz & AI Engine** | | | | | |
+| 10 | `GET` | `/api/quiz/settings` | Public | Fetches question count limit (default: 50) | ✅ 200 OK |
+| 11 | `POST` | `/api/quiz/settings` | Public | Updates question count limit | ✅ 200 OK |
+| 12 | `GET` | `/api/quiz/session` | Zero-Knowledge | Deals 50 dynamic Gemini AI questions with scrubbed answers | ✅ 200 OK |
+| 13 | `POST` | `/api/quiz/grade` | Speed Telemetry | Evaluates answers, audits <0.8s bot speeds (Passmark: 35) | ✅ 200 OK |
+| 14 | `GET` | `/api/quiz/stats` | Public | Question bank metrics, DB status, and AI engine status | ✅ 200 OK |
+| 15 | `POST` | `/api/quiz/generate` | Public | On-demand batch generation of AI questions | ✅ 200 OK |
+| **Surveillance & WebRTC** | | | | | |
+| 16 | `POST` | `/api/quiz/live-frame` | Public | Candidate broadcasts snapshot frame (1-2 FPS fallback) | ✅ 200 OK |
+| 17 | `GET` | `/api/quiz/live-stream` | SSE Stream | Supervisor Server-Sent Events live video feed | ✅ 200 OK |
+| 18 | `GET` | `/api/quiz/live-frame` | Public | Polling fallback for active stream status | ✅ 200 OK |
+| 19 | `POST` | `/api/quiz/live-stream-end` | Public | Clean termination of live webcam stream | ✅ 200 OK |
+| 20 | `POST` | `/api/quiz/live-message` | Public | Supervisor broadcasts live superchat notice to candidate | ✅ 200 OK |
+| 21 | `POST` | `/api/quiz/webrtc/offer` | WebRTC | Candidate posts SDP offer for P2P video call | ✅ 200 OK |
+| 22 | `POST` | `/api/quiz/webrtc/answer` | WebRTC | Supervisor posts SDP answer to complete handshake | ✅ 200 OK |
+| 23 | `POST` | `/api/quiz/webrtc/ice` | WebRTC | Exchanges ICE candidates for UDP NAT traversal | ✅ 200 OK |
+| 24 | `GET` | `/api/quiz/webrtc/status` | WebRTC | Checks WebRTC signaling connection state | ✅ 200 OK |
+| 25 | `POST` | `/api/quiz/webrtc/reset` | WebRTC | Resets / disconnects WebRTC session | ✅ 200 OK |
+| 26 | `POST` | `/api/quiz/webrtc/request`| WebRTC | Supervisor requests fresh WebRTC call from candidate | ✅ 200 OK |
+| **Submissions & Forensics** | | | | | |
+| 27 | `POST` | `/api/submissions/submit` | Multer, Hash, EXIF | Submits task payload with cryptographic hash & EXIF checks | ✅ 201 Created |
+| 28 | `POST` | `/api/tasks/submit` | Multer, Hash, EXIF | Unified submission route for task pipelines | ✅ 201 Created |
+| 29 | `GET` | `/api/submissions` | Public | Retrieves all submission records and audit logs | ✅ 200 OK |
+| 30 | `GET` | `/api/submissions/:id` | Public | Retrieves detailed single submission audit log | ✅ 200 OK |
+| 31 | `GET` | `/api/reports/:sessionId` | Digital Forensics | Generates structured forensic compliance audit report | ✅ 200 OK / 404 |
+
+---
+
+## 🔒 Security & Anti-Cheat Summary
+
+| Protection Layer | Enforcement Mechanism | Action on Violation |
+| :--- | :--- | :--- |
+| **External Clipboard** | Event interceptor on `paste` and `drop` | Input blocked + Red Lockdown Alarm |
+| **Focus Loss & Tab Switching** | `visibilitychange` & `window.onblur` surveillance | Strike logged + snapshot taken + Red Lockdown Alarm |
+| **Idle Time Exploitation** | 3.5s keystroke grace cadence detector | Stopwatch automatically pauses |
+| **Recycled Photo Submissions** | SHA-256 / MD5 cryptographic collision checks | Blocked upon submission attempt |
+| **Fake Handwritten Work** | Hardware EXIF tags & capture timestamp delta | Flagged if edited, non-camera, or not taken today |
+| **Bot Speed Exploitation** | Per-question response timing detector (<0.8s) | Flagged as cadence anomaly, integrity score drops |
+| **Inspect Element Cheat** | Zero-knowledge question dealer scrubbing | Answers are physically absent from frontend memory |
+| **Alarm Dismissal** | Hardened `localStorage` state retention | Requires physical disarm on supervisor dashboard |
+
+---
+
+## 🚀 Running Locally
+
+### Prerequisites
+* **Node.js**: v18.0.0 or higher
+* **MongoDB**: MongoDB Atlas connection string (or local MongoDB on port 27017)
+* **Google Gemini API Key**: *(Optional but recommended for infinite AI questions)* — get one free at [aistudio.google.com](https://aistudio.google.com/)
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Maheshwarandev/sentinel-proctor.git
+cd sentinel-proctor
+```
+
+### 2. Configure Backend Environment
+Create `backend/.env`:
+```env
+PORT=5001
+NODE_ENV=development
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.t9zyrqz.mongodb.net/brother_compliance?retryWrites=true&w=majority
+JWT_SECRET=super_secret_jwt_key_2026
+CLIENT_URL=http://localhost:5173
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+### 3. Install Dependencies & Start
+
+**Option A: Root Helper Scripts**
+```bash
+# Install both backend and frontend dependencies
+npm run install:all
+
+# Run backend (port 5001) in terminal 1:
+npm run dev:backend
+
+# Run frontend (port 5173) in terminal 2:
+npm run dev:frontend
+```
+
+**Option B: Independent Terminals**
+```bash
+# Terminal 1 - Backend:
+cd backend
+npm install
+npm run dev
+
+# Terminal 2 - Frontend:
+cd frontend
+npm install
+npm run dev
+```
+
+* **Candidate Portal**: `http://localhost:5173/test`
+* **Supervisor Enclave**: `http://localhost:5173/` *(Passcode: `admin123`)*
+* **Backend Health**: `http://localhost:5001/api/health`
+
+---
+
+## ☁️ Cloud Deployment (Render Unified Full-Stack)
+
+This repository is configured for unified full-stack hosting on **Render** (single Web Service):
+
+1. **Create Web Service** on [Render](https://render.com).
+2. Connect your GitHub repository `Maheshwarandev/sentinel-proctor`.
+3. Configure settings:
+   * **Environment**: `Node`
+   * **Root Directory**: *(leave blank to use root)*
+   * **Build Command**: `npm run build` *(installs frontend + backend and compiles Vite)*
+   * **Start Command**: `npm start` *(launches `backend/src/server.js` which serves both API and static frontend)*
+4. **Environment Variables**:
+   * `NODE_ENV`: `production`
+   * `PORT`: `10000` (or Render default)
+   * `MONGO_URI`: Your MongoDB Atlas URI
+   * `JWT_SECRET`: A secure random secret
+   * `GEMINI_API_KEY`: Your Google Gemini API key
+5. **DNS Fix Built-In**: The backend database adapter automatically sets public Google/Cloudflare DNS resolvers (`dns.setServers(['8.8.8.8', '1.1.1.1'])`) to prevent SRV lookup timeouts on Render.
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-rbc/
-├── frontend/                          # Vite + React 18 Single Page App
+sentinel-proctor/
+├── frontend/                          # Vite + React 18 Single Page Application
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── AdminGate.jsx          # Passcode gate for admin enclave
-│   │   │   ├── AdminIntelligenceBoard.jsx # Main executive supervisor board
-│   │   │   ├── AdminFinishedTasks.jsx # Submissions review list with zoom & approve
-│   │   │   ├── DailyArchivePage.jsx   # Daily Submission Archive ledger
-│   │   │   ├── AntiCheatPage.jsx      # Forensic telemetry & hardware sensor audit
-│   │   │   ├── SubjectHub.jsx         # Brother's portal (Modules 1, 2, 3 + writing screen)
-│   │   │   ├── RedLockdownBanner.jsx  # Red alarm banner & physical disarm switch
-│   │   │   ├── CyberHeader.jsx        # Admin top navigation bar
-│   │   │   ├── CyberNotificationPopup.jsx # Floating live submission alerts
+│   │   │   ├── AdminGate.jsx          # Passcode protection gate for supervisor enclave
+│   │   │   ├── AdminIntelligenceBoard.jsx # Executive surveillance board & KPI telemetry
+│   │   │   ├── AdminFinishedTasks.jsx # Submissions review list with zoom & approval actions
+│   │   │   ├── DailyArchivePage.jsx   # 3-in-1 consolidated daily submission archive
+│   │   │   ├── AntiCheatPage.jsx      # Deep forensic telemetry & camera sensor inspector
+│   │   │   ├── SubjectHub.jsx         # Candidate portal (Modules 1, 2, 3 + Close button)
+│   │   │   ├── EnglishQuizModal.jsx   # Win11 x Duolingo engine + webcam HUD + superchat
+│   │   │   ├── LiveProctorCCTV.jsx    # Supervisor WebRTC P2P CCTV deck & superchat broadcast
+│   │   │   ├── RedLockdownBanner.jsx  # Emergency red alarm banner & physical disarm switch
+│   │   │   ├── CyberHeader.jsx        # Supervisor top navigation bar
+│   │   │   ├── CyberNotificationPopup.jsx # Floating real-time submission alerts
 │   │   │   ├── SubmissionsBoxPage.jsx # Dedicated submissions review center
-│   │   │   ├── ComplianceWorkspace.jsx# Direct workspace terminal
-│   │   │   └── Modal.jsx              # Reusable modal container
+│   │   │   └── ErrorBoundary.jsx      # Global React error boundary
 │   │   ├── context/
-│   │   │   └── ForensicContext.jsx    # Central state, audio synth, broadcast sync & storage
-│   │   ├── hooks/                     # useTelemetry, useTypingTracker
-│   │   ├── utils/                     # api client, formatters
-│   │   ├── App.jsx                    # Route partitioning & lockdown styling
-│   │   └── main.jsx                   # React root entry
-│   ├── vercel.json                    # SPA rewrite configuration for Vercel deployment
+│   │   │   └── ForensicContext.jsx    # Central state, audio synth, WebRTC & tab sync
+│   │   ├── data/
+│   │   │   └── writingTopics.js       # Curated 10-point daily writing topics
+│   │   ├── assets/
+│   │   │   └── index.css              # Cyber Dark Tailwind styles & animations
+│   │   ├── App.jsx                    # Route isolation (/test vs /admin)
+│   │   └── main.jsx                   # React DOM entry point
 │   ├── vite.config.js                 # Vite build & proxy settings
-│   ├── tailwind.config.js             # Cybernetic dark/red theme configuration
 │   └── package.json
 │
-├── backend/                           # Node.js + Express REST API
+├── backend/                           # Node.js + Express REST API & WebRTC Signaling
 │   ├── src/
-│   │   ├── config/                    # db.js (MongoDB Mongoose), env.js
-│   │   ├── controllers/               # taskController, submissionController, authController
-│   │   ├── middlewares/               # verifyEXIF, checkDuplicateHash, auth
-│   │   ├── models/                    # Task, Submission, User schemas
-│   │   ├── routes/                    # taskRoutes, submissionRoutes, reportRoutes, authRoutes
-│   │   ├── services/                  # hashService, ocrService, complianceScorer
-│   │   └── server.js                  # Express application bootstrap & logger
+│   │   ├── config/
+│   │   │   ├── db.js                  # MongoDB Atlas connection + SRV DNS fix
+│   │   │   └── env.js                 # Environment variable schema
+│   │   ├── controllers/
+│   │   │   ├── authController.js      # Supervisor & candidate authentication
+│   │   │   ├── quizController.js      # Quiz dealer, grader, CCTV streaming & WebRTC signaling
+│   │   │   ├── submissionController.js# Ingestion, EXIF audit & duplicate hash check
+│   │   │   └── taskController.js      # Task bank management & daily writing topics
+│   │   ├── middlewares/
+│   │   │   ├── auth.js                # JWT token validation middleware
+│   │   │   ├── checkDuplicateHash.js  # MD5 / SHA-256 fingerprint collision detector
+│   │   │   └── verifyEXIF.js          # Physical camera hardware metadata validator
+│   │   ├── models/
+│   │   │   ├── Question.js            # MongoDB schema for assessment questions
+│   │   │   ├── Submission.js          # MongoDB schema for verified submissions
+│   │   │   ├── Task.js                # MongoDB schema for compliance disciplines
+│   │   │   └── User.js                # MongoDB schema for users & credentials
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js          # /api/auth endpoints
+│   │   │   ├── quizRoutes.js          # /api/quiz endpoints (AI, CCTV, WebRTC)
+│   │   │   ├── reportRoutes.js        # /api/reports forensic audit endpoints
+│   │   │   ├── submissionRoutes.js    # /api/submissions ingestion endpoints
+│   │   │   ├── syncRoutes.js          # Cross-device synchronization endpoints
+│   │   │   └── taskRoutes.js          # /api/tasks discipline endpoints
+│   │   ├── services/
+│   │   │   ├── aiQuestionService.js   # 100% Google Gemini AI dynamic question engine
+│   │   │   ├── complianceScorer.js    # Speed cadence & integrity scoring engine
+│   │   │   ├── hashService.js         # File fingerprinting & collision verification
+│   │   │   └── ocrService.js          # Optical character recognition verification
+│   │   └── server.js                  # Express bootstrap, WebRTC signaling & static SPA server
 │   └── package.json
 │
-├── .gitignore                         # Excludes node_modules, build dist, and secrets
-└── README.md                          # Complete project documentation
+├── package.json                       # Unified root scripts for Render build & start
+├── .gitignore
+└── README.md
 ```
 
 ---
 
-## 🚀 Running Locally
+## 📜 License & Acknowledgments
 
-### 1. Start the Backend API
-```bash
-cd backend
-npm install
-npm run dev
-```
-* **Port:** `http://localhost:5001`
-* **Health Endpoint:** `http://localhost:5001/api/health`
-
-### 2. Start the Frontend Application
-```bash
-cd frontend
-npm install
-npm run dev
-```
-* **Port:** `http://localhost:5173`
-* **Brother Portal:** `http://localhost:5173/`
-* **Admin Portal:** `http://localhost:5173/admin` *(Passcode: `admin123`)*
-
----
-
-## 🌐 Deployment Guide (Cloud Production)
-
-### Frontend (Vercel)
-1. Push the project to GitHub.
-2. Import repository in [Vercel](https://vercel.com).
-3. Set **Root Directory** to `frontend`.
-4. Framework Preset: **Vite**.
-5. Add Environment Variable:
-   * `VITE_API_URL`: Your deployed backend URL (e.g., `https://your-backend.onrender.com/api`).
-6. Deploy! (`vercel.json` will automatically handle SPA client routing).
-
-### Backend (Render / Railway)
-1. Create a **Web Service** on [Render](https://render.com).
-2. Set **Root Directory** to `backend`.
-3. Build Command: `npm install`
-4. Start Command: `npm start`
-5. Add Environment Variables:
-   * `NODE_ENV`: `production`
-   * `PORT`: `10000` (or leave default)
-   * `MONGO_URI`: Your MongoDB Atlas connection string (`mongodb+srv://...`)
-   * `JWT_SECRET`: A strong secret key
-   * `CLIENT_URL`: Your frontend Vercel URL
-6. *(Tip to prevent free-tier sleep: set up a free monitor on [cron-job.org](https://cron-job.org) to ping `/api/health` every 10 minutes).*
-
-### Database (MongoDB Atlas)
-1. Create a free **M0 Cluster** on [MongoDB Atlas](https://www.mongodb.com/atlas).
-2. Choose AWS **Mumbai (`ap-south-1`)** for minimal latency.
-3. Whitelist all IP addresses (`0.0.0.0/0`) in Network Access.
-4. Copy the connection string into your backend `MONGO_URI`.
-
----
-
-## 🔒 Security & Anti-Cheat Summary
-
-| Protection Layer | Mechanism | Action on Violation |
-| :--- | :--- | :--- |
-| **External Clipboard** | Event interceptor on `paste` / `drop` | Input blocked + Red Lockdown Alarm |
-| **Focus Loss & Tabs** | `visibilitychange` & `blur` surveillance | Strike logged + Red Lockdown Alarm |
-| **Idle Time Exploits** | 3.5s grace cadence detector | Stopwatch automatically pauses |
-| **Recycled Screenshots**| MD5 / SHA-256 fingerprint collision | Flagged on Admin Review |
-| **Fake Handwritten Work**| Camera EXIF tags & capture timestamp delta | Flagged if edited or non-camera sensor |
-| **Alarm Dismissal** | Hardened `localStorage` state retention | Requires physical disarm by Admin |
-
----
-
-## 📡 Complete REST API Endpoint Inventory (18 Endpoints)
-
-All backend endpoints are operational, verified, and audited:
-
-| # | Method | Endpoint | Pipeline / Gatekeepers | Description | Status |
-|---|---|---|---|---|---|
-| 1 | `GET` | `/api/health` | Public | Core Engine status & Gatekeeper health | ✅ 200 OK |
-| 2 | `POST` | `/api/auth/login` | Public | Admin/Candidate login, returns JWT token | ✅ 200 OK |
-| 3 | `POST` | `/api/auth/register` | Public | Registers user, hashes password, returns JWT | ✅ 201 Created |
-| 4 | `GET` | `/api/auth/me` | Bearer JWT | Decrypts token claims and returns user profile | ✅ 200 OK |
-| 5 | `GET` | `/api/tasks/daily-writing-topic` | Public | Serves deterministic 10-point daily handwriting topic | ✅ 200 OK |
-| 6 | `GET` | `/api/tasks` | Public | Retrieves active compliance task definitions | ✅ 200 OK |
-| 7 | `GET` | `/api/tasks/:id` | Public | Retrieves single compliance task by ID | ✅ 200 OK |
-| 8 | `POST` | `/api/tasks` | Public | Dynamically creates custom compliance tasks | ✅ 201 Created |
-| 9 | `GET` | `/api/quiz/session` | Zero-Knowledge | Deals 50 questions (scrubs answer keys/explanations) | ✅ 200 OK |
-| 10 | `POST` | `/api/quiz/grade` | Speed Telemetry | Evaluates answers, audits <0.8s bot speeds, passmark: 35 | ✅ 200 OK |
-| 11 | `GET` | `/api/quiz/stats` | Public | Question bank metrics, DB status, and AI engine status | ✅ 200 OK |
-| 12 | `POST` | `/api/quiz/generate` | Public | On-demand batch generation of AI questions | ✅ 200 OK |
-| 13 | `POST` | `/api/tasks/submit` | Multer, Hash, EXIF | Full Gatekeeper ingestion & compliance scoring | ✅ 201 Created |
-| 14 | `POST` | `/api/submissions/submit` | Multer, Hash, EXIF | Direct submission endpoint with EXIF inspection | ✅ 201 Created |
-| 15 | `POST` | `/api/submissions/:taskId` | Multer, Hash, EXIF | Task-specific submission endpoint | ✅ 201 Created |
-| 16 | `GET` | `/api/submissions` | Public | Retrieves all submission audit logs | ✅ 200 OK |
-| 17 | `GET` | `/api/submissions/:id` | Public | Retrieves single submission audit record by ID | ✅ 200 OK |
-| 18 | `GET` | `/api/reports/:sessionId` | Digital Forensics | Generates forensic audit report (404 on invalid session) | ✅ 200 OK / 404 |
-
----
-
-## 🧪 Senior Automation QA Test Report
-
-### Automated End-to-End Test Suite Execution
-- **Test Runner:** Custom automated Node.js test suite with real HTTP fetch requests
-- **Backend Port:** `http://localhost:5001`
-- **Total Test Cases:** **18**
-- **Passed:** **18 (100%)**
-- **Failed:** **0 (0%)**
-
-```
-===============================================================
-  🔍 BROTHER COMPLIANCE SAAS - AUTOMATED TEST SUITE EXECUTION
-===============================================================
-
-  ✅ [PASS] 1. GET /api/health - Core Engine & Gatekeepers Online (Status: 200)
-  ✅ [PASS] 2. POST /api/auth/login - Admin Authentication & JWT Token (Role: admin)
-  ✅ [PASS] 3. POST /api/auth/register - Candidate Registration (201 Created)
-  ✅ [PASS] 4. GET /api/auth/me - Token Claim Decryption (User: Admin (Me))
-  ✅ [PASS] 5. GET /api/tasks/daily-writing-topic - 10-Point Daily Topic Delivery
-  ✅ [PASS] 6. GET /api/tasks - Task Bank Retrieval (Count: 3)
-  ✅ [PASS] 7. POST /api/tasks - Task Creation (201 Created)
-  ✅ [PASS] 8. GET /api/tasks/:id - Task Retrieval By ID (Found)
-  ✅ [PASS] 9. GET /api/quiz/session - Zero-Knowledge Dealer (50 Qs, Scrubbed Keys, No Leaks)
-  ✅ [PASS] 10. GET /api/quiz/stats - Question Bank Statistics (Total Bank: 100)
-  ✅ [PASS] 11. POST /api/quiz/grade - Server-Side Evaluation & Scoring (PassMark: 35)
-  ✅ [PASS] 12. POST /api/quiz/grade - Bot & Tab-Switch Telemetry Flagging (<0.8s Detection)
-  ✅ [PASS] 13. POST /api/tasks/submit - Full Gatekeeper Pipeline (Direct Match Fix Verified)
-  ✅ [PASS] 14. POST /api/submissions/submit - Cryptographic Duplicate SHA-256 Hash Detection
-  ✅ [PASS] 15. GET /api/submissions - Submission Surveillance Logs Retrieval
-  ✅ [PASS] 16. GET /api/submissions/:id - Single Submission Audit Record
-  ✅ [PASS] 17. GET /api/reports/:sessionId - Forensic Compliance Audit Report Generation
-  ✅ [PASS] 18. GET /api/reports/:sessionId - 404 On Missing Session (Security Vulnerability Fixed)
-
-===============================================================
-  TOTAL TESTS: 18 | PASSED: 18 | FAILED: 0
-===============================================================
-```
-
----
-
-## 🛠️ Security Loophole & Bug Fix Log
-
-During this comprehensive audit, the following security vulnerabilities and runtime crashes were discovered and resolved:
-
-1. **🔒 Insecure Report Generation Loophole Fixed**:
-   - *Issue*: `GET /api/reports/:sessionId` generated a fabricated 200 OK "VERIFIED" audit report for non-existent session IDs.
-   - *Fix*: Integrated `SESSION_STORE` lookup; now returns a strict `404 Not Found` for invalid or fabricated session IDs.
-
-2. **🚫 Quiz Grading Network Error Auto-Pass Exploit Fixed**:
-   - *Issue*: `EnglishQuizModal.jsx` catch block granted `fallbackScore = userAnswers.length` (awarding 50/50 and passing unconditionally if the backend was offline).
-   - *Fix*: Rewrote fallback grading to strictly evaluate against verified answers and never award an automatic pass on error.
-
-3. **💥 Frontend Missing Import & ReferenceError Crashes Resolved**:
-   - Added missing `Layers` import to `EnglishQuizModal.jsx` (crashed on initial load).
-   - Added missing `Maximize2`, `Minimize2`, `Cpu`, `FileCheck`, and `Edit3` imports to `SubjectHub.jsx`.
-   - Defined missing `handleCanvasModeChange` function in `SubjectHub.jsx` (crashed when switching between dark and paper modes).
-   - Corrected undeclared `pasteAlert` variable to `pasteBlockedAlert` in `SubjectHub.jsx`.
-   - Added missing `Archive` import and guarded against null `submittedAt` timestamps in `AdminIntelligenceBoard.jsx`.
-   - Added missing `Share2` import to `SubmissionsBoxPage.jsx`.
-   - Added missing `Flame` and `UploadCloud` imports to `AdminFinishedTasks.jsx`.
-   - Added missing `Share2`, `Inbox`, `Terminal`, `Flame`, and `FileCheck` imports to `DailyArchivePage.jsx`.
-
-4. **⚡ Mongoose Question Schema Category Restriction**:
-   - *Issue*: `Question.js` schema enum rejected categories like `'Beginner English'`, `'Coding Basics'`, etc., throwing validation errors during MongoDB seeding.
-   - *Fix*: Expanded enum in `Question.js` to encompass all operational and seed categories.
-
-5. **🛣️ Direct Match Submission Routing Fix**:
-   - *Issue*: `POST /api/tasks/submit` returned `404 Not Found` because `submissionRoutes.js` lacked a root `router.post('/')` handler.
-   - *Fix*: Added `router.post('/', ...gatekeeperPipeline);` to ensure seamless ingestion.
-
-6. **🧹 Zero Demo Data Policy**:
-   - All automated test records, temporary sessions, and registration trials generated during the test suite were purged from memory and database stores.
-
+* Built with [React](https://react.dev/), [Vite](https://vitejs.dev/), [Tailwind CSS](https://tailwindcss.com/), [Express](https://expressjs.com/), [MongoDB](https://www.mongodb.com/), and [Google Gemini AI](https://aistudio.google.com/).
+* Engineered for high-integrity academic discipline, authentic skill verification, and remote proctoring.
