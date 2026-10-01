@@ -5,8 +5,6 @@ import {
   Activity, 
   CheckCircle2, 
   AlertTriangle, 
-  Copy, 
-  ExternalLink, 
   RotateCcw, 
   Sliders, 
   ShieldCheck, 
@@ -45,7 +43,6 @@ export const AdminModule1Page = () => {
   });
   const [inputVal, setInputVal] = useState(wordTarget);
   const [feedback, setFeedback] = useState(null);
-  const [copiedLink, setCopiedLink] = useState(false);
 
   // Sync to localStorage
   const handleSaveWordTarget = (val) => {
@@ -55,12 +52,6 @@ export const AdminModule1Page = () => {
     localStorage.setItem('module1_word_target', num.toString());
     setFeedback(`Target updated to ${num} words.`);
     setTimeout(() => setFeedback(null), 3500);
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/test`);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
   };
 
   const currentWords = (keyboardTask.content || '').trim().split(/\s+/).filter(Boolean).length;
@@ -87,27 +78,6 @@ export const AdminModule1Page = () => {
         }
         title="Module 1: Keyboard Typing Practice"
         subtitle="Configure target word limits, monitor keystroke cadence telemetry, inspect typed drafts, and record supervisor verdicts."
-        actions={
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
-            >
-              <Copy className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{copiedLink ? 'Copied Link!' : 'Copy Candidate Link'}</span>
-            </button>
-            <a
-              href="/test"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
-            >
-              <span>Test Terminal</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-        }
       />
 
       {/* KPI Stats Grid */}

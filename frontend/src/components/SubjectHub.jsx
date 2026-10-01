@@ -685,6 +685,15 @@ export const SubjectHub = () => {
     showHubToast('Module 3: Handwritten notes cleared.');
   };
 
+  const handleClearTechHardware = (e) => {
+    if (e) e.stopPropagation();
+    clearTask('mod-4-techhardware');
+    try {
+      localStorage.removeItem('module4_understood_items');
+    } catch (err) {}
+    showHubToast('Module 4: Hardware & rig audit cleared.');
+  };
+
   // Helper for Status Badge - Modern Pill Design
   const renderStatusBadge = (status) => {
     switch (status) {
@@ -1582,11 +1591,11 @@ export const SubjectHub = () => {
         {/* ------------------------------------------------------------- */}
         <div 
           onClick={() => setIsModule4ModalOpen(true)}
-          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-sky-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
+          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
         >
           {/* Subtle Ambient Hover Glow & Top Scan Accent */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-sky-400/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           {/* Header & Status */}
           <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
@@ -1609,73 +1618,97 @@ export const SubjectHub = () => {
             {renderStatusBadge(techHardwareTask?.status || 'PENDING')}
           </div>
 
-          {/* Telemetry / Syllabus Preview Banner */}
-          <div className="rounded-xl border border-white/[0.06] bg-slate-950/70 p-2.5 space-y-2 text-xs shadow-inner my-1.5 relative z-10">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5">
-              <div className="flex items-center space-x-1.5 text-cyan-400 font-semibold tracking-wide text-[11px]">
-                <Activity className="w-3.5 h-3.5" />
-                <span>KNOWLEDGE LAB</span>
-              </div>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wide ${
-                techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED'
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-slate-800 text-slate-400'
-              }`}>
-                {techHardwareTask?.status === 'VERIFIED' ? '● VERIFIED' : techHardwareTask?.status === 'SUBMITTED' ? '● SUBMITTED' : 'READY TO AUDIT'}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-center pt-0.5">
-              <div className="p-1.5 rounded-lg bg-slate-900/80 border border-white/[0.05]">
-                <span className="text-[10px] text-slate-400 block font-medium">Curriculum</span>
-                <span className="text-xs font-mono font-bold text-white">Kitchen Model</span>
-              </div>
-              <div className="p-1.5 rounded-lg bg-slate-900/80 border border-white/[0.05]">
-                <span className="text-[10px] text-slate-400 block font-medium">Rig Audit</span>
-                <span className="text-xs font-mono font-bold text-cyan-400">
-                  {techHardwareTask?.rigAudit ? 'Logged ✓' : '3-Step Inspection'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Content Preview Box */}
-          <div className="flex-1 min-h-[50px] p-3 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-slate-300 leading-relaxed flex flex-col justify-center text-center my-1 relative overflow-hidden group-hover:border-cyan-500/30 transition-colors z-10">
+          {/* Clean Summary of Progress */}
+          <div className="flex-1 my-2 flex flex-col justify-center">
             {techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED' ? (
-              <div className="space-y-1">
-                <span className="text-xs font-bold text-emerald-300 flex items-center justify-center space-x-1">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Audit Completed</span>
-                </span>
-                <p className="text-[11px] text-slate-400 font-mono">
-                  {techHardwareTask.rigAudit?.cpuInfo ? `${techHardwareTask.rigAudit.cpuInfo.slice(0, 24)} • ` : ''}Submitted for supervisor verification
-                </p>
+              <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-2 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Rig Verified</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-400/80 font-mono font-medium">
+                    {techHardwareTask.rigAudit?.os ? techHardwareTask.rigAudit.os.toUpperCase() : 'AUDIT LOGGED'}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Cpu className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span className="text-xs font-bold font-mono text-white truncate" title={techHardwareTask.rigAudit?.cpuInfo || 'CPU Logged'}>
+                      {techHardwareTask.rigAudit?.cpuInfo || 'CPU Detected'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono text-slate-300 pl-6 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-emerald-300/90 font-semibold">
+                      {techHardwareTask.rigAudit?.ramInfo ? `${techHardwareTask.rigAudit.ramInfo} RAM` : 'RAM Logged'}
+                    </span>
+                    {techHardwareTask.rigAudit?.networkType && (
+                      <>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-400">{techHardwareTask.rigAudit.networkType}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-1.5 border-t border-emerald-500/15 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                  <span>Curriculum: Kitchen Model</span>
+                  <span className="text-emerald-400 font-semibold">✓ Completed</span>
+                </div>
               </div>
             ) : (
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-200">
-                  The "Restaurant Kitchen" Model & Machine Audit
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  Chef (CPU), Countertop (RAM), Pantry (SSD), Waiter (Motherboard) + solve college dilemmas & audit your own rig.
-                </p>
+              <div className="p-3.5 rounded-xl border border-white/[0.08] group-hover:border-cyan-500/40 bg-slate-950/60 group-hover:bg-cyan-950/15 text-center space-y-2 transition-all relative z-10">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-inner">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-white tracking-wide group-hover:text-cyan-200 transition-colors">
+                    Learn the Kitchen Model & Auto-Detect Your Rig
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed px-1">
+                    Chef (CPU), Countertop (RAM), Pantry (SSD) & 3-step workstation check
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 pt-0.5">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-cyan-300 text-[9px] font-semibold border border-slate-700">
+                    🍳 Kitchen Model
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[9px] font-semibold border border-slate-700">
+                    💻 Rig Audit
+                  </span>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Bottom Action CTA */}
-          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2 relative z-10">
+          {/* Action Row */}
+          <div className="pt-2 flex items-center gap-2 relative z-10">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsModule4ModalOpen(true);
               }}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all cursor-pointer group-hover:scale-[1.02] active:scale-[0.98]"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all cursor-pointer group-hover:scale-[1.01] active:scale-[0.98]"
             >
               <Cpu className="w-3.5 h-3.5 fill-slate-950" />
               <span>{techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED' ? 'Review Kitchen Model & Rig' : 'Open Kitchen Model & Rig Audit'}</span>
             </button>
+            {(techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED') && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClearTechHardware();
+                }}
+                title="Clear Hardware & Rig Audit"
+                className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center space-x-1 transition-all shrink-0 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                <span>CLEAR</span>
+              </button>
+            )}
           </div>
         </div>
 

@@ -1466,6 +1466,10 @@ export const ForensicProvider = ({ children }) => {
             totalQuestions: null,
             percentage: null,
             results: [],
+            rigAudit: null,
+            summaryText: null,
+            masteredCount: null,
+            casesSolved: null,
             submittedAt: null,
             auditorVerdict: null,
             auditorNotes: ''

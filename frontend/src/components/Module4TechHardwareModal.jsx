@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   X, 
-  ChefHat, 
   ArrowRight, 
   Check, 
   ChevronRight, 
@@ -10,7 +9,19 @@ import {
   Laptop,
   Zap,
   HelpCircle,
-  ThumbsUp
+  ThumbsUp,
+  Cpu,
+  Layers,
+  HardDrive,
+  Monitor,
+  Wifi,
+  AlertTriangle,
+  RotateCcw,
+  Camera,
+  Info,
+  ExternalLink,
+  ShieldCheck,
+  ChevronLeft
 } from 'lucide-react';
 import { 
   KITCHEN_ANALOGY_COMPONENTS, 
@@ -131,7 +142,7 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
         setSelectedCaseOption(null);
         setAiGenMessage({ type: 'success', text: `✨ Added new scenario: "${data.case.title}"` });
       } else {
-        setAiGenMessage({ type: 'error', text: 'Ready with current scenarios!' });
+        setAiGenMessage({ type: 'error', text: 'All essential scenarios loaded!' });
       }
     } catch (err) {
       setAiGenMessage({ type: 'error', text: 'Using ready scenario bank.' });
@@ -145,28 +156,84 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
   const correctCasesCount = Object.values(caseAnswers).filter(a => a.isCorrect).length;
 
   // -------------------------------------------------------------
-  // STAGE 3: KNOW YOUR OWN RIG STATE
+  // STAGE 3: KNOW YOUR OWN RIG STATE & 1-CLICK AUTO-DETECT
   // -------------------------------------------------------------
   const [rigOs, setRigOs] = useState('windows');
   const [rigCpu, setRigCpu] = useState('');
   const [rigRam, setRigRam] = useState('');
   const [rigNetwork, setRigNetwork] = useState('');
+  const [autoDetected, setAutoDetected] = useState(false);
+  const [autoDetectTimestamp, setAutoDetectTimestamp] = useState(null);
   const [submissionFeedback, setSubmissionFeedback] = useState(null);
 
+  // Initialize from previous saved task data if exists
   useEffect(() => {
     if (task.rigAudit) {
       if (task.rigAudit.cpuInfo) setRigCpu(task.rigAudit.cpuInfo);
       if (task.rigAudit.ramInfo) setRigRam(task.rigAudit.ramInfo);
       if (task.rigAudit.networkType) setRigNetwork(task.rigAudit.networkType);
+      if (task.rigAudit.os) setRigOs(task.rigAudit.os);
     }
   }, [task]);
+
+  // 1-Click Auto-Detect from Browser Web APIs
+  const handleAutoDetectSpecs = () => {
+    try {
+      const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
+      let detectedOs = 'windows';
+      let osLabel = 'Windows';
+      if (/Macintosh|Mac OS X/i.test(userAgent)) {
+        detectedOs = 'mac';
+        osLabel = 'macOS (Apple Silicon / Intel)';
+      } else if (/Linux/i.test(userAgent)) {
+        detectedOs = 'linux';
+        osLabel = 'Linux';
+      }
+
+      setRigOs(detectedOs === 'mac' ? 'mac' : 'windows');
+
+      // CPU Cores Detection
+      const cores = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) 
+        ? `${navigator.hardwareConcurrency} Logical CPU Cores (${osLabel})`
+        : `4+ Cores (${osLabel})`;
+
+      // RAM Detection
+      let ramDetect = '';
+      if (typeof navigator !== 'undefined' && navigator.deviceMemory) {
+        ramDetect = `${navigator.deviceMemory} GB RAM (Browser High-Speed Allocation)`;
+      } else {
+        ramDetect = '8 GB RAM (Standard College Rig)';
+      }
+
+      // Network Detection
+      let netDetect = 'Wi-Fi / Ethernet Connected (Online)';
+      if (typeof navigator !== 'undefined') {
+        if (!navigator.onLine) {
+          netDetect = 'Offline (Check your connection)';
+        } else if (navigator.connection) {
+          const conn = navigator.connection;
+          const eff = conn.effectiveType ? conn.effectiveType.toUpperCase() : 'Broadband';
+          const typ = conn.type && conn.type !== 'unknown' ? conn.type : 'Wi-Fi / Ethernet';
+          netDetect = `${eff} Connection (${typ} • Online)`;
+        }
+      }
+
+      setRigCpu(cores);
+      setRigRam(ramDetect);
+      setRigNetwork(netDetect);
+      setAutoDetected(true);
+      setAutoDetectTimestamp(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    } catch (err) {
+      console.error('Failed auto-detecting hardware specs:', err);
+    }
+  };
 
   const isRigComplete = rigCpu.trim().length > 1 && rigRam.trim().length > 1 && rigNetwork.trim().length > 1;
 
   const handleFinalSubmit = () => {
     if (!isRigComplete) {
-      setSubmissionFeedback({ type: 'error', text: 'Please answer all 3 quick questions about your laptop!' });
-      setTimeout(() => setSubmissionFeedback(null), 3000);
+      setSubmissionFeedback({ type: 'error', text: 'Please complete all 3 laptop fields (or use ⚡ 1-Click Auto-Detect)!' });
+      setTimeout(() => setSubmissionFeedback(null), 3500);
       return;
     }
 
@@ -191,124 +258,148 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
         cpuInfo: rigCpu.trim(),
         ramInfo: rigRam.trim(),
         networkType: rigNetwork.trim(),
+        autoDetected,
         completedAt: new Date().toISOString()
       },
-      summaryText: `Rig Check Done: ${rigCpu.trim()} • ${rigRam.trim()} RAM • ${rigNetwork.trim()}`
+      summaryText: `Rig Check Done: ${rigCpu.trim()} • ${rigRam.trim()} • ${rigNetwork.trim()}`
     };
 
     submitTechHardwarePractice(submissionPayload);
-    setSubmissionFeedback({ type: 'success', text: '🎉 Awesome job! Your check has been submitted for review.' });
+    setSubmissionFeedback({ 
+      type: 'success', 
+      text: '🎉 Outstanding work! Module 4 has been recorded and submitted for proctor audit.' 
+    });
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-fade-in font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-fade-in font-['Plus_Jakarta_Sans',sans-serif]">
       <div 
-        className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#0b111e] border border-cyan-500/30 rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full max-w-5xl max-h-[94vh] flex flex-col bg-[#0b111e] border border-cyan-500/35 rounded-2xl sm:rounded-3xl shadow-2xl shadow-cyan-950/50 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.08] bg-slate-950/80 shrink-0">
-          <div className="flex items-center space-x-3">
-            <span className="text-2xl">🍳</span>
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/[0.08] bg-slate-950/90 shrink-0">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/40 flex items-center justify-center text-xl shadow-inner">
+              🍳
+            </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="text-sm font-bold text-white tracking-wide">
-                  Module 4: Computer Basics Made Simple
+              <div className="flex items-center space-x-2.5">
+                <h3 className="text-sm sm:text-base font-extrabold text-white tracking-wide">
+                  Module 4: Computer Basics & Hardware
                 </h3>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-sm ${
                   task.status === 'VERIFIED'
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
                     : task.status === 'SUBMITTED'
-                    ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                    ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                    : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
                 }`}>
                   {task.status === 'VERIFIED' ? '✓ Verified' : task.status === 'SUBMITTED' ? 'Submitted' : 'In Progress'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Learn how a computer works using a simple kitchen model!
+              <p className="text-xs text-slate-400 mt-0.5">
+                Master how your laptop actually works using the friendly <strong>Restaurant Kitchen Model</strong>.
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+            title="Close Module"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* 3 STEPS TABS */}
-        <div className="flex items-center border-b border-white/[0.07] bg-slate-950/40 px-5 py-2 gap-2 shrink-0">
+        {/* 3 STAGE PROGRESS TABS */}
+        <div className="flex items-center border-b border-white/[0.08] bg-slate-950/60 px-4 sm:px-6 py-2.5 gap-2 overflow-x-auto shrink-0 scrollbar-none">
           <button
             onClick={() => setActiveTab('analogy')}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'analogy'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-gradient-to-r from-cyan-500/25 to-blue-500/20 text-cyan-200 border border-cyan-500/50 shadow-md shadow-cyan-950/40'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <span>🍳 1. The Kitchen Model</span>
-            <span className="text-[10px] font-mono bg-cyan-950 px-1.5 py-0.5 rounded text-cyan-400">
-              {understoodItems.length}/6
+            <span>🍳 1. Kitchen Visual Studio</span>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+              understoodItems.length === KITCHEN_ANALOGY_COMPONENTS.length
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                : 'bg-cyan-950 text-cyan-300'
+            }`}>
+              {understoodItems.length}/{KITCHEN_ANALOGY_COMPONENTS.length} Mastered
             </span>
           </button>
 
-          <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+          <ChevronRight className="w-4 h-4 text-slate-600 shrink-0" />
 
           <button
             onClick={() => setActiveTab('troubleshooting')}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'troubleshooting'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-gradient-to-r from-amber-500/25 to-orange-500/20 text-amber-200 border border-amber-500/50 shadow-md shadow-amber-950/40'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <span>💡 2. Quick Dilemmas</span>
-            <span className="text-[10px] font-mono bg-amber-950 px-1.5 py-0.5 rounded text-amber-400">
-              {solvedCasesCount}/{cases.length}
+            <span>💡 2. Quick Dilemmas Lab</span>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+              solvedCasesCount === cases.length
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                : 'bg-amber-950 text-amber-300'
+            }`}>
+              {solvedCasesCount}/{cases.length} Solved
             </span>
           </button>
 
-          <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+          <ChevronRight className="w-4 h-4 text-slate-600 shrink-0" />
 
           <button
             onClick={() => setActiveTab('rig')}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'rig'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-gradient-to-r from-emerald-500/25 to-teal-500/20 text-emerald-200 border border-emerald-500/50 shadow-md shadow-emerald-950/40'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <span>💻 3. Check Your Laptop</span>
-            <span className="text-[10px] font-mono bg-emerald-950 px-1.5 py-0.5 rounded text-emerald-400">
-              {isRigComplete ? 'Done ✓' : '3 Qs'}
+            <span>💻 3. Laptop Rig Inspector</span>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+              isRigComplete
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                : 'bg-slate-800 text-slate-400'
+            }`}>
+              {isRigComplete ? 'Ready ✓' : '3 Fields'}
             </span>
           </button>
         </div>
 
-        {/* MAIN BODY */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        {/* MAIN BODY VIEWPORT */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
 
           {/* ======================================================== */}
-          {/* TAB 1: THE KITCHEN ANALOGY */}
+          {/* STAGE 1: KITCHEN VISUAL STUDIO */}
           {/* ======================================================== */}
           {activeTab === 'analogy' && (
-            <div className="space-y-4">
+            <div className="space-y-5 animate-fade-in">
               
-              {/* Simple Banner */}
-              <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/25 flex items-center space-x-3">
-                <span className="text-xl">💡</span>
-                <p className="text-xs text-cyan-200 leading-relaxed">
-                  Think of your computer as a busy <strong>Restaurant Kitchen</strong>. Click each station below to see what it does in simple words!
-                </p>
+              {/* Friendly Concept Banner */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-blue-950/30 to-slate-900 border border-cyan-500/30 flex items-start sm:items-center space-x-3.5 shadow-sm">
+                <span className="text-2xl sm:text-3xl shrink-0">🧑‍🍳</span>
+                <div className="space-y-0.5">
+                  <p className="text-xs sm:text-sm text-cyan-200 leading-relaxed font-medium">
+                    Think of your computer as a high-speed <strong>Restaurant Kitchen</strong>! Each physical part has one specific job to prepare your apps and files.
+                  </p>
+                  <p className="text-[11px] text-cyan-400/80">
+                    Click each station below to see real photos, how it works in 1 second, and the memorable College Rule.
+                  </p>
+                </div>
               </div>
 
-              {/* 6 Kitchen Stations Buttons */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+              {/* 6 Hardware Station Cards with Real Photos & Emojis */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {KITCHEN_ANALOGY_COMPONENTS.map(comp => {
                   const isSelected = selectedComponentId === comp.id;
                   const isUnderstood = understoodItems.includes(comp.id);
@@ -316,81 +407,180 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
                     <button
                       key={comp.id}
                       onClick={() => setSelectedComponentId(comp.id)}
-                      className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between min-h-[90px] ${
+                      className={`relative p-2.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden group ${
                         isSelected
-                          ? 'bg-cyan-950/60 border-cyan-400 text-white shadow-md'
-                          : 'bg-slate-900/60 hover:bg-slate-900 border-white/[0.08] text-slate-300'
+                          ? 'bg-cyan-950/70 border-cyan-400 text-white shadow-lg shadow-cyan-950/50 ring-2 ring-cyan-400/40 -translate-y-0.5'
+                          : 'bg-slate-900/70 hover:bg-slate-900 border-white/[0.08] text-slate-300 hover:border-cyan-500/30'
                       }`}
                     >
-                      <span className="text-2xl mb-1">{comp.emoji}</span>
-                      <div className="text-xs font-bold text-white">{comp.roleName}</div>
-                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5">{comp.shortName}</div>
-                      {isUnderstood && (
-                        <span className="text-[9px] text-emerald-400 font-bold mt-1">✓ Got it</span>
-                      )}
+                      {/* Photo Thumbnail */}
+                      <div className="w-full h-16 sm:h-20 rounded-xl overflow-hidden bg-slate-950 mb-2 relative border border-white/[0.08]">
+                        <img 
+                          src={comp.image} 
+                          alt={comp.techName} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <span className="absolute bottom-1 left-1.5 text-base drop-shadow">{comp.emoji}</span>
+                        {isUnderstood && (
+                          <span className="absolute top-1 right-1 bg-emerald-500 text-slate-950 rounded-full p-0.5 shadow">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Station Info */}
+                      <div>
+                        <div className="text-xs font-bold text-white truncate leading-snug">{comp.roleName}</div>
+                        <div className="text-[10px] text-cyan-400 font-mono font-semibold mt-0.5 truncate">{comp.shortName}</div>
+                      </div>
+
+                      <div className="mt-2 pt-1 border-t border-white/[0.06] flex items-center justify-between">
+                        <span className="text-[9px] text-slate-400">{comp.badge.split(' ')[0]}</span>
+                        {isUnderstood ? (
+                          <span className="text-[9px] text-emerald-400 font-bold">✓ Mastered</span>
+                        ) : (
+                          <span className="text-[9px] text-slate-500 group-hover:text-slate-300">Learn →</span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Current Station Details (Short & Simple) */}
-              <div className="rounded-xl border border-white/[0.1] bg-slate-950/80 p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-3xl">{currentComponent.emoji}</span>
+              {/* Station Deep Dive Studio (Selected Component) */}
+              <div className="rounded-2xl border border-white/[0.1] bg-slate-950/90 p-5 sm:p-6 space-y-5 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Station Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/[0.08] gap-4">
+                  <div className="flex items-start sm:items-center space-x-4">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-cyan-400/50 shadow-md shrink-0 bg-slate-900 relative">
+                      <img 
+                        src={currentComponent.image} 
+                        alt={currentComponent.techName} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                      <span className="absolute bottom-1 right-1 text-base">{currentComponent.emoji}</span>
+                    </div>
+
                     <div>
-                      <h4 className="text-base font-bold text-white">
-                        {currentComponent.roleName} ({currentComponent.techName})
-                      </h4>
-                      <p className="text-xs text-cyan-400 font-medium">{currentComponent.simpleRole}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-base sm:text-lg font-black text-white">
+                          {currentComponent.roleName}
+                        </h4>
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+                          {currentComponent.techName}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                          {currentComponent.badge}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-cyan-300/90 font-medium mt-1">
+                        👉 <em>"{currentComponent.inOneSecond || currentComponent.simpleRole}"</em>
+                      </p>
                     </div>
                   </div>
 
+                  {/* Toggle Mastered Button */}
                   <button
                     onClick={() => toggleUnderstood(currentComponent.id)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
+                    className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shrink-0 shadow-sm ${
                       understoodItems.includes(currentComponent.id)
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        : 'bg-white/[0.08] hover:bg-white/[0.14] text-slate-200'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 hover:bg-emerald-500/30'
+                        : 'bg-white/[0.08] hover:bg-white/[0.14] text-slate-200 border border-white/[0.1]'
                     }`}
                   >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>{understoodItems.includes(currentComponent.id) ? 'Mastered ✓' : 'Mark as Understood'}</span>
+                    <Check className={`w-4 h-4 ${understoodItems.includes(currentComponent.id) ? 'stroke-[3]' : ''}`} />
+                    <span>{understoodItems.includes(currentComponent.id) ? 'Mastered ✓' : 'Mark as Mastered'}</span>
                   </button>
                 </div>
 
-                {/* 2 Simple Cards instead of 4 dense boxes */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="p-3.5 rounded-xl bg-slate-900/70 border border-white/[0.06] space-y-1">
-                    <span className="text-[11px] font-bold text-cyan-300 uppercase tracking-wide">
-                      What it does:
-                    </span>
-                    <p className="text-xs text-slate-200 leading-relaxed">
-                      {currentComponent.whatItDoes}
+                {/* SIDE-BY-SIDE COMPARISON: IN THE KITCHEN vs IN YOUR LAPTOP */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* In the Kitchen */}
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-amber-950/30 to-orange-950/20 border border-amber-500/30 space-y-1.5 shadow-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">🍳</span>
+                      <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                        In the Restaurant Kitchen
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-100 leading-relaxed">
+                      {currentComponent.kitchenRole || currentComponent.simpleRole}
                     </p>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-1">
-                    <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wide">
-                      Student Rule:
-                    </span>
-                    <p className="text-xs text-amber-100 leading-relaxed">
-                      {currentComponent.collegeTip}
+                  {/* In Your Laptop */}
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-950/30 to-blue-950/20 border border-cyan-500/30 space-y-1.5 shadow-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">💻</span>
+                      <span className="text-xs font-black text-cyan-300 uppercase tracking-wider">
+                        Inside Your Laptop
+                      </span>
+                    </div>
+                    <p className="text-xs text-cyan-100 leading-relaxed">
+                      {currentComponent.computerRole || currentComponent.whatItDoes}
                     </p>
                   </div>
                 </div>
 
-                {/* Bottom Step Advance */}
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-slate-400 font-mono">
-                    {understoodItems.length} of 6 parts understood
-                  </span>
+                {/* CLEAR ANSWERS TO THE 2 BIG FRESHMAN QUESTIONS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-white/[0.08] space-y-1">
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-200">
+                      <span className="text-sm">🚀</span>
+                      <span>What happens when you open an app?</span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-5">
+                      {currentComponent.appAction || currentComponent.whatItDoes}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-white/[0.08] space-y-1">
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-rose-300">
+                      <span className="text-sm">⚡</span>
+                      <span>What happens if laptop power is cut?</span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-5">
+                      {currentComponent.powerLossAction || currentComponent.collegeTip}
+                    </p>
+                  </div>
+                </div>
+
+                {/* MEMORABLE FRESHMAN RULE & SPECS GUIDE */}
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/35 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-base">🌟</span>
+                    <span className="text-xs font-black text-amber-300 uppercase tracking-wide">
+                      Freshman Golden Rule
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-100 leading-relaxed font-medium">
+                    {currentComponent.freshmanRule || currentComponent.collegeTip}
+                  </p>
+                  {currentComponent.specsGuide && (
+                    <div className="pt-2 border-t border-amber-500/20 text-[11px] text-amber-300/80 font-mono">
+                      📊 <strong>Specs Guide:</strong> {currentComponent.specsGuide}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Step Advance Bar */}
+                <div className="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-white/[0.08] gap-3">
+                  <div className="flex items-center space-x-2 text-xs text-slate-300 font-mono">
+                    <span className="font-bold text-cyan-400">{understoodItems.length}</span>
+                    <span>of {KITCHEN_ANALOGY_COMPONENTS.length} hardware stations mastered</span>
+                  </div>
+
                   <button
                     onClick={() => setActiveTab('troubleshooting')}
-                    className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer"
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 text-xs font-black flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-lg shadow-cyan-500/25"
                   >
-                    <span>Next: Quick Dilemmas</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>Continue to Dilemmas Lab</span>
+                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                   </button>
                 </div>
               </div>
@@ -399,55 +589,65 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
           )}
 
           {/* ======================================================== */}
-          {/* TAB 2: COLLEGE TROUBLESHOOTING */}
+          {/* STAGE 2: COLLEGE TROUBLESHOOTING LAB */}
           {/* ======================================================== */}
           {activeTab === 'troubleshooting' && (
-            <div className="space-y-4">
+            <div className="space-y-5 animate-fade-in">
 
               {/* Case Bar */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/25">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl">{activeCase.emoji || '💡'}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-amber-950/30 to-slate-900 border border-amber-500/30 gap-3">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">{activeCase.emoji || '💡'}</span>
                   <div>
-                    <h4 className="text-xs font-bold text-white">{activeCase.title}</h4>
-                    <span className="text-[10px] text-amber-300 font-mono">Scenario {currentCaseIndex + 1} of {cases.length}</span>
+                    <div className="flex items-center space-x-2">
+                      <h4 className="text-xs sm:text-sm font-black text-white">{activeCase.title}</h4>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        {activeCase.badge}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      Scenario {currentCaseIndex + 1} of {cases.length} • Score: {correctCasesCount}/{solvedCasesCount} Correct
+                    </span>
                   </div>
                 </div>
 
                 <button
                   onClick={handleGenerateAiCase}
                   disabled={isGeneratingAiCase}
-                  className="px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-bold text-cyan-300 flex items-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  className="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-bold text-cyan-300 flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50 shrink-0"
                 >
                   <Sparkles className={`w-3.5 h-3.5 ${isGeneratingAiCase ? 'animate-spin' : ''}`} />
-                  <span>{isGeneratingAiCase ? 'Thinking...' : '✨ New AI Scenario'}</span>
+                  <span>{isGeneratingAiCase ? 'Analyzing...' : '✨ New AI Scenario'}</span>
                 </button>
               </div>
 
               {aiGenMessage && (
-                <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-cyan-300 font-mono">
+                <div className="p-3 rounded-xl bg-cyan-950/50 border border-cyan-500/40 text-xs text-cyan-300 font-mono animate-fade-in">
                   {aiGenMessage.text}
                 </div>
               )}
 
-              {/* Case Box */}
+              {/* Scenario Interactive Card */}
               {activeCase && (
-                <div className="rounded-xl border border-white/[0.08] bg-slate-950/80 p-5 space-y-4">
+                <div className="rounded-2xl border border-white/[0.1] bg-slate-950/90 p-5 sm:p-6 space-y-5 shadow-xl">
                   
-                  {/* Short Scenario */}
-                  <div className="p-3.5 rounded-xl bg-slate-900 border border-white/[0.06] text-xs text-slate-200 leading-relaxed">
-                    <strong className="text-amber-400 block mb-0.5">The Problem:</strong>
+                  {/* Relatable Problem Description */}
+                  <div className="p-4 rounded-xl bg-slate-900/90 border border-white/[0.08] text-xs sm:text-sm text-slate-200 leading-relaxed shadow-inner">
+                    <div className="flex items-center space-x-1.5 text-amber-400 font-bold uppercase tracking-wider text-[11px] mb-1">
+                      <span>⚠️ The College Dilemma:</span>
+                    </div>
                     {activeCase.scenario}
                   </div>
 
-                  {/* Question */}
-                  <div className="space-y-2">
-                    <h5 className="text-xs font-bold text-white">
-                      👉 {activeCase.diagnosticQuestion}
+                  {/* Diagnostic Question */}
+                  <div className="space-y-3">
+                    <h5 className="text-xs sm:text-sm font-extrabold text-white flex items-center space-x-2">
+                      <span className="text-cyan-400">❓</span>
+                      <span>{activeCase.diagnosticQuestion}</span>
                     </h5>
 
-                    {/* Short Options */}
-                    <div className="space-y-2">
+                    {/* Multiple-Choice Options */}
+                    <div className="space-y-2.5">
                       {activeCase.options.map((option, idx) => {
                         const isSelected = selectedCaseOption === idx;
                         const isRecorded = currentCaseAnswer !== undefined;
@@ -455,17 +655,17 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
                         const isCorrectOption = idx === correctIdx;
                         const isChosenOption = currentCaseAnswer?.selectedIndex === idx;
 
-                        let style = 'bg-slate-900/60 hover:bg-slate-900 border-white/[0.08] text-slate-300';
+                        let style = 'bg-slate-900/60 hover:bg-slate-900 border-white/[0.08] text-slate-300 hover:border-cyan-500/30';
                         if (isRecorded) {
                           if (isCorrectOption) {
-                            style = 'bg-emerald-950/40 border-emerald-500 text-emerald-200 font-bold';
+                            style = 'bg-emerald-950/50 border-emerald-500 text-emerald-200 font-bold shadow-md shadow-emerald-950/50';
                           } else if (isChosenOption && !currentCaseAnswer.isCorrect) {
-                            style = 'bg-rose-950/40 border-rose-500 text-rose-300';
+                            style = 'bg-rose-950/50 border-rose-500 text-rose-300';
                           } else {
-                            style = 'bg-slate-950/50 border-white/[0.04] text-slate-500 opacity-50';
+                            style = 'bg-slate-950/50 border-white/[0.04] text-slate-500 opacity-40';
                           }
                         } else if (isSelected) {
-                          style = 'bg-amber-500/20 border-amber-400 text-amber-200';
+                          style = 'bg-cyan-500/20 border-cyan-400 text-cyan-200 ring-2 ring-cyan-400/30';
                         }
 
                         return (
@@ -473,12 +673,21 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
                             key={idx}
                             onClick={() => handleSelectOption(idx)}
                             disabled={isRecorded}
-                            className={`w-full p-3 rounded-xl border text-left text-xs transition-all flex items-center space-x-2.5 cursor-pointer disabled:cursor-default ${style}`}
+                            className={`w-full p-3.5 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-center space-x-3 cursor-pointer disabled:cursor-default ${style}`}
                           >
-                            <span className="w-5 h-5 rounded-md bg-black/40 flex items-center justify-center text-[10px] font-mono font-bold shrink-0">
+                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-mono font-bold shrink-0 ${
+                              isRecorded && isCorrectOption 
+                                ? 'bg-emerald-500 text-slate-950'
+                                : isSelected 
+                                ? 'bg-cyan-400 text-slate-950' 
+                                : 'bg-black/50 text-slate-400'
+                            }`}>
                               {String.fromCharCode(65 + idx)}
                             </span>
-                            <span>{option}</span>
+                            <span className="flex-1 leading-snug">{option}</span>
+                            {isRecorded && isCorrectOption && (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            )}
                           </button>
                         );
                       })}
@@ -491,54 +700,57 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
                       <button
                         onClick={handleSubmitCaseAnswer}
                         disabled={selectedCaseOption === null}
-                        className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-30 text-slate-950 text-xs font-bold transition-all cursor-pointer"
+                        className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-30 disabled:cursor-not-allowed text-slate-950 text-xs font-black transition-all cursor-pointer shadow-md shadow-amber-500/20"
                       >
-                        Check Answer
+                        Check My Diagnosis
                       </button>
                     </div>
                   )}
 
-                  {/* Short 1-Line Explanation */}
+                  {/* INSTANT KITCHEN DIAGNOSIS FEEDBACK */}
                   {currentCaseAnswer && (
-                    <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 space-y-1.5 animate-fade-in text-xs">
-                      <div className="flex items-center space-x-1.5 font-bold text-cyan-300">
-                        <ThumbsUp className="w-3.5 h-3.5" />
-                        <span>Why this happens:</span>
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-950/40 to-slate-900 border border-cyan-500/40 space-y-2.5 animate-fade-in text-xs sm:text-sm shadow-md">
+                      <div className="flex items-center space-x-2 font-bold text-cyan-300">
+                        <span className="text-base">🍳</span>
+                        <span className="text-xs uppercase tracking-wider">Kitchen Diagnosis:</span>
                       </div>
                       <p className="text-slate-200 leading-relaxed">
                         {activeCase.kitchenDiagnosis || activeCase.explanation}
                       </p>
-                      <p className="text-emerald-300 font-medium pt-1">
-                        {activeCase.collegeGoldenRule || activeCase.collegeLifeRule}
-                      </p>
+                      <div className="pt-2 border-t border-cyan-500/20 flex items-center space-x-2 text-emerald-300 font-semibold text-xs">
+                        <span>🌟</span>
+                        <span>{activeCase.collegeGoldenRule || activeCase.collegeLifeRule}</span>
+                      </div>
                     </div>
                   )}
 
-                  {/* Prev / Next Controls */}
-                  <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-                    <div className="flex items-center space-x-2">
+                  {/* Prev / Next Controls & Advance */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between pt-3 border-t border-white/[0.08] gap-3">
+                    <div className="flex items-center space-x-2 w-full sm:w-auto">
                       <button
                         onClick={handlePrevCase}
                         disabled={currentCaseIndex === 0}
-                        className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-20 text-xs text-slate-300 cursor-pointer"
+                        className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-20 text-xs text-slate-300 flex items-center justify-center space-x-1 cursor-pointer"
                       >
-                        ← Prev
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>Previous</span>
                       </button>
                       <button
                         onClick={handleNextCase}
                         disabled={currentCaseIndex === cases.length - 1}
-                        className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-20 text-xs text-slate-300 cursor-pointer"
+                        className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-20 text-xs text-slate-300 flex items-center justify-center space-x-1 cursor-pointer"
                       >
-                        Next →
+                        <span>Next</span>
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
 
                     <button
                       onClick={() => setActiveTab('rig')}
-                      className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer"
+                      className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-black flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-lg shadow-emerald-500/25"
                     >
-                      <span>Final Step: Check Laptop</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Continue to Check Laptop</span>
+                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                     </button>
                   </div>
 
@@ -549,34 +761,37 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
           )}
 
           {/* ======================================================== */}
-          {/* TAB 3: KNOW YOUR OWN RIG (SIMPLE 3 QUESTIONS) */}
+          {/* STAGE 3: RIG INSPECTOR & 1-CLICK AUTO-DETECT */}
           {/* ======================================================== */}
           {activeTab === 'rig' && (
-            <div className="space-y-4">
+            <div className="space-y-5 animate-fade-in">
 
-              {/* Simple Guide Banner */}
-              <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-bold text-white">Check Your Own Laptop (Super Easy 1-2-3)</h4>
-                  <p className="text-[11px] text-slate-300">
-                    Take 30 seconds to find out what CPU and RAM your machine has.
+              {/* Inspector Header Banner */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-slate-900 border border-emerald-500/35 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Laptop className="w-5 h-5 text-emerald-400" />
+                    <h4 className="text-sm sm:text-base font-extrabold text-white">Know Your Own Laptop Rig</h4>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Verify what CPU processor, RAM memory, and internet connection powers your machine.
                   </p>
                 </div>
 
                 {/* OS Switcher */}
-                <div className="flex items-center space-x-1 p-1 rounded-xl bg-slate-950 border border-white/[0.08] shrink-0">
+                <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-slate-950 border border-white/[0.1] self-start md:self-auto shrink-0">
                   <button
                     onClick={() => setRigOs('windows')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      rigOs === 'windows' ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      rigOs === 'windows' ? 'bg-cyan-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     Windows 🪟
                   </button>
                   <button
                     onClick={() => setRigOs('mac')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      rigOs === 'mac' ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      rigOs === 'mac' ? 'bg-cyan-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     macOS 🍏
@@ -584,67 +799,143 @@ export const Module4TechHardwareModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* 3 Simple Questions */}
-              <div className="space-y-3">
+              {/* ⚡ 1-CLICK AUTO-DETECT HERO BUTTON */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-blue-950/40 to-slate-900 border-2 border-cyan-400/50 shadow-xl shadow-cyan-950/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Zap className="w-5 h-5 text-yellow-400 fill-yellow-400 animate-pulse" />
+                    <h5 className="text-sm font-black text-white">Instant 1-Click Hardware Scan</h5>
+                  </div>
+                  <p className="text-xs text-cyan-200/90 leading-relaxed">
+                    Don't want to dig through Task Manager? Click below to instantly query your browser hardware APIs for CPU cores, RAM, and network status!
+                  </p>
+                  {autoDetected && (
+                    <div className="flex items-center space-x-2 pt-1">
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center space-x-1">
+                        <Check className="w-3 h-3" />
+                        <span>⚡ Auto-Detected from Browser Hardware APIs ({autoDetectTimestamp || 'Active'})</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleAutoDetectSpecs}
+                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 text-xs sm:text-sm font-black flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-lg shadow-cyan-500/30 shrink-0 active:scale-95"
+                >
+                  <Zap className="w-4 h-4 fill-slate-950" />
+                  <span>{autoDetected ? '⚡ Re-Detect Specs' : '⚡ Auto-Detect My Laptop Specs'}</span>
+                </button>
+              </div>
+
+              {/* 3 Interactive Question Cards */}
+              <div className="space-y-3.5">
                 {KNOW_YOUR_OWN_RIG_TASKS.map((item) => {
                   const currentVal = item.id === 'audit-cpu' ? rigCpu : item.id === 'audit-ram' ? rigRam : rigNetwork;
                   const setVal = item.id === 'audit-cpu' ? setRigCpu : item.id === 'audit-ram' ? setRigRam : setRigNetwork;
                   const instructions = rigOs === 'windows' ? item.easyInstructionsWindows : item.easyInstructionsMac;
+                  const isFieldFilled = currentVal.trim().length > 1;
 
                   return (
-                    <div key={item.id} className="p-4 rounded-xl border border-white/[0.08] bg-slate-950/80 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold text-xs flex items-center justify-center font-mono">
-                            {item.stepNumber}
+                    <div 
+                      key={item.id} 
+                      className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                        isFieldFilled 
+                          ? 'border-emerald-500/40 bg-slate-950/90 shadow-md shadow-emerald-950/20' 
+                          : 'border-white/[0.08] bg-slate-950/70'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+                        <div className="flex items-center space-x-2.5">
+                          <span className={`w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center font-mono ${
+                            isFieldFilled ? 'bg-emerald-500 text-slate-950' : 'bg-cyan-500/20 text-cyan-300'
+                          }`}>
+                            {isFieldFilled ? '✓' : item.stepNumber}
                           </span>
-                          <span className="text-xs font-bold text-white">{item.title}</span>
+                          <span className="text-xs sm:text-sm font-extrabold text-white">{item.title}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-mono">{item.analogyRef}</span>
+                        <span className="text-[11px] text-cyan-400/80 font-mono hidden sm:inline">
+                          {item.analogyRef}
+                        </span>
                       </div>
 
-                      <div className="p-2 rounded-lg bg-slate-900 border border-white/[0.05] text-[11px] text-cyan-200">
-                        👉 <strong>How to look:</strong> {instructions}
+                      {/* Manual lookup guide */}
+                      <div className="my-2.5 p-2.5 rounded-xl bg-slate-900/80 border border-white/[0.05] text-[11px] text-cyan-200/90 flex items-start space-x-2">
+                        <span className="text-xs shrink-0">🔍</span>
+                        <div>
+                          <strong>Manual Steps ({rigOs === 'windows' ? 'Windows' : 'Mac'}):</strong> {instructions}
+                        </div>
                       </div>
 
-                      <div className="pt-1">
+                      {/* Input with Auto-Detected Badge */}
+                      <div className="relative">
                         <input
                           type="text"
                           value={currentVal}
                           onChange={(e) => setVal(e.target.value)}
                           placeholder={item.placeholder}
-                          className="w-full bg-slate-900 border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono transition-colors"
+                          className="w-full bg-slate-900 border border-white/[0.12] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono transition-colors"
                         />
+                        {isFieldFilled && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1 text-emerald-400 text-[10px] font-mono font-bold bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                            <span>Verified</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Feedback Message */}
+              {/* Status Indicator Bar */}
+              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.08] flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-2">
+                  <ShieldCheck className={`w-4 h-4 ${isRigComplete ? 'text-emerald-400' : 'text-slate-500'}`} />
+                  <span className={isRigComplete ? 'text-emerald-300 font-bold' : 'text-slate-400'}>
+                    {isRigComplete 
+                      ? '✓ All 3 Rig specifications verified and ready for audit!' 
+                      : 'Please populate all 3 fields above to submit.'}
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono text-cyan-400 font-bold">
+                  {[rigCpu, rigRam, rigNetwork].filter(x => x.trim().length > 1).length} of 3 Complete
+                </span>
+              </div>
+
+              {/* Feedback Message Alert */}
               {submissionFeedback && (
-                <div className={`p-3 rounded-xl text-xs font-mono border ${
+                <div className={`p-4 rounded-xl text-xs sm:text-sm font-mono border animate-fade-in ${
                   submissionFeedback.type === 'success' 
-                    ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300' 
-                    : 'bg-rose-950/30 border-rose-500/40 text-rose-300'
+                    ? 'bg-emerald-950/50 border-emerald-500/50 text-emerald-200' 
+                    : 'bg-rose-950/50 border-rose-500/50 text-rose-200'
                 }`}>
                   {submissionFeedback.text}
                 </div>
               )}
 
-              {/* Submit Button */}
-              <div className="pt-2 flex justify-end">
+              {/* Big Celebratory Submit Button */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/[0.08]">
+                <button
+                  onClick={() => setActiveTab('troubleshooting')}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  ← Back to Dilemmas
+                </button>
+
                 <button
                   onClick={handleFinalSubmit}
                   disabled={!isRigComplete}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black flex items-center space-x-2 transition-all cursor-pointer ${
+                  className={`w-full sm:w-auto px-8 py-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center space-x-2.5 transition-all cursor-pointer shadow-xl ${
                     isRigComplete
-                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 shadow-emerald-500/30 active:scale-95'
                       : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'
                   }`}
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{isAlreadySubmitted ? 'Update & Re-Submit' : 'Submit Module 4'}</span>
+                  <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
+                  <span>
+                    {isAlreadySubmitted ? '✓ Update & Re-Submit Module 4' : '🎉 Submit Module 4 For Review'}
+                  </span>
                 </button>
               </div>
 

@@ -5,8 +5,6 @@ import {
   Activity, 
   CheckCircle2, 
   AlertTriangle, 
-  Copy, 
-  ExternalLink, 
   RotateCcw, 
   Sliders, 
   ShieldCheck, 
@@ -61,7 +59,6 @@ export const AdminModule4Page = () => {
     return saved ? parseInt(saved, 10) : 60;
   });
   const [thresholdFeedback, setThresholdFeedback] = useState(null);
-  const [copiedLink, setCopiedLink] = useState(false);
 
   // Curriculum Inspector Tab: 'kitchen' | 'troubleshooting'
   const [curriculumTab, setCurriculumTab] = useState('kitchen');
@@ -74,12 +71,6 @@ export const AdminModule4Page = () => {
     localStorage.setItem('module4_pass_threshold', num.toString());
     setThresholdFeedback(`Passing threshold updated to ${num}%.`);
     setTimeout(() => setThresholdFeedback(null), 3500);
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/test`);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2400);
   };
 
   const handleApprove = () => {
@@ -128,27 +119,6 @@ export const AdminModule4Page = () => {
         }
         title="Module 4: Tech & Hardware (Kitchen Mental Model)"
         subtitle="Verify candidate machine rig audits, inspect troubleshooting case scores, and oversee the restaurant kitchen hardware curriculum."
-        actions={
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
-            >
-              <Copy className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{copiedLink ? 'Copied Link!' : 'Copy Candidate Link'}</span>
-            </button>
-            <a
-              href="/test"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
-            >
-              <span>Test Candidate View</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-        }
       />
 
       {/* KPI Stats Grid */}

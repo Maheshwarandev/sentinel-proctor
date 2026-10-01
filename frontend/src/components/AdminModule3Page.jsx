@@ -5,8 +5,6 @@ import {
   Activity, 
   CheckCircle2, 
   AlertTriangle, 
-  Copy, 
-  ExternalLink, 
   RotateCcw, 
   BookOpen, 
   ShieldCheck, 
@@ -50,7 +48,6 @@ export const AdminModule3Page = () => {
   const [topicHistory, setTopicHistory] = useState(() => WRITING_TOPICS);
   const [isGenerating, setIsGenerating] = useState(false);
   const [topicFeedback, setTopicFeedback] = useState(null);
-  const [copiedLink, setCopiedLink] = useState(false);
   const [zoomPhoto, setZoomPhoto] = useState(null);
 
   // Gemini Key status
@@ -152,12 +149,6 @@ export const AdminModule3Page = () => {
     }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/test`);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
-  };
-
   const photosList = Array.isArray(writingTask.photos) ? writingTask.photos : [];
 
   return (
@@ -215,23 +206,6 @@ export const AdminModule3Page = () => {
               <Sparkles className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
               <span>{isGenerating ? 'Synthesizing Topic...' : '✨ Generate Fresh Gemini Topic'}</span>
             </button>
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
-            >
-              <Copy className="w-3.5 h-3.5 text-teal-400" />
-              <span>{copiedLink ? 'Copied Link!' : 'Copy Candidate Link'}</span>
-            </button>
-            <a
-              href="/test"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/[0.1] text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
-            >
-              <span>Test Workstation</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
           </div>
         }
       />

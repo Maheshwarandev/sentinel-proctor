@@ -5,8 +5,6 @@ import {
   Activity, 
   CheckCircle2, 
   AlertTriangle, 
-  Copy, 
-  ExternalLink, 
   RotateCcw, 
   Sliders, 
   ShieldCheck, 
@@ -64,7 +62,6 @@ export const AdminModule2Page = () => {
   const [customLimitInput, setCustomLimitInput] = useState(module2QuestionLimit);
   const [limitFeedback, setLimitFeedback] = useState(null);
   const [timeFeedback, setTimeFeedback] = useState(null);
-  const [copiedLink, setCopiedLink] = useState(false);
 
   // 1-second live clock ticker
   const [, setTimeTick] = useState(Date.now());
@@ -179,12 +176,6 @@ export const AdminModule2Page = () => {
     }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/test`);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
-  };
-
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-['Plus_Jakarta_Sans',sans-serif]">
       {notifications?.length > 0 && (
@@ -217,23 +208,6 @@ export const AdminModule2Page = () => {
               <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
               <span>Reset to Day 1</span>
             </button>
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
-            >
-              <Copy className="w-3.5 h-3.5 text-amber-400" />
-              <span>{copiedLink ? 'Copied Link!' : 'Copy Candidate Link'}</span>
-            </button>
-            <a
-              href="/test"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
-            >
-              <span>Test Quest Road</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
           </div>
         }
       />
