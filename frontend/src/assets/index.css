@@ -2,95 +2,171 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   SENTINEL PROCTOR — GLOBAL STYLES
+   ============================================================ */
+
 :root {
   color-scheme: dark;
+  --sidebar-width: 240px;
 }
 
 body {
   margin: 0;
   background-color: #080c14;
   overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Cybernetic Surveillance Grid Background */
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #080c14; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+/* ============================================================
+   LAYOUT UTILITIES
+   ============================================================ */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 40;
+  transition: transform 0.25s ease;
+}
+
+.admin-main {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+  .admin-main {
+    margin-left: 0;
+  }
+}
+
+/* ============================================================
+   ANIMATIONS — RESTRAINED
+   ============================================================ */
+
+/* Subtle surveillance grid — admin only */
 .bg-surveillance-grid {
-  background-image: radial-gradient(rgba(6, 182, 212, 0.08) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
-/* Brother Scanner Beam Animation */
+/* Status pulse — only for live indicators */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-status-pulse {
+  animation: statusPulse 2.5s ease-in-out infinite;
+}
+
+/* Scanline — CCTV only */
 @keyframes scanline {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(1000%);
-  }
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
 }
-
 .animate-scanline {
   animation: scanline 8s linear infinite;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #090d16;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #06b6d4;
-}
-
+/* Shake for security alerts */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
 }
+.animate-shake { animation: shake 0.4s ease-in-out; }
 
-.animate-shake {
-  animation: shake 0.4s ease-in-out;
-}
-
-/* Live Stream Alert / Superchat Animation */
+/* Superchat / stream alert pop */
 @keyframes streamAlertPop {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -20px) scale(0.92);
-  }
-  60% {
-    opacity: 1;
-    transform: translate(-50%, 4px) scale(1.02);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1);
-  }
+  0% { opacity: 0; transform: translate(-50%, -16px) scale(0.94); }
+  60% { opacity: 1; transform: translate(-50%, 3px) scale(1.01); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
 }
-
 @keyframes streamAlertProgress {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
+  from { width: 100%; }
+  to { width: 0%; }
 }
-
 .animate-stream-alert {
-  animation: streamAlertPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: streamAlertPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
 .animate-alert-progress {
   animation: streamAlertProgress 7.5s linear forwards;
 }
 
+/* ─── Admin Sidebar Layout ──────────────────────────────────────────────── */
+
+/* The root shell: sidebar fixed on the left, main column fills the rest */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar: hidden (off-screen) by default on mobile, fixed on desktop */
+.admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 40;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+}
+
+/* Open state — mobile drawer slides in */
+.admin-sidebar.open {
+  transform: translateX(0);
+}
+
+/* On large screens: always visible */
+@media (min-width: 1024px) {
+  .admin-sidebar {
+    transform: translateX(0);
+  }
+
+  /* Push main content to the right of the 240px sidebar */
+  .admin-main {
+    margin-left: 240px;
+  }
+}
+/* Slide-in for modals/panels */
+@keyframes slideInFromBottom {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideInFromBottom 0.2s ease-out forwards;
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}

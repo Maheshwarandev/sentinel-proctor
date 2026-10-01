@@ -1,6 +1,15 @@
 import { Task } from '../models/Task.js';
 import { getIsConnected } from '../config/db.js';
-import { getDailyTopicForDate } from '../services/dailyWritingTopicService.js';
+import { 
+  getDailyTopicForDate, 
+  generateFreshTopic, 
+  getGeminiTopicStatus, 
+  setRuntimeGeminiKey 
+} from '../services/dailyWritingTopicService.js';
+import { 
+  getNextCollegeTroubleshootCase, 
+  FOUNDATIONAL_COLLEGE_CASES 
+} from '../services/collegeTroubleshootService.js';
 
 const SEED_TASKS = [
   {
@@ -171,7 +180,8 @@ export const createTask = async (req, res) => {
 export const getDailyWritingTopic = async (req, res) => {
   try {
     const dateKey = req.query.date || new Date().toISOString().split('T')[0];
-    const topic = await getDailyTopicForDate(dateKey);
+    const forceRefresh = req.query.refresh === 'true' || req.query.fresh === 'true';
+    const topic = await getDailyTopicForDate(dateKey, { forceRefresh });
     return res.status(200).json({
       success: true,
       dateKey,
@@ -184,5 +194,71 @@ export const getDailyWritingTopic = async (req, res) => {
       message: 'Failed to retrieve daily writing topic', 
       error: err.message 
     });
+  }
+};
+
+export const generateNewWritingTopic = async (req, res) => {
+  try {
+    const { category } = req.body || {};
+    const topic = await generateFreshTopic({ category });
+    return res.status(200).json({
+      success: true,
+      topic,
+      source: topic.source,
+      message: 'Fresh unique topic synthesized successfully'
+    });
+  } catch (err) {
+    console.error('[TaskController] Error generating writing topic:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate writing topic',
+      error: err.message
+    });
+  }
+};
+
+export const getGeminiTopicConfig = async (req, res) => {
+  try {
+    const status = getGeminiTopicStatus();
+    return res.status(200).json({ success: true, ...status });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const updateGeminiKey = async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    if (!apiKey || typeof apiKey !== 'string') {
+      return res.status(400).json({ success: false, message: 'Invalid API key provided' });
+    }
+    setRuntimeGeminiKey(apiKey);
+    const status = getGeminiTopicStatus();
+    return res.status(200).json({ success: true, message: 'Gemini API key updated', ...status });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const getCollegeCases = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      foundationalCases: FOUNDATIONAL_COLLEGE_CASES
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const generateCollegeCase = async (req, res) => {
+  try {
+    const troubleCase = await getNextCollegeTroubleshootCase();
+    return res.status(200).json({
+      success: true,
+      case: troubleCase
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 };

@@ -160,6 +160,19 @@ export const processSubmission = async (req, res) => {
       integrityScore: scoringResult.score,
       violations: scoringResult.violations,
       verdict: scoringResult.verdict,
+      module2Assessment: Array.isArray(req.body.module2Assessment || req.body.results)
+        ? (req.body.module2Assessment || req.body.results).map(item => ({
+            questionId: item.questionId || '',
+            questionText: item.questionText || '',
+            category: item.category || 'General',
+            userAnswer: item.userAnswer || item.userSelectedText || '',
+            userSelectedIndex: typeof item.userSelectedIndex === 'number' ? item.userSelectedIndex : undefined,
+            correctAnswer: item.correctAnswer || item.correctAnswerText || '',
+            isCorrect: !!item.isCorrect,
+            explanation: item.explanation || '',
+            timeSpentSec: item.timeSpentSec || 0
+          }))
+        : [],
       createdAt: new Date()
     };
 

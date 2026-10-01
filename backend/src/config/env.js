@@ -13,5 +13,7 @@ export const ENV = {
   JWT_SECRET: process.env.JWT_SECRET || 'brother_super_secret_jwt_key_2026',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   TUNNEL_URL: process.env.TUNNEL_URL || '',
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || ''
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
+  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || ''
 };

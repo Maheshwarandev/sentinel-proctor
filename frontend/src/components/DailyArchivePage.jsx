@@ -254,52 +254,37 @@ export const DailyArchivePage = () => {
       {/* Real-time floating popup */}
       <CyberNotificationPopup />
 
-      {/* Top Breadcrumb */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-        <div className="flex items-center space-x-2 text-xs">
-          <span className="text-slate-500">Admin</span>
-          <span className="text-slate-600">/</span>
-          <span className="text-emerald-400 font-semibold">Daily Submission Archive</span>
-        </div>
-      </div>
-
-      {/* Header Banner */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/80 p-6 shadow-xl backdrop-blur-md">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-1.5">
-            <div className="flex items-center space-x-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold flex items-center space-x-1">
-                <Archive className="w-3 h-3 mr-1" />
-                <span>Permanent Compliance Ledger</span>
-              </span>
-              <span className="text-xs text-slate-400">Subject: Brother</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Daily Submission Archive
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-              Every time you review and approve a task in the Submissions Box, it is automatically archived here with the full text, camera EXIF sensor data, OCR streak, and your approval notes.
-            </p>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border bg-emerald-500/12 text-emerald-400 border-emerald-500/25">
+              <Archive className="w-3 h-3" />
+              Permanent Compliance Ledger
+            </span>
+            <span className="text-xs text-slate-400">Subject: Brother</span>
           </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Daily Submission Archive</h1>
+          <p className="text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            Every approved task is archived here with full text, camera EXIF, OCR streak, and approval notes.
+          </p>
+        </div>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center shrink-0">
-            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-              <div className="text-[10px] uppercase text-slate-500 font-semibold">Total Approved</div>
-              <div className="text-xl font-bold text-emerald-400 mt-0.5">{archive.length}</div>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-              <div className="text-[10px] uppercase text-slate-500 font-semibold">Days Logged</div>
-              <div className="text-xl font-bold text-cyan-400 mt-0.5">{totalDaysCount}</div>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-              <div className="text-[10px] uppercase text-slate-500 font-semibold">Duolingo</div>
-              <div className="text-xl font-bold text-amber-400 mt-0.5">{duolingoCount}</div>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-              <div className="text-[10px] uppercase text-slate-500 font-semibold">Writing</div>
-              <div className="text-xl font-bold text-teal-400 mt-0.5">{writingCount}</div>
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center shrink-0">
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
+            <div className="text-[10px] uppercase text-slate-500 font-semibold">Total Approved</div>
+            <div className="text-xl font-bold text-emerald-400 mt-0.5">{archive.length}</div>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
+            <div className="text-[10px] uppercase text-slate-500 font-semibold">Days Logged</div>
+            <div className="text-xl font-bold text-cyan-400 mt-0.5">{totalDaysCount}</div>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
+            <div className="text-[10px] uppercase text-slate-500 font-semibold">Duolingo</div>
+            <div className="text-xl font-bold text-amber-400 mt-0.5">{duolingoCount}</div>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
+            <div className="text-[10px] uppercase text-slate-500 font-semibold">Writing</div>
+            <div className="text-xl font-bold text-teal-400 mt-0.5">{writingCount}</div>
           </div>
         </div>
       </div>

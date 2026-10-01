@@ -6,7 +6,8 @@ import {
   Volume2, 
   VolumeX, 
   Minimize2, 
-  Maximize2 
+  Maximize2,
+  Clock 
 } from 'lucide-react';
 import { useForensics } from '../context/ForensicContext';
 
@@ -62,9 +63,12 @@ const DuoOwl = ({ className = "w-24 h-24", mood = "happy" }) => (
   </div>
 );
 
-export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
+export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null }) => {
   const navigate = useNavigate();
-  const { submitDuolingoPractice, triggerRedLockdown, module2QuestionLimit = 50 } = useForensics();
+  const { submitDuolingoPractice, triggerRedLockdown, module2QuestionLimit = 50, getModule2TimeStatus } = useForensics();
+
+  const timeStatus = typeof getModule2TimeStatus === 'function' ? getModule2TimeStatus() : { isActive: true, countdownOpen: '00:00:00' };
+  const isTimeLocked = !activeSession?.practiceMode && !timeStatus.isActive;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -868,6 +872,17 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
   const handleCommitAssessment = () => {
     if (!finalGrade || !finalGrade.passed) return;
 
+    // Record completion in Module 2 daily quest roadmap
+    if (activeSession?.day) {
+      try {
+        const savedDays = JSON.parse(localStorage.getItem('module2_completed_days') || '[]');
+        if (!savedDays.includes(activeSession.day)) {
+          savedDays.push(activeSession.day);
+          localStorage.setItem('module2_completed_days', JSON.stringify(savedDays));
+        }
+      } catch (e) {}
+    }
+
     submitDuolingoPractice({
       type: 'english_quiz',
       quizScore: finalGrade.score,
@@ -907,6 +922,38 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
   };
 
   if (!isOpen) return null;
+
+  if (isTimeLocked && !isCompleted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#080c14] text-white font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
+            <Clock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-white">Daily Session Locked</h2>
+            <p className="text-xs text-amber-300 font-mono font-bold">
+              Access Window: 7:00 PM – 10:00 PM (19:00 – 22:00)
+            </p>
+          </div>
+          <div className="p-4 rounded-xl bg-slate-950/80 border border-white/[0.08] space-y-1">
+            <div className="text-[10px] uppercase font-semibold text-slate-400">Time Until 7:00 PM Tonight</div>
+            <div className="text-3xl font-black font-mono text-amber-400">{timeStatus.countdownOpen}</div>
+            <p className="text-xs text-slate-400 pt-1 leading-relaxed">
+              Module 2 questions are strictly accessible between 7:00 PM and 10:00 PM daily. Please return during the scheduled window to take your assessment!
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose || (() => navigate('/test'))}
+            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-400 to-cyan-500 hover:from-sky-300 hover:to-cyan-400 text-slate-950 font-bold text-xs transition-all cursor-pointer shadow-md"
+          >
+            Back to Candidate Workstation
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const currentQuestion = questions[currentIndex];
   const progressPercent = questions.length > 0 ? Math.round(((currentIndex + (hasChecked ? 1 : 0)) / questions.length) * 100) : 0;
@@ -982,14 +1029,26 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
           <X className="w-6 h-6 stroke-[2.5]" />
         </button>
 
-        {/* Chunky Duolingo Green Progress Bar */}
-        <div className="flex-1 max-w-2xl h-4 bg-[#E5E5E5] rounded-full overflow-hidden relative">
-          <div 
-            className="h-full bg-[#58CC02] rounded-full transition-all duration-500 ease-out relative"
-            style={{ width: `${Math.max(4, progressPercent)}%` }}
-          >
-            {/* Reflective glossy top line */}
-            <div className="absolute top-0.5 left-2 right-2 h-1 bg-white/35 rounded-full" />
+        {/* Chunky Duolingo Green Progress Bar & Session Label */}
+        <div className="flex-1 max-w-2xl flex flex-col justify-center">
+          {activeSession && (
+            <div className="flex items-center justify-between text-[11px] font-black font-mono text-[#777777] mb-1 px-1">
+              <span className="truncate text-[#3C3C3C]">
+                DAY {activeSession.day}: {activeSession.title}
+              </span>
+              <span className="text-[#58CC02] shrink-0 ml-2">
+                {progressPercent}%
+              </span>
+            </div>
+          )}
+          <div className="h-4 bg-[#E5E5E5] rounded-full overflow-hidden relative">
+            <div 
+              className="h-full bg-[#58CC02] rounded-full transition-all duration-500 ease-out relative"
+              style={{ width: `${Math.max(4, progressPercent)}%` }}
+            >
+              {/* Reflective glossy top line */}
+              <div className="absolute top-0.5 left-2 right-2 h-1 bg-white/35 rounded-full" />
+            </div>
           </div>
         </div>
 
@@ -1098,13 +1157,60 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
       ) : (
         /* Active Duolingo Question Interface */
         <div className="flex-1 max-w-2xl mx-auto w-full px-4 pt-4 pb-36 flex flex-col justify-center my-auto">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3C3C3C] tracking-tight mb-8">
-            Select the correct answer
+          
+          {/* Pillar Category Badge Header */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center space-x-2">
+              {currentQuestion.category === 'Fluency' || currentQuestion.isFluency ? (
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-sky-500/15 text-sky-700 border border-sky-500/30 text-xs font-black uppercase tracking-wider font-mono">
+                  <span>🗣️ ENGLISH FLUENCY & SPOKEN PRACTICE</span>
+                </span>
+              ) : currentQuestion.category === 'Coding' || currentQuestion.codeSnippet ? (
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 text-xs font-black uppercase tracking-wider font-mono">
+                  <span>💻 BASIC PROGRAMMING LOGIC</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-purple-500/15 text-purple-700 border border-purple-500/30 text-xs font-black uppercase tracking-wider font-mono">
+                  <span>📖 ENGLISH GRAMMAR MECHANICS</span>
+                </span>
+              )}
+            </div>
+
+            <span className="text-xs font-bold text-[#AFAFAF] uppercase tracking-wider font-mono">
+              Question {currentIndex + 1} of {questions.length}
+            </span>
+          </div>
+
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#3C3C3C] tracking-tight mb-4">
+            {currentQuestion.category === 'Fluency' || currentQuestion.isFluency 
+              ? "Listen and choose the most natural workplace response:" 
+              : "Select the correct answer"}
           </h1>
 
+          {/* VISUAL IMAGE CARD (IF IMAGE PRESENT) */}
+          {currentQuestion.imageUrl && (
+            <div className="mb-5 rounded-2xl overflow-hidden border-2 border-[#E5E5E5] bg-slate-950 shadow-md p-2 flex flex-col items-center">
+              <img 
+                src={currentQuestion.imageUrl} 
+                alt="Visual Reference" 
+                className="w-full max-h-56 sm:max-h-64 object-contain rounded-xl"
+              />
+              <div className="text-[11px] font-mono text-slate-400 py-1.5 flex items-center space-x-1.5">
+                <span>🔍 Visual Reference — Inspect Above</span>
+              </div>
+            </div>
+          )}
+
+          {/* CODE SNIPPET (IF CODING QUESTION WITH CODE) */}
+          {currentQuestion.codeSnippet && (
+            <div className="mb-4 rounded-xl bg-slate-900 border border-slate-700 p-3.5 font-mono text-xs text-emerald-400 overflow-x-auto shadow-inner">
+              <pre className="whitespace-pre-wrap leading-relaxed">{currentQuestion.codeSnippet}</pre>
+            </div>
+          )}
+
           {/* Duo the Owl Prompt with Speech Bubble */}
-          <div className="flex items-start space-x-4 mb-8">
-            <DuoOwl className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 -mt-2" />
+          <div className="flex items-start space-x-4 mb-6">
+            <DuoOwl className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 -mt-1" />
             
             <div className="relative bg-white border-2 border-[#E5E5E5] rounded-2xl p-4 sm:p-5 shadow-sm text-left flex items-center space-x-3.5 flex-1">
               {/* Triangle pointer to Duo */}
@@ -1113,19 +1219,21 @@ export const EnglishQuizModal = ({ isOpen = true, onClose }) => {
               <button
                 type="button"
                 onClick={() => speakQuestion(currentQuestion.text)}
-                className="w-10 h-10 rounded-xl bg-[#1CB0F6] hover:bg-[#1899D6] border-b-4 border-[#1482B4] text-white flex items-center justify-center shrink-0 shadow-sm cursor-pointer transition-all active:border-b-0 active:translate-y-1"
-                title="Listen"
+                className="w-11 h-11 rounded-xl bg-[#1CB0F6] hover:bg-[#1899D6] border-b-4 border-[#1482B4] text-white flex items-center justify-center shrink-0 shadow-sm cursor-pointer transition-all active:border-b-0 active:translate-y-1"
+                title="Listen audio"
               >
                 <Volume2 className="w-5 h-5 fill-white" />
               </button>
 
               <div className="space-y-0.5">
-                <span className="text-lg sm:text-xl font-extrabold text-[#3C3C3C] leading-snug block">
+                <span className="text-base sm:text-lg font-extrabold text-[#3C3C3C] leading-snug block">
                   {currentQuestion.text}
                 </span>
-                <span className="text-xs font-bold text-[#AFAFAF] uppercase tracking-wider block">
-                  {currentQuestion.category} • {currentQuestion.difficulty}
-                </span>
+                {(currentQuestion.category === 'Fluency' || currentQuestion.isFluency) && (
+                  <span className="text-[11px] font-bold text-[#1CB0F6] block pt-1">
+                    🔊 Click the blue speaker icon to listen to natural pronunciation!
+                  </span>
+                )}
               </div>
             </div>
           </div>

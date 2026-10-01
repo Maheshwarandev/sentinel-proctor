@@ -54,6 +54,19 @@ const sessionLogSchema = new mongoose.Schema({
       }
     ]
   },
+  module2Assessment: [
+    {
+      questionId: { type: String, default: '' },
+      questionText: { type: String, default: '' },
+      category: { type: String, required: true, default: 'General' },
+      userAnswer: { type: String, default: '' },
+      userSelectedIndex: { type: Number },
+      correctAnswer: { type: String, default: '' },
+      isCorrect: { type: Boolean, required: true, default: false },
+      explanation: { type: String, default: '' },
+      timeSpentSec: { type: Number, default: 0 }
+    }
+  ],
   integrityScore: { type: Number, default: 100 },
   violations: [String],
   verdict: {
@@ -72,6 +85,7 @@ sessionLogSchema.index({ createdAt: -1 });
 sessionLogSchema.index({ taskId: 1, createdAt: -1 });
 sessionLogSchema.index({ userId: 1, createdAt: -1 });
 sessionLogSchema.index({ verdict: 1 });
+sessionLogSchema.index({ 'module2Assessment.category': 1 });
 
 export const SessionLog = mongoose.models.SessionLog || mongoose.model('SessionLog', sessionLogSchema);
 

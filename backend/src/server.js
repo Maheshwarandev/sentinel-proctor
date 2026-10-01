@@ -12,6 +12,7 @@ import submissionRoutes from './routes/submissionRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
 import syncRoutes from './routes/syncRoutes.js';
+import { initCronJobs } from './services/cronService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +22,9 @@ const PORT = ENV.PORT;
 
 // Initialize MongoDB connection
 connectDB();
+
+// Initialize autonomous daily cron jobs (21:00 Daily Compliance Digest)
+initCronJobs();
 
 // Global Middleware
 app.use(cors({
@@ -51,7 +55,8 @@ app.get('/api/health', (req, res) => {
       exifVerification: 'ONLINE',
       duplicateHashDetection: 'ONLINE',
       telemetrySurveillance: 'ONLINE',
-      antiPasteShield: 'ONLINE'
+      antiPasteShield: 'ONLINE',
+      dailyDigestCron: 'ONLINE (21:00 Daily)'
     }
   });
 });

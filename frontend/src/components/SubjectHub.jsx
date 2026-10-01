@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { useForensics, INITIAL_TASKS } from '../context/ForensicContext';
 import { EnglishQuizModal } from './EnglishQuizModal';
+import { Module2RoadmapLanding } from './Module2RoadmapLanding';
+import { Module4TechHardwareModal } from './Module4TechHardwareModal';
 import { WRITING_TOPICS } from '../data/writingTopics';
 
 export const SubjectHub = () => {
@@ -40,8 +42,14 @@ export const SubjectHub = () => {
     triggerRedLockdown,
     isAllTasksCompleted,
     unlockNewDayTasks,
-    module2QuestionLimit = 50
+    module2QuestionLimit = 50,
+    currentStreak = 0,
+    trustScore = 100,
+    getModule2TimeStatus
   } = useForensics();
+
+  const module2TimeStatus = typeof getModule2TimeStatus === 'function' ? getModule2TimeStatus() : null;
+  const isModule3TimeUnlocked = module2TimeStatus ? module2TimeStatus.isActive : true;
 
   const [timeUntilTomorrow, setTimeUntilTomorrow] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
@@ -86,9 +94,15 @@ export const SubjectHub = () => {
   const keyboardTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-1-keyboard')) || INITIAL_TASKS[0];
   const duolingoTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-2-duolingo')) || INITIAL_TASKS[1];
   const writingTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-3-writing')) || INITIAL_TASKS[2];
+  const techHardwareTask = (Array.isArray(tasks) && tasks.find(t => t?.id === 'mod-4-techhardware')) || INITIAL_TASKS[3];
 
   // Windows 11 English Assessment Engine Modal State
+  const [isRoadmapOpen, setIsRoadmapOpen] = useState(false);
   const [isEnglishQuizOpen, setIsEnglishQuizOpen] = useState(false);
+  const [activeSession, setActiveSession] = useState(null);
+
+  // Module 4 Tech & Hardware Modal State
+  const [isModule4ModalOpen, setIsModule4ModalOpen] = useState(false);
 
   // -------------------------------------------------------------
   // MODULE 1: FULLSCREEN BLACK WRITING CANVAS STATE
@@ -97,6 +111,8 @@ export const SubjectHub = () => {
   const isWritingAreaOpenRef = useRef(false);
   const [inputText, setInputText] = useState(keyboardTask?.submissionText || '');
   const [typingSeconds, setTypingSeconds] = useState(0);
+  const [fullSessionSeconds, setFullSessionSeconds] = useState(0);
+  const fullTimerRef = useRef(null);
   const [isTypingActive, setIsTypingActive] = useState(false);
   const isTypingActiveRef = useRef(false);
   const [pasteBlockedAlert, setPasteBlockedAlert] = useState(null);
@@ -105,6 +121,63 @@ export const SubjectHub = () => {
   const [pasteAttempts, setPasteAttempts] = useState(0);
   const [keystrokesCount, setKeystrokesCount] = useState(keyboardTask?.telemetry?.totalKeystrokes || 0);
   const [hubNotification, setHubNotification] = useState(null);
+
+  // Security bypass flag for onPaste interception during programmatic state restoration
+  const [isPasteInterceptionEnabled, setIsPasteInterceptionEnabled] = useState(true);
+  const isPasteInterceptionEnabledRef = useRef(true);
+
+  // Auto-save & draft restoration tracking refs
+  const lastSavedTextRef = useRef(keyboardTask?.submissionText || '');
+  const inputTextRef = useRef(inputText);
+
+  // Synchronize inputTextRef to avoid stale closures in auto-save timers
+  useEffect(() => {
+    inputTextRef.current = inputText;
+  }, [inputText]);
+
+  // MODULE 1 DRAFT RESTORATION & CRITICAL SECURITY BYPASS (ON MOUNT)
+  useEffect(() => {
+    try {
+      const savedDraft = sessionStorage.getItem('mod1_draft');
+      if (savedDraft) {
+        // CRITICAL SECURITY BYPASS: Temporarily disable onPaste interception flag
+        // so state restoration does not trigger a false-positive security strike
+        isPasteInterceptionEnabledRef.current = false;
+        setIsPasteInterceptionEnabled(false);
+
+        setInputText(savedDraft);
+        inputTextRef.current = savedDraft;
+        lastSavedTextRef.current = savedDraft;
+
+        // Re-enable anti-paste listener immediately after the draft is loaded
+        const reEnableTimer = setTimeout(() => {
+          isPasteInterceptionEnabledRef.current = true;
+          setIsPasteInterceptionEnabled(true);
+        }, 50);
+
+        return () => clearTimeout(reEnableTimer);
+      }
+    } catch (err) {
+      console.warn('[SubjectHub] Failed to restore mod1_draft from sessionStorage:', err);
+    }
+  }, []);
+
+  // MODULE 1 AUTO-SAVE: Saves text buffer to sessionStorage every 5s if changed
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      const currentText = inputTextRef.current;
+      if (currentText !== lastSavedTextRef.current) {
+        try {
+          sessionStorage.setItem('mod1_draft', currentText);
+          lastSavedTextRef.current = currentText;
+        } catch (err) {
+          console.warn('[SubjectHub] Auto-save to sessionStorage failed:', err);
+        }
+      }
+    }, 5000);
+
+    return () => clearInterval(autoSaveInterval);
+  }, []);
 
   const showHubToast = (msg, type = 'success') => {
     setHubNotification({ msg, type });
@@ -134,6 +207,24 @@ export const SubjectHub = () => {
 
     return () => {
       if (typingTimerRef.current) clearInterval(typingTimerRef.current);
+    };
+  }, [isWritingAreaOpen]);
+
+  // FULL TIME TIMER: ticks continuously whenever the writing terminal is open
+  useEffect(() => {
+    if (!isWritingAreaOpen) {
+      if (fullTimerRef.current) clearInterval(fullTimerRef.current);
+      return;
+    }
+
+    fullTimerRef.current = setInterval(() => {
+      if (isWritingAreaOpenRef.current) {
+        setFullSessionSeconds(prev => prev + 1);
+      }
+    }, 1000);
+
+    return () => {
+      if (fullTimerRef.current) clearInterval(fullTimerRef.current);
     };
   }, [isWritingAreaOpen]);
 
@@ -189,6 +280,9 @@ export const SubjectHub = () => {
 
   // Prevent Paste, Drop, and Right-Click Context Menu
   const handlePaste = (e) => {
+    if (!isPasteInterceptionEnabledRef.current || !isPasteInterceptionEnabled) {
+      return;
+    }
     e.preventDefault();
     setPasteAttempts(p => p + 1);
     flashPasteAlert('CRITICAL SECURITY INTERCEPTION: External clipboard paste blocked by Sentinel Engine!');
@@ -257,6 +351,13 @@ export const SubjectHub = () => {
       totalKeystrokes: keystrokesCount,
       backspaceCount: 5
     });
+
+    try {
+      sessionStorage.removeItem('mod1_draft');
+    } catch (err) {
+      console.warn('[SubjectHub] Failed to remove mod1_draft from sessionStorage:', err);
+    }
+    lastSavedTextRef.current = '';
 
     setIsWritingAreaOpen(false);
     showHubToast('Module 1: Keyboard practice submitted successfully!');
@@ -332,10 +433,11 @@ export const SubjectHub = () => {
   };
 
   // -------------------------------------------------------------
-  // MODULE 3: WRITING PRACTICE (1 FIXED TOPIC FOR THE DAY VIA API)
+  // MODULE 3: WRITING PRACTICE (DYNAMIC GEMINI AI GENERATION)
   // -------------------------------------------------------------
   const [dailyWritingTopic, setDailyWritingTopic] = useState(() => WRITING_TOPICS[0]);
   const [isWritingTopicModalOpen, setIsWritingTopicModalOpen] = useState(false);
+  const [isGeneratingNewTopic, setIsGeneratingNewTopic] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -354,6 +456,26 @@ export const SubjectHub = () => {
     fetchDailyWritingTopic();
     return () => { isMounted = false; };
   }, [isAllTasksCompleted]);
+
+  const handleGenerateFreshWritingTopic = async () => {
+    setIsGeneratingNewTopic(true);
+    try {
+      const res = await fetch('/api/tasks/daily-writing-topic/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success && data.topic) {
+        setDailyWritingTopic(data.topic);
+        showHubToast(`✨ Fresh Gemini Topic Generated: "${data.topic.title}"`);
+      }
+    } catch (err) {
+      console.warn('[SubjectHub] Fresh topic generation failed:', err);
+      showHubToast('Failed to connect to AI generator. Please retry.');
+    } finally {
+      setIsGeneratingNewTopic(false);
+    }
+  };
 
   const currentWritingTopic = dailyWritingTopic;
 
@@ -491,8 +613,14 @@ export const SubjectHub = () => {
   // -------------------------------------------------------------
   useEffect(() => {
     if (keyboardTask?.status === 'PENDING' && !keyboardTask?.submissionText) {
+      try {
+        if (sessionStorage.getItem('mod1_draft')) {
+          return;
+        }
+      } catch (e) {}
       setInputText('');
       setTypingSeconds(0);
+      setFullSessionSeconds(0);
       setIsTypingActive(false);
       isTypingActiveRef.current = false;
       setKeystrokesCount(0);
@@ -521,8 +649,13 @@ export const SubjectHub = () => {
 
   const handleClearKeyboard = (e) => {
     if (e) e.stopPropagation();
+    try {
+      sessionStorage.removeItem('mod1_draft');
+    } catch (e) {}
+    lastSavedTextRef.current = '';
     setInputText('');
     setTypingSeconds(0);
+    setFullSessionSeconds(0);
     setIsTypingActive(false);
     isTypingActiveRef.current = false;
     setKeystrokesCount(0);
@@ -557,30 +690,30 @@ export const SubjectHub = () => {
     switch (status) {
       case 'VERIFIED':
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-sm shadow-emerald-500/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
-            VERIFIED
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-emerald-500/12 text-emerald-400 border-emerald-500/25">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+            Verified
           </span>
         );
       case 'FLAGGED':
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-sm shadow-rose-500/10 animate-pulse">
-            <AlertOctagon className="w-3 h-3 mr-1 text-rose-400" />
-            STRIKE ISSUED
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-rose-500/12 text-rose-400 border-rose-500/25">
+            <AlertOctagon className="w-3 h-3 shrink-0" />
+            Strike Issued
           </span>
         );
       case 'SUBMITTED':
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-sm shadow-cyan-500/10">
-            <Activity className="w-3 h-3 mr-1 text-cyan-400 animate-spin" />
-            PROCESSING
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-cyan-500/12 text-cyan-400 border-cyan-500/25">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+            Under Review
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm shadow-amber-500/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5" />
-            PENDING EXECUTION
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-700/40 text-slate-400 border-slate-600/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0" />
+            Not Started
           </span>
         );
     }
@@ -638,32 +771,46 @@ export const SubjectHub = () => {
       </div>
 
       {/* Subject Welcome Dossier Command Bar */}
-      <div className="rounded-2xl border border-white/[0.08] bg-slate-900/70 shadow-2xl px-4 py-2.5 sm:px-5 sm:py-3 relative overflow-hidden backdrop-blur-2xl shrink-0 z-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 text-[10px] font-semibold tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-1.5 animate-pulse" />
-                SUBJECT PORTAL • RESTRICTED ENCLAVE
+      <div className="rounded-2xl border border-white/[0.08] bg-slate-900/70 shadow-xl px-4 py-2.5 sm:px-5 sm:py-3 relative overflow-hidden backdrop-blur-2xl shrink-0 z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+          <div className="space-y-0.5">
+            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-[10px] font-semibold tracking-wide">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                CANDIDATE WORKSTATION
               </span>
-              <span className="text-[11px] text-slate-400 font-mono">ID: SUBJ-BROTHER-01</span>
+              <span className="text-[11px] text-slate-400 font-mono">ID: CANDIDATE-01</span>
+
+              {currentStreak > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/25 border border-amber-500/40 text-amber-300 text-[11px] font-black tracking-wide shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse">
+                  <span className="text-xs">🔥</span>
+                  <span>{currentStreak} Day Streak</span>
+                </span>
+              )}
             </div>
-            <h1 className="text-lg sm:text-xl font-extrabold text-white tracking-tight leading-tight flex items-center space-x-2">
-              <span>Mandatory Daily Compliance Disciplines</span>
+            <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              Daily Practice Disciplines
             </h1>
-            <p className="text-[12px] text-slate-400 max-w-2xl truncate hidden md:block">
-              Complete all three modules below. All keystrokes, screenshots, and handwritten uploads are audited in real time.
-            </p>
           </div>
 
           <div className="flex items-center space-x-2 text-xs shrink-0">
-            <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[75px]">
+            {currentStreak > 0 && (
+              <div className="px-3 py-1.5 rounded-xl bg-gradient-to-br from-amber-950/60 to-orange-950/40 border border-amber-500/40 text-center min-w-[78px] shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                <div className="text-[9px] uppercase tracking-wider text-amber-400 font-semibold flex items-center justify-center gap-1">
+                  <span>🔥</span> Streak
+                </div>
+                <div className="text-xs sm:text-sm font-black text-amber-300 font-mono">
+                  {currentStreak} {currentStreak === 1 ? 'Day' : 'Days'}
+                </div>
+              </div>
+            )}
+            <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[70px]">
               <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">Quota</div>
               <div className={`text-xs sm:text-sm font-bold font-mono ${isAllTasksCompleted ? 'text-emerald-400' : 'text-cyan-400'}`}>
-                {isAllTasksCompleted ? '3 / 3 ✓' : `${tasks.filter(t => t.status !== 'PENDING').length} / 3`}
+                {isAllTasksCompleted ? `${tasks.length} / ${tasks.length} ✓` : `${tasks.filter(t => t.status !== 'PENDING').length} / ${tasks.length}`}
               </div>
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[85px]">
+            <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[75px]">
               <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">State</div>
               <div className={`text-xs sm:text-sm font-bold flex items-center justify-center space-x-1 ${isAllTasksCompleted ? 'text-emerald-400' : 'text-amber-400'}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${isAllTasksCompleted ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
@@ -676,10 +823,10 @@ export const SubjectHub = () => {
               type="button"
               onClick={handleCloseWindow}
               title="Close and exit workstation"
-              className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-600 active:scale-95 border border-rose-500/50 hover:border-rose-400 text-rose-200 hover:text-white text-xs font-bold flex items-center space-x-1.5 transition-all shadow-md shadow-rose-950/40 cursor-pointer ml-1"
+              className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 active:scale-95 border border-rose-500/40 hover:border-rose-400 text-rose-300 hover:text-white text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer ml-1"
             >
-              <X className="w-4 h-4 text-rose-300 stroke-[2.5]" />
-              <span className="tracking-wide">Close</span>
+              <X className="w-3.5 h-3.5" />
+              <span>Close</span>
             </button>
           </div>
         </div>
@@ -687,10 +834,10 @@ export const SubjectHub = () => {
 
       {/* DAILY CADENCE COMPLETION COMPACT BANNER */}
       {isAllTasksCompleted && (
-        <div className="rounded-xl border border-emerald-500/50 bg-gradient-to-r from-emerald-950/80 via-slate-900/95 to-teal-950/80 px-3.5 py-1.5 shadow-md relative overflow-hidden backdrop-blur-md shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/25 px-4 py-2 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center space-x-2 text-xs font-mono text-emerald-300">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="font-bold">ALL 3 DISCIPLINES COMPLETED FOR TODAY! (3/3 DONE)</span>
+            <span className="font-bold">ALL {tasks.length} DISCIPLINES COMPLETED FOR TODAY! ({tasks.length}/{tasks.length} DONE)</span>
             <span className="text-slate-400 hidden lg:inline">• Today's session locked & archived</span>
           </div>
 
@@ -720,15 +867,15 @@ export const SubjectHub = () => {
         </div>
       )}
 
-      {/* Grid of Three Locked-Down Task Modules */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-3 my-1.5 lg:my-2">
+      {/* Grid of Four Locked-Down Task Modules */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 my-1.5 lg:my-2">
 
         {/* ------------------------------------------------------------- */}
         {/* MODULE 1: KEYBOARD PRACTICE (TOUCH TO ENTER BLACK WRITING AREA)*/}
         {/* ------------------------------------------------------------- */}
         <div 
           onClick={() => setIsWritingAreaOpen(true)}
-          className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
+          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
         >
           {/* Subtle Ambient Hover Glow & Top Scan Accent */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
@@ -737,15 +884,18 @@ export const SubjectHub = () => {
           {/* Header & Status */}
           <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
-                <Terminal className="w-5 h-5" />
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-cyan-400/80 font-mono bg-slate-900 border border-cyan-500/30 px-1 rounded">01</span>
               </div>
               <div>
                 <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-cyan-300 transition-colors">
-                  Module 1: Keyboard Practice
+                  Keyboard Practice
                 </h2>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Full-Screen Distraction-Free Terminal
+                  Full-screen typing terminal
                 </p>
               </div>
             </div>
@@ -770,10 +920,13 @@ export const SubjectHub = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
                 <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Words</span>
-                <span className="text-white font-bold font-mono text-sm mt-0.5 block">{words}</span>
+                <span className={`font-bold font-mono text-sm mt-0.5 block ${
+                  (() => { const t = parseInt(localStorage.getItem('module1_word_target') || '300', 10); return words >= t ? 'text-emerald-400' : 'text-white'; })()
+                }`}>{words}</span>
+                <span className="text-[9px] text-slate-500 font-mono">/ {parseInt(localStorage.getItem('module1_word_target') || '300', 10)}</span>
               </div>
               <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
                 <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Active Writing</span>
@@ -893,9 +1046,9 @@ export const SubjectHub = () => {
                 </div>
               </div>
 
-              {/* Center Stopwatch */}
-              <div className="flex items-center space-x-3">
-                <div className={`flex items-center space-x-2 px-4 py-1.5 rounded-full border font-mono font-bold shadow-lg transition-all ${
+              {/* Center Stopwatch & Full Time */}
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className={`flex items-center space-x-2 px-3 sm:px-4 py-1.5 rounded-full border font-mono font-bold shadow-lg transition-all ${
                   isTypingActive 
                     ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300 ring-2 ring-emerald-500/20' 
                     : isLightWritingCanvas
@@ -904,7 +1057,16 @@ export const SubjectHub = () => {
                 }`}>
                   <Clock className={`w-4 h-4 ${isTypingActive ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
                   <span className="text-sm tracking-widest">{formatTimer(typingSeconds)}</span>
-                  <span className="text-[10px] opacity-70">ACTIVE WRITING</span>
+                  <span className="text-[10px] opacity-70">ACTIVE</span>
+                </div>
+
+                <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border font-mono font-bold text-xs ${
+                  isLightWritingCanvas
+                    ? 'bg-slate-100 border-slate-200 text-slate-700'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                }`} title="Total session duration on this page">
+                  <span className="text-[10px] text-slate-400 font-semibold tracking-wider">FULL TIME:</span>
+                  <span className="text-cyan-400 font-mono tracking-wider">{formatTimer(fullSessionSeconds)}</span>
                 </div>
               </div>
 
@@ -962,7 +1124,7 @@ export const SubjectHub = () => {
                 value={inputText}
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
+                onPaste={isPasteInterceptionEnabled ? handlePaste : undefined}
                 onDrop={handleDrop}
                 onContextMenu={handleContextMenu}
                 spellCheck="false"
@@ -974,45 +1136,40 @@ export const SubjectHub = () => {
                 }`}
               />
 
-              {/* Bottom Sticky Submission Bar */}
-              <div className={`mt-2 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 ${
+              {/* Bottom Sticky Status Bar */}
+              <div className={`mt-2 pt-3 border-t flex items-center justify-between shrink-0 ${
                 isLightWritingCanvas ? 'border-slate-200 bg-[#faf9f5]' : 'border-zinc-900 bg-black'
               }`}>
                 <div className="flex items-center space-x-3 sm:space-x-4 text-xs font-mono">
-                  <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
-                    <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{words}</strong> words
-                  </span>
+                  {(() => {
+                    const target = parseInt(localStorage.getItem('module1_word_target') || '300', 10);
+                    const isTargetReached = words >= target;
+                    return (
+                      <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
+                        <strong className={
+                          isLightWritingCanvas 
+                            ? 'text-slate-900' 
+                            : isTargetReached 
+                            ? 'text-emerald-400' 
+                            : 'text-white'
+                        }>
+                          ({words}/{target})
+                        </strong> words {isTargetReached && <span className="text-emerald-400 ml-0.5">✓</span>}
+                      </span>
+                    );
+                  })()}
                   <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
                     <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{chars}</strong> chars
                   </span>
                   <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
                     <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{liveWpm}</strong> WPM
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold text-[11px]">
-                    ⏱️ {formatTimer(typingSeconds)}
+                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold text-[11px]" title="Active typing duration">
+                    ⏱️ Active: {formatTimer(typingSeconds)}
                   </span>
-                </div>
-
-                <div className="flex items-center space-x-2.5 w-full sm:w-auto">
-                  {(inputText || typingSeconds > 0) && (
-                    <button
-                      type="button"
-                      onClick={handleClearKeyboard}
-                      className="py-2 px-3 rounded-xl border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-                      <span>CLEAR</span>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={handleFinishClick}
-                    className="flex-1 sm:flex-initial py-2.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-sm font-black flex items-center justify-center space-x-2 shadow-[0_0_25px_rgba(16,185,129,0.45)] transition-all cursor-pointer active:scale-95"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>SUBMIT KEYBOARD PRACTICE</span>
-                  </button>
+                  <span className="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 font-bold text-[11px]" title="Full session duration">
+                    ⌛ Full Time: {formatTimer(fullSessionSeconds)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1023,7 +1180,7 @@ export const SubjectHub = () => {
         {/* MODULE 2: ENGLISH ASSESSMENT (WINDOWS 11 FLUENT APP)          */}
         {/* ------------------------------------------------------------- */}
         <div 
-          onClick={() => setIsEnglishQuizOpen(true)}
+          onClick={() => setIsRoadmapOpen(true)}
           className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-sky-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden group cursor-pointer transition-all duration-300 h-full"
         >
           {/* Ambient Glow */}
@@ -1033,15 +1190,18 @@ export const SubjectHub = () => {
           {/* Header & Status */}
           <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
-                <Zap className="w-5 h-5" />
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-sky-400/80 font-mono bg-slate-900 border border-sky-500/30 px-1 rounded">02</span>
               </div>
               <div>
                 <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-sky-300 transition-colors">
-                  Module 2: English Assessment
+                  English Assessment
                 </h2>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Windows 11 Fluent App (Zero-Knowledge Engine)
+                  AI-powered quiz + live proctoring
                 </p>
               </div>
             </div>
@@ -1053,14 +1213,22 @@ export const SubjectHub = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5 text-sky-300 font-semibold text-[11px]">
                 <Cpu className="w-3.5 h-3.5 text-sky-400" />
-                <span>SERVER-SIDE ZERO-KNOWLEDGE</span>
+                <span>DAY-BY-DAY LEARNING QUEST</span>
               </div>
-              <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1">
-                <span>⚡ GEMINI AI ENGINE</span>
-              </span>
+              {module2TimeStatus?.isActive ? (
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1 animate-pulse">
+                  <Clock className="w-3 h-3 text-emerald-400" />
+                  <span>7 PM – 10 PM ACTIVE</span>
+                </span>
+              ) : (
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center space-x-1">
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span>OPENS 7:00 PM</span>
+                </span>
+              )}
             </div>
             <p className="text-[10px] text-slate-400 leading-tight">
-              {module2QuestionLimit} non-repeating questions dynamically synthesized via Google Gemini AI. Pass mark: {Math.ceil(module2QuestionLimit * 0.7)}/{module2QuestionLimit}.
+              30 structured daily sessions • {module2QuestionLimit} Gemini questions • Active window: 7:00 PM – 10:00 PM.
             </p>
           </div>
 
@@ -1092,10 +1260,10 @@ export const SubjectHub = () => {
                 </div>
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-white tracking-wide">
-                    TOUCH TO LAUNCH ASSESSMENT
+                    TOUCH TO VIEW DAILY SESSIONS
                   </div>
                   <p className="text-[10px] text-slate-400">
-                    Gamified layout • {module2QuestionLimit} Beginner questions
+                    Day-by-day sequential unlocking • {module2QuestionLimit} questions
                   </p>
                 </div>
                 <div className="flex items-center justify-center space-x-2 pt-0.5">
@@ -1116,12 +1284,12 @@ export const SubjectHub = () => {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsEnglishQuizOpen(true);
+                setIsRoadmapOpen(true);
               }}
               className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all active:scale-[0.98]"
             >
               <Zap className="w-4 h-4" />
-              <span>{duolingoTask?.status !== 'PENDING' ? 'RETAKE ASSESSMENT' : 'LAUNCH ASSESSMENT (WIN11)'}</span>
+              <span>{duolingoTask?.status !== 'PENDING' ? 'OPEN DAILY QUEST (RETAKE)' : 'OPEN DAILY QUEST (DAY-BY-DAY) →'}</span>
             </button>
             {duolingoTask?.status !== 'PENDING' && (
               <button
@@ -1151,26 +1319,42 @@ export const SubjectHub = () => {
           {/* Header & Status */}
           <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shadow-inner shrink-0 group-hover:scale-105 transition-transform">
-                <FileCheck className="w-5 h-5" />
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shadow-inner shrink-0 group-hover:scale-105 transition-transform">
+                  <FileCheck className="w-5 h-5" />
+                </div>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-emerald-400/80 font-mono bg-slate-900 border border-emerald-500/30 px-1 rounded">03</span>
               </div>
               <div>
-                <h2 className="font-bold text-sm text-white tracking-tight">
-                  Module 3: Writing Practice
+                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-emerald-300 transition-colors">
+                  Writing Practice
                 </h2>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Handwritten Notes (EXIF & Hashing Active)
+                  Handwritten notes — photo upload
                 </p>
               </div>
             </div>
-            {renderStatusBadge(writingTask?.status || 'PENDING')}
+            <div className="flex items-center space-x-2">
+              {isModule3TimeUnlocked ? (
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1 animate-pulse">
+                  <Clock className="w-3 h-3 text-emerald-400" />
+                  <span>7 PM – 10 PM ACTIVE</span>
+                </span>
+              ) : (
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center space-x-1">
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span>OPENS 7:00 PM</span>
+                </span>
+              )}
+              {renderStatusBadge(writingTask?.status || 'PENDING')}
+            </div>
           </div>
 
           {/* Assigned 10-Point Handwriting Directive Box */}
           <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/25 p-2.5 text-xs space-y-1.5 my-1.5 relative z-10">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[9px] font-semibold uppercase tracking-wider">
-                <BookOpen className="w-3 h-3 text-emerald-400" />
+                <Sparkles className="w-3 h-3 text-emerald-400" />
                 <span>TODAY'S TOPIC • 10 POINTS</span>
               </span>
               <span className="text-[10px] text-emerald-400/90 font-medium">
@@ -1191,150 +1375,307 @@ export const SubjectHub = () => {
             <div className="pt-0.5">
               <button
                 type="button"
-                onClick={() => setIsWritingTopicModalOpen(true)}
-                className="w-full py-1.5 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+                onClick={() => {
+                  if (isModule3TimeUnlocked || writingTask?.status !== 'PENDING') {
+                    setIsWritingTopicModalOpen(true);
+                  }
+                }}
+                disabled={!isModule3TimeUnlocked && writingTask?.status === 'PENDING'}
+                className={`w-full py-1.5 px-3 rounded-lg font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-sm ${
+                  !isModule3TimeUnlocked && writingTask?.status === 'PENDING'
+                    ? 'bg-slate-800/80 text-slate-500 border border-white/[0.06] cursor-not-allowed'
+                    : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 cursor-pointer active:scale-[0.98]'
+                }`}
               >
-                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-                <span>VIEW ALL 10 POINTS TO WRITE</span>
+                {!isModule3TimeUnlocked && writingTask?.status === 'PENDING' ? (
+                  <>
+                    <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>LOCKED • OPENS AT 7:00 PM (WITH MODULE 2)</span>
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>VIEW ALL 10 POINTS TO WRITE</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
 
-          {/* Multiple Photo Slots Container (Up to 5 Pages) */}
-          <div className="flex-1 min-h-[50px] flex flex-col justify-center my-1 space-y-1.5 relative z-10">
-            {/* Slot Header Counter */}
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-semibold text-slate-300 flex items-center space-x-1.5">
-                <Camera className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Photo Slots (1 to 5 Pages)</span>
-              </span>
-              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                writingSlots.length > 0
-                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                  : 'bg-slate-800 text-slate-400 border-slate-700'
+          {/* Locked State Container when outside 7 PM - 10 PM */}
+          {!isModule3TimeUnlocked && writingTask?.status === 'PENDING' ? (
+            <>
+              <div className="flex-1 min-h-[130px] flex flex-col justify-center my-1.5 p-3 rounded-xl border border-amber-500/25 bg-amber-950/20 text-center space-y-2 relative z-10">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+                  <Lock className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="text-xs font-bold text-white tracking-wide">
+                    WRITING PRACTICE LOCKED UNTIL 7:00 PM
+                  </h3>
+                  <p className="text-[10px] text-slate-400 leading-tight">
+                    Synchronized with Module 2. Scheduled daily window: 7:00 PM – 10:00 PM.
+                  </p>
+                </div>
+                <div className="inline-flex items-center justify-center space-x-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-semibold mx-auto">
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span>Opens in: {module2TimeStatus?.countdownOpen || '00:00:00'}</span>
+                </div>
+              </div>
+
+              {/* Action Row Locked */}
+              <div className="pt-2 flex items-center gap-2 relative z-10">
+                <button
+                  type="button"
+                  disabled
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center space-x-2 cursor-not-allowed border border-white/[0.05]"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>LOCKED (OPENS 7:00 PM – 10:00 PM)</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Multiple Photo Slots Container (Up to 5 Pages) */}
+              <div className="flex-1 min-h-[50px] flex flex-col justify-center my-1 space-y-1.5 relative z-10">
+                {/* Slot Header Counter */}
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[11px] font-semibold text-slate-300 flex items-center space-x-1.5">
+                    <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Photo Slots (1 to 5 Pages)</span>
+                  </span>
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                    writingSlots.length > 0
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                  }`}>
+                    📸 {writingSlots.length} / 5 Slots Filled
+                  </span>
+                </div>
+
+                {/* Slots Grid / Active Dropzone */}
+                {writingScanning && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-slate-950/90 p-4 z-20 flex flex-col items-center justify-center space-y-1.5 text-center">
+                    <Activity className="w-5 h-5 text-emerald-400 animate-spin" />
+                    <span className="text-[11px] font-mono text-emerald-400 tracking-wider font-semibold">
+                      EXTRACTING EXIF METADATA & MULTI-PAGE AUDIT...
+                    </span>
+                  </div>
+                )}
+
+                {!writingScanning && writingSlots.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto p-1.5 bg-slate-950/60 rounded-xl border border-white/[0.06]">
+                      {writingSlots.map((slot) => (
+                        <div 
+                          key={slot.id} 
+                          className="relative rounded-xl border border-emerald-500/30 bg-slate-900/90 overflow-hidden group/slot shadow-md flex flex-col justify-between"
+                        >
+                          <div className="absolute top-1 inset-x-1 flex items-center justify-between z-10">
+                            <span className="px-1.5 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-[8px]">
+                              PAGE {slot.pageNumber}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => handleRemoveSlot(slot.id, e)}
+                              title={`Remove Page ${slot.pageNumber}`}
+                              className="w-4 h-4 rounded-full bg-rose-950/90 border border-rose-500/60 text-rose-300 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+
+                          <div 
+                            onClick={() => setActiveSlotZoom(slot)}
+                            className="relative w-full h-16 bg-black cursor-pointer overflow-hidden group/img"
+                            title="Click to view full page photo"
+                          >
+                            <img src={slot.dataUrl} alt={`Handwritten Page ${slot.pageNumber}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
+                              <Maximize2 className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+
+                          <div className="p-1 bg-slate-950 border-t border-white/[0.06] text-[8px] text-slate-400 truncate">
+                            <span className="text-emerald-400 font-bold">{slot.fileName || `Page ${slot.pageNumber}`}</span> ({slot.fileSize})
+                          </div>
+                        </div>
+                      ))}
+
+                      {writingSlots.length < 5 && (
+                        <div className="relative rounded-xl border-2 border-dashed border-emerald-500/30 hover:border-emerald-400 bg-slate-950/70 p-2 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group min-h-[64px]">
+                          <Plus className="w-4 h-4 text-emerald-400 mb-0.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-[10px] font-semibold text-emerald-300">
+                            + Add Slot
+                          </span>
+                          <span className="text-[8px] text-slate-500">
+                            (Page {writingSlots.length + 1} of 5)
+                          </span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleWritingUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : !writingScanning && (
+                  <div className="relative rounded-xl border-2 border-dashed border-white/[0.12] hover:border-emerald-400/80 bg-slate-950/60 hover:bg-emerald-950/15 p-3 text-center transition-all group overflow-hidden flex flex-col items-center justify-center min-h-[85px] cursor-pointer">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-1.5 group-hover:scale-105 transition-transform shadow-inner">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <div className="text-xs font-bold text-slate-200">
+                      UPLOAD PHOTOS OF HANDWRITTEN PAPER
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Supports multiple pages (up to 5 photo slots) • Tap or select photos
+                    </p>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleWritingUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                  </div>
+                )}
+
+                {/* Audit Status Footer */}
+                <div className="flex items-center justify-between pt-0.5 px-0.5">
+                  <span className="text-[10px] text-slate-400">Physical pen & paper photos</span>
+                  <span className="text-[10px] text-slate-500 font-mono">EXIF & Multi-Page Audit Active</span>
+                </div>
+              </div>
+
+              {/* Submit & Clear Action Row */}
+              <div className="pt-2 flex items-center gap-2 relative z-10">
+                <button
+                  type="button"
+                  onClick={handleSubmitWriting}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all cursor-pointer active:scale-[0.98]"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>SUBMIT HANDWRITTEN ARTIFACT {writingSlots.length > 0 ? `(${writingSlots.length} PAGES)` : ''}</span>
+                </button>
+                {(writingSlots.length > 0 || writingTask?.status !== 'PENDING') && (
+                  <button
+                    type="button"
+                    onClick={handleClearWriting}
+                    title="Clear Handwritten Notes"
+                    className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center space-x-1 transition-all shrink-0 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                    <span>CLEAR</span>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ------------------------------------------------------------- */}
+        {/* MODULE 4: TECHNOLOGY, HARDWARE & ABBREVIATIONS                */}
+        {/* ------------------------------------------------------------- */}
+        <div 
+          onClick={() => setIsModule4ModalOpen(true)}
+          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-sky-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
+        >
+          {/* Subtle Ambient Hover Glow & Top Scan Accent */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-sky-400/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+          {/* Header & Status */}
+          <div className="flex items-start justify-between gap-2 border-b border-white/[0.06] pb-3 relative z-10">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
+                  <Cpu className="w-5 h-5" />
+                </div>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-cyan-400/80 font-mono bg-slate-900 border border-cyan-500/30 px-1 rounded">04</span>
+              </div>
+              <div>
+                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-cyan-300 transition-colors">
+                  Hardware & Rig Audit
+                </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Kitchen mental model & machine audit
+                </p>
+              </div>
+            </div>
+            {renderStatusBadge(techHardwareTask?.status || 'PENDING')}
+          </div>
+
+          {/* Telemetry / Syllabus Preview Banner */}
+          <div className="rounded-xl border border-white/[0.06] bg-slate-950/70 p-2.5 space-y-2 text-xs shadow-inner my-1.5 relative z-10">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5">
+              <div className="flex items-center space-x-1.5 text-cyan-400 font-semibold tracking-wide text-[11px]">
+                <Activity className="w-3.5 h-3.5" />
+                <span>KNOWLEDGE LAB</span>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wide ${
+                techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-slate-800 text-slate-400'
               }`}>
-                📸 {writingSlots.length} / 5 Slots Filled
+                {techHardwareTask?.status === 'VERIFIED' ? '● VERIFIED' : techHardwareTask?.status === 'SUBMITTED' ? '● SUBMITTED' : 'READY TO AUDIT'}
               </span>
             </div>
 
-            {/* Slots Grid / Active Dropzone */}
-            {writingScanning && (
-              <div className="rounded-xl border border-emerald-500/30 bg-slate-950/90 p-4 z-20 flex flex-col items-center justify-center space-y-1.5 text-center">
-                <Activity className="w-5 h-5 text-emerald-400 animate-spin" />
-                <span className="text-[11px] font-mono text-emerald-400 tracking-wider font-semibold">
-                  EXTRACTING EXIF METADATA & MULTI-PAGE AUDIT...
+            <div className="grid grid-cols-2 gap-2 text-center pt-0.5">
+              <div className="p-1.5 rounded-lg bg-slate-900/80 border border-white/[0.05]">
+                <span className="text-[10px] text-slate-400 block font-medium">Curriculum</span>
+                <span className="text-xs font-mono font-bold text-white">Kitchen Model</span>
+              </div>
+              <div className="p-1.5 rounded-lg bg-slate-900/80 border border-white/[0.05]">
+                <span className="text-[10px] text-slate-400 block font-medium">Rig Audit</span>
+                <span className="text-xs font-mono font-bold text-cyan-400">
+                  {techHardwareTask?.rigAudit ? 'Logged ✓' : '3-Step Inspection'}
                 </span>
               </div>
-            )}
-
-            {!writingScanning && writingSlots.length > 0 ? (
-              <div className="space-y-1.5">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto p-1.5 bg-slate-950/60 rounded-xl border border-white/[0.06]">
-                  {writingSlots.map((slot) => (
-                    <div 
-                      key={slot.id} 
-                      className="relative rounded-xl border border-emerald-500/30 bg-slate-900/90 overflow-hidden group/slot shadow-md flex flex-col justify-between"
-                    >
-                      <div className="absolute top-1 inset-x-1 flex items-center justify-between z-10">
-                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-[8px]">
-                          PAGE {slot.pageNumber}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => handleRemoveSlot(slot.id, e)}
-                          title={`Remove Page ${slot.pageNumber}`}
-                          className="w-4 h-4 rounded-full bg-rose-950/90 border border-rose-500/60 text-rose-300 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-
-                      <div 
-                        onClick={() => setActiveSlotZoom(slot)}
-                        className="relative w-full h-16 bg-black cursor-pointer overflow-hidden group/img"
-                        title="Click to view full page photo"
-                      >
-                        <img src={slot.dataUrl} alt={`Handwritten Page ${slot.pageNumber}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
-                          <Maximize2 className="w-4 h-4 text-white" />
-                        </div>
-                      </div>
-
-                      <div className="p-1 bg-slate-950 border-t border-white/[0.06] text-[8px] text-slate-400 truncate">
-                        <span className="text-emerald-400 font-bold">{slot.fileName || `Page ${slot.pageNumber}`}</span> ({slot.fileSize})
-                      </div>
-                    </div>
-                  ))}
-
-                  {writingSlots.length < 5 && (
-                    <div className="relative rounded-xl border-2 border-dashed border-emerald-500/30 hover:border-emerald-400 bg-slate-950/70 p-2 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group min-h-[64px]">
-                      <Plus className="w-4 h-4 text-emerald-400 mb-0.5 group-hover:scale-110 transition-transform" />
-                      <span className="text-[10px] font-semibold text-emerald-300">
-                        + Add Slot
-                      </span>
-                      <span className="text-[8px] text-slate-500">
-                        (Page {writingSlots.length + 1} of 5)
-                      </span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleWritingUpload}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : !writingScanning && (
-              <div className="relative rounded-xl border-2 border-dashed border-white/[0.12] hover:border-emerald-400/80 bg-slate-950/60 hover:bg-emerald-950/15 p-3 text-center transition-all group overflow-hidden flex flex-col items-center justify-center min-h-[85px] cursor-pointer">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-1.5 group-hover:scale-105 transition-transform shadow-inner">
-                  <Camera className="w-4 h-4" />
-                </div>
-                <div className="text-xs font-bold text-slate-200">
-                  UPLOAD PHOTOS OF HANDWRITTEN PAPER
-                </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">
-                  Supports multiple pages (up to 5 photo slots) • Tap or select photos
-                </p>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleWritingUpload}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-              </div>
-            )}
-
-            {/* Audit Status Footer */}
-            <div className="flex items-center justify-between pt-0.5 px-0.5">
-              <span className="text-[10px] text-slate-400">Physical pen & paper photos</span>
-              <span className="text-[10px] text-slate-500 font-mono">EXIF & Multi-Page Audit Active</span>
             </div>
           </div>
 
-          {/* Submit & Clear Action Row */}
-          <div className="pt-2 flex items-center gap-2 relative z-10">
+          {/* Content Preview Box */}
+          <div className="flex-1 min-h-[50px] p-3 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-slate-300 leading-relaxed flex flex-col justify-center text-center my-1 relative overflow-hidden group-hover:border-cyan-500/30 transition-colors z-10">
+            {techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED' ? (
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-emerald-300 flex items-center justify-center space-x-1">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>Audit Completed</span>
+                </span>
+                <p className="text-[11px] text-slate-400 font-mono">
+                  {techHardwareTask.rigAudit?.cpuInfo ? `${techHardwareTask.rigAudit.cpuInfo.slice(0, 24)} • ` : ''}Submitted for supervisor verification
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-200">
+                  The "Restaurant Kitchen" Model & Machine Audit
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Chef (CPU), Countertop (RAM), Pantry (SSD), Waiter (Motherboard) + solve college dilemmas & audit your own rig.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Action CTA */}
+          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2 relative z-10">
             <button
               type="button"
-              onClick={handleSubmitWriting}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all cursor-pointer active:scale-[0.98]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsModule4ModalOpen(true);
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all cursor-pointer group-hover:scale-[1.02] active:scale-[0.98]"
             >
-              <Send className="w-4 h-4" />
-              <span>SUBMIT HANDWRITTEN ARTIFACT {writingSlots.length > 0 ? `(${writingSlots.length} PAGES)` : ''}</span>
+              <Cpu className="w-3.5 h-3.5 fill-slate-950" />
+              <span>{techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED' ? 'Review Kitchen Model & Rig' : 'Open Kitchen Model & Rig Audit'}</span>
             </button>
-            {(writingSlots.length > 0 || writingTask?.status !== 'PENDING') && (
-              <button
-                type="button"
-                onClick={handleClearWriting}
-                title="Clear Handwritten Notes"
-                className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center space-x-1 transition-all shrink-0 cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-                <span>CLEAR</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -1480,11 +1821,11 @@ export const SubjectHub = () => {
 
             </div>
 
-            {/* Modal Footer (No Topic Change - Locked for Today) */}
+            {/* Modal Footer (Daily Topic Automatically Generated for Today) */}
             <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
                 <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-                <span>Assigned Daily Topic • 1 Topic For Today (No Change Required)</span>
+                <span>{currentWritingTopic.source === 'gemini-ai' ? '✨ Daily Topic • Synthesized by Google Gemini AI' : '✨ Daily Topic • 10 Points Assigned'}</span>
               </div>
 
               <div className="flex items-center space-x-2.5 w-full sm:w-auto">
@@ -1499,10 +1840,10 @@ export const SubjectHub = () => {
                 <button
                   type="button"
                   onClick={() => setIsWritingTopicModalOpen(false)}
-                  className="w-full sm:w-auto py-2.5 px-6 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-mono font-bold flex items-center justify-center space-x-2 shadow-[0_0_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer"
+                  className="w-full sm:w-auto py-2.5 px-5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-mono font-bold flex items-center justify-center space-x-2 shadow-[0_0_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                  <span>I Finished Writing — Ready to Upload Photo →</span>
+                  <span>I Finished Writing → Upload Photo</span>
                 </button>
               </div>
             </div>
@@ -1511,11 +1852,37 @@ export const SubjectHub = () => {
         </div>
       )}
 
+      {/* Module 2 Daily Learning Quest Roadmap Landing */}
+      {isRoadmapOpen && (
+        <Module2RoadmapLanding 
+          onBack={() => setIsRoadmapOpen(false)}
+          onStartSession={(session) => {
+            setActiveSession(session);
+            setIsRoadmapOpen(false);
+            setIsEnglishQuizOpen(true);
+          }}
+          duolingoTask={duolingoTask}
+          questionLimit={module2QuestionLimit}
+        />
+      )}
+
       {/* Windows 11 English Assessment Engine Modal */}
       {isEnglishQuizOpen && (
         <EnglishQuizModal 
           isOpen={isEnglishQuizOpen} 
-          onClose={() => setIsEnglishQuizOpen(false)} 
+          activeSession={activeSession}
+          onClose={() => {
+            setIsEnglishQuizOpen(false);
+            setIsRoadmapOpen(true);
+          }} 
+        />
+      )}
+
+      {/* Module 4 Technology, Hardware & Abbreviations Modal */}
+      {isModule4ModalOpen && (
+        <Module4TechHardwareModal
+          isOpen={isModule4ModalOpen}
+          onClose={() => setIsModule4ModalOpen(false)}
         />
       )}
 

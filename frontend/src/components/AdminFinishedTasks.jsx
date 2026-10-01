@@ -22,7 +22,8 @@ import {
   ChevronUp,
   BookOpen,
   Flame,
-  UploadCloud
+  UploadCloud,
+  Cpu
 } from 'lucide-react';
 import { useForensics } from '../context/ForensicContext';
 
@@ -193,11 +194,14 @@ export const AdminFinishedTasks = () => {
                         ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
                         : task.type === 'image_ocr'
                         ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                        : task.type === 'tech_hardware'
+                        ? 'bg-sky-500/10 border-sky-500/20 text-sky-400'
                         : 'bg-teal-500/10 border-teal-500/20 text-teal-400'
                     }`}>
                       {task.type === 'keyboard' && <Terminal className="w-4 h-4" />}
                       {task.type === 'image_ocr' && <Flame className="w-4 h-4" />}
                       {task.type === 'image_exif' && <Camera className="w-4 h-4" />}
+                      {task.type === 'tech_hardware' && <Cpu className="w-4 h-4" />}
                     </div>
 
                     <div>
@@ -206,7 +210,7 @@ export const AdminFinishedTasks = () => {
                           {task.title}
                         </h2>
                         <span className="text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">
-                          {task.id === 'mod-1-keyboard' ? 'Module 1' : task.id === 'mod-2-duolingo' ? 'Module 2' : 'Module 3'}
+                          {task.id === 'mod-1-keyboard' ? 'Module 1' : task.id === 'mod-2-duolingo' ? 'Module 2' : task.id === 'mod-4-techhardware' ? 'Module 4' : 'Module 3'}
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">
@@ -697,6 +701,57 @@ export const AdminFinishedTasks = () => {
                           </div>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {/* MODULE 4: TECH & HARDWARE MASTERY DRILL */}
+                  {task.type === 'tech_hardware' && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                          <span className="text-slate-500 text-[10px] block">Drill Score</span>
+                          <span className="text-white font-bold text-sm">
+                            {task.score !== null && task.score !== undefined ? `${task.score} / ${task.totalQuestions || 10}` : 'Pending'}
+                          </span>
+                        </div>
+                        <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                          <span className="text-slate-500 text-[10px] block">Accuracy</span>
+                          <span className={`font-bold text-sm ${task.percentage >= 70 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {task.percentage !== null && task.percentage !== undefined ? `${task.percentage}%` : '--'}
+                          </span>
+                        </div>
+                        <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                          <span className="text-slate-500 text-[10px] block">Terms Mastered</span>
+                          <span className="text-sky-400 font-bold text-sm">
+                            {task.masteredCount || 0}
+                          </span>
+                        </div>
+                        <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                          <span className="text-slate-500 text-[10px] block">Curriculum</span>
+                          <span className="text-slate-300 font-bold text-sm">
+                            Hardware & Acronyms
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Question details if results available */}
+                      {Array.isArray(task.results) && task.results.length > 0 && (
+                        <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs space-y-2">
+                          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">
+                            Drill Breakdown:
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {task.results.map((r, rIdx) => (
+                              <div key={rIdx} className={`p-2 rounded-lg border text-[11px] ${
+                                r.isCorrect ? 'bg-emerald-950/20 border-emerald-500/25 text-emerald-300' : 'bg-rose-950/20 border-rose-500/25 text-rose-300'
+                              }`}>
+                                <span className="font-bold">Q{rIdx + 1}: {r.question}</span>
+                                <span className="block text-[10px] opacity-75">{r.isCorrect ? '✓ Correct' : '✕ Incorrect'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

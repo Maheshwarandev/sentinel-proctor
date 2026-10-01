@@ -54,6 +54,27 @@ const INITIAL_SYNC_TASKS = [
 ];
 
 import { getQuestionLimit, setQuestionLimit } from './quizController.js';
+import { User } from '../models/User.js';
+import { getIsConnected } from '../config/db.js';
+
+const isSameCalendarDay = (d1, d2) => {
+  if (!d1 || !d2) return false;
+  const a = new Date(d1);
+  const b = new Date(d2);
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+};
+
+const isYesterdayCalendarDay = (d, relativeTo = new Date()) => {
+  if (!d) return false;
+  const a = new Date(d);
+  const yesterday = new Date(relativeTo);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return isSameCalendarDay(a, yesterday);
+};
 
 let globalSyncState = {
   version: Date.now(),
@@ -63,16 +84,42 @@ let globalSyncState = {
   isRedLockdown: false,
   activeBreach: null,
   alarmHistory: [],
+  currentStreak: 0,
+  trustScore: 100,
+  lastCompletedDate: null,
   module2QuestionLimit: getQuestionLimit()
 };
 
-// GET /api/sync/state -> returns current shared global state
-export const getSyncState = (req, res) => {
+// Expose live in-memory sync state for background cron aggregation
+export const getGlobalSyncState = () => globalSyncState;
+
+// GET /api/sync/state -> returns current shared global state with currentStreak
+export const getSyncState = async (req, res) => {
+  if (getIsConnected()) {
+    try {
+      const candidate = await User.findOne({ role: { $in: ['brother', 'candidate'] } });
+      if (candidate) {
+        if (typeof candidate.currentStreak === 'number') {
+          globalSyncState.currentStreak = candidate.currentStreak;
+        }
+        if (typeof candidate.trustScore === 'number') {
+          globalSyncState.trustScore = candidate.trustScore;
+        }
+        if (candidate.lastCompletedDate) {
+          globalSyncState.lastCompletedDate = candidate.lastCompletedDate;
+        }
+      }
+    } catch (e) {}
+  }
+
   return res.status(200).json({
     success: true,
     version: globalSyncState.version,
     data: {
       ...globalSyncState,
+      currentStreak: globalSyncState.currentStreak || 0,
+      trustScore: globalSyncState.trustScore ?? 100,
+      lastCompletedDate: globalSyncState.lastCompletedDate || null,
       module2QuestionLimit: getQuestionLimit()
     }
   });
@@ -142,7 +189,7 @@ export const submitTaskSync = (req, res) => {
 };
 
 // POST /api/sync/task-verdict -> Admin approves or rejects a task
-export const setTaskVerdictSync = (req, res) => {
+export const setTaskVerdictSync = async (req, res) => {
   try {
     const { taskId, verdict, auditorNotes } = req.body;
     if (!taskId || !verdict) {
@@ -165,6 +212,52 @@ export const setTaskVerdictSync = (req, res) => {
       globalSyncState.strikes = (globalSyncState.strikes || 0) + 1;
     }
 
+    // Positive Reinforcement Momentum Engine (Daily Streaks & Trust Score)
+    // When the 3rd and final task of the day is marked as VERIFIED and zero security strikes were logged:
+    const allThreeVerified = globalSyncState.tasks.length === 3 && globalSyncState.tasks.every(t => t.status === 'VERIFIED');
+    const zeroStrikes = (globalSyncState.strikes || 0) === 0;
+
+    if (allThreeVerified && zeroStrikes && verdict === 'APPROVED') {
+      const now = new Date();
+      const lastDate = globalSyncState.lastCompletedDate;
+
+      // Prevent redundant double-increments if approved repeatedly on the same calendar day
+      if (!isSameCalendarDay(lastDate, now)) {
+        if (isYesterdayCalendarDay(lastDate, now)) {
+          // If lastCompletedDate was yesterday, increment currentStreak by 1 and add +5 to their Trust Score
+          globalSyncState.currentStreak = (globalSyncState.currentStreak || 0) + 1;
+          globalSyncState.trustScore = (globalSyncState.trustScore || 100) + 5;
+        } else {
+          // Fresh streak or recovery from missed days
+          globalSyncState.currentStreak = 1;
+          globalSyncState.trustScore = (globalSyncState.trustScore || 100) + 5;
+        }
+
+        // Update lastCompletedDate to today
+        globalSyncState.lastCompletedDate = now;
+
+        console.log(`[MomentumEngine] 🔥 3/3 tasks verified with 0 strikes! Streak: ${globalSyncState.currentStreak} Days | Trust Score: ${globalSyncState.trustScore}`);
+
+        // Persist to MongoDB User model
+        if (getIsConnected()) {
+          try {
+            await User.updateMany(
+              { role: { $in: ['brother', 'candidate'] } },
+              {
+                $set: {
+                  currentStreak: globalSyncState.currentStreak,
+                  trustScore: globalSyncState.trustScore,
+                  lastCompletedDate: globalSyncState.lastCompletedDate
+                }
+              }
+            );
+          } catch (dbErr) {
+            console.warn('[SyncEngine] Failed to persist streak to User in Mongo:', dbErr.message);
+          }
+        }
+      }
+    }
+
     globalSyncState.version = Date.now();
 
     console.log(`[SyncEngine] ⚖️ Task verdict: ${taskId} -> ${verdict} (Notes: ${auditorNotes})`);
@@ -172,7 +265,10 @@ export const setTaskVerdictSync = (req, res) => {
     return res.status(200).json({
       success: true,
       version: globalSyncState.version,
-      tasks: globalSyncState.tasks
+      tasks: globalSyncState.tasks,
+      currentStreak: globalSyncState.currentStreak || 0,
+      trustScore: globalSyncState.trustScore ?? 100,
+      lastCompletedDate: globalSyncState.lastCompletedDate || null
     });
   } catch (err) {
     console.error('[SyncEngine] Verdict error:', err);
@@ -278,6 +374,9 @@ export const resetAllSync = (req, res) => {
       isRedLockdown: false,
       activeBreach: null,
       alarmHistory: [],
+      currentStreak: globalSyncState.currentStreak || 0,
+      trustScore: globalSyncState.trustScore ?? 100,
+      lastCompletedDate: globalSyncState.lastCompletedDate || null,
       module2QuestionLimit: currentLimit
     };
 

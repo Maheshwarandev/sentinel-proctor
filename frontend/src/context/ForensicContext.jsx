@@ -51,6 +51,22 @@ const INITIAL_TASKS = [
     auditorVerdict: null,
     auditorNotes: '',
     strikesCount: 0
+  },
+  {
+    id: 'mod-4-techhardware',
+    moduleId: 4,
+    type: 'tech_hardware',
+    title: 'Module 4: Tech & Hardware Mastery',
+    subtitle: 'Hardware Parts, Architecture & Tech Abbreviations Drill',
+    status: 'PENDING',
+    score: null,
+    totalQuestions: null,
+    percentage: null,
+    results: [],
+    submittedAt: null,
+    auditorVerdict: null,
+    auditorNotes: '',
+    strikesCount: 0
   }
 ];
 
@@ -316,7 +332,11 @@ export const ForensicProvider = ({ children }) => {
       const saved = localStorage.getItem('forensic_tasks_state');
       if (!saved) return INITIAL_TASKS;
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length >= 3 && parsed[0]?.id && parsed[1]?.id && parsed[2]?.id) {
+      if (Array.isArray(parsed) && parsed.length >= 3 && parsed[0]?.id) {
+        if (!parsed.some(t => t.id === 'mod-4-techhardware')) {
+          const mod4 = INITIAL_TASKS.find(t => t.id === 'mod-4-techhardware');
+          return [...parsed, mod4];
+        }
         return parsed;
       }
       return INITIAL_TASKS;
@@ -483,6 +503,180 @@ export const ForensicProvider = ({ children }) => {
     }
   };
 
+  // MODULE 2: SUPERVISOR DAY PROGRESS CONTROLLER
+  const [module2UnlockedDay, setModule2UnlockedDay] = useState(() => {
+    const saved = localStorage.getItem('module2_unlocked_day');
+    return saved ? Math.max(1, parseInt(saved, 10)) : 1;
+  });
+
+  const resetModule2ToDay1 = () => {
+    setModule2UnlockedDay(1);
+    localStorage.setItem('module2_unlocked_day', '1');
+    localStorage.setItem('module2_completed_days', '[]');
+    if (broadcastChannelRef.current) {
+      try {
+        broadcastChannelRef.current.postMessage({
+          type: 'MODULE2_DAY_UPDATED',
+          unlockedDay: 1,
+          completedDays: []
+        });
+      } catch (e) {}
+    }
+  };
+
+  const updateModule2UnlockedDay = (day) => {
+    const parsed = Math.max(1, Math.min(30, parseInt(day, 10) || 1));
+    setModule2UnlockedDay(parsed);
+    localStorage.setItem('module2_unlocked_day', parsed.toString());
+    if (broadcastChannelRef.current) {
+      try {
+        broadcastChannelRef.current.postMessage({
+          type: 'MODULE2_DAY_UPDATED',
+          unlockedDay: parsed
+        });
+      } catch (e) {}
+    }
+  };
+
+  // MODULE 2: 7:00 PM – 10:00 PM ACCESS WINDOW POLICY
+  const [module2WindowEnabled, setModule2WindowEnabled] = useState(() => {
+    return localStorage.getItem('module2_window_enabled') !== 'false'; // default true
+  });
+  const [module2WindowStartHour, setModule2WindowStartHour] = useState(() => {
+    const saved = localStorage.getItem('module2_window_start_hour');
+    return saved ? parseInt(saved, 10) : 19; // 7 PM (19:00)
+  });
+  const [module2WindowEndHour, setModule2WindowEndHour] = useState(() => {
+    const saved = localStorage.getItem('module2_window_end_hour');
+    return saved ? parseInt(saved, 10) : 22; // 10 PM (22:00)
+  });
+  const [module2AdminBypass, setModule2AdminBypass] = useState(() => {
+    return localStorage.getItem('module2_admin_bypass') === 'true'; // default false
+  });
+
+  const updateModule2WindowEnabled = (enabled) => {
+    setModule2WindowEnabled(enabled);
+    localStorage.setItem('module2_window_enabled', enabled ? 'true' : 'false');
+    if (broadcastChannelRef.current) {
+      try {
+        broadcastChannelRef.current.postMessage({
+          type: 'MODULE2_WINDOW_CONFIG',
+          enabled,
+          startHour: module2WindowStartHour,
+          endHour: module2WindowEndHour,
+          bypass: module2AdminBypass
+        });
+      } catch (e) {}
+    }
+  };
+
+  const updateModule2AdminBypass = (bypass) => {
+    setModule2AdminBypass(bypass);
+    localStorage.setItem('module2_admin_bypass', bypass ? 'true' : 'false');
+    if (broadcastChannelRef.current) {
+      try {
+        broadcastChannelRef.current.postMessage({
+          type: 'MODULE2_WINDOW_CONFIG',
+          enabled: module2WindowEnabled,
+          startHour: module2WindowStartHour,
+          endHour: module2WindowEndHour,
+          bypass
+        });
+      } catch (e) {}
+    }
+  };
+
+  const updateModule2WindowHours = (startHour, endHour) => {
+    const s = Math.max(0, Math.min(23, parseInt(startHour, 10) || 19));
+    const e = Math.max(0, Math.min(23, parseInt(endHour, 10) || 22));
+    setModule2WindowStartHour(s);
+    setModule2WindowEndHour(e);
+    localStorage.setItem('module2_window_start_hour', s.toString());
+    localStorage.setItem('module2_window_end_hour', e.toString());
+    if (broadcastChannelRef.current) {
+      try {
+        broadcastChannelRef.current.postMessage({
+          type: 'MODULE2_WINDOW_CONFIG',
+          enabled: module2WindowEnabled,
+          startHour: s,
+          endHour: e,
+          bypass: module2AdminBypass
+        });
+      } catch (e) {}
+    }
+  };
+
+  const getModule2TimeStatus = (now = new Date()) => {
+    const formatHour12 = (h24) => {
+      const period = h24 >= 12 ? 'PM' : 'AM';
+      const h = h24 % 12 === 0 ? 12 : h24 % 12;
+      return `${h}:00 ${period}`;
+    };
+
+    const formatSecondsToHms = (sec) => {
+      if (sec <= 0) return '00:00:00';
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    };
+
+    const formattedWindow = `${formatHour12(module2WindowStartHour)} – ${formatHour12(module2WindowEndHour)}`;
+
+    if (!module2WindowEnabled || module2AdminBypass) {
+      return {
+        isActive: true,
+        isBypassed: module2AdminBypass,
+        isEnabled: module2WindowEnabled,
+        startHour: module2WindowStartHour,
+        endHour: module2WindowEndHour,
+        formattedWindow,
+        statusLabel: 'BYPASS_ACTIVE',
+        countdownText: 'Admin Testing Bypass Active',
+        secondsUntilOpen: 0,
+        secondsUntilClose: 0,
+        countdownOpen: '00:00:00',
+        countdownClose: '00:00:00'
+      };
+    }
+
+    const curHour = now.getHours();
+    const curMin = now.getMinutes();
+    const curSec = now.getSeconds();
+    const curSecondsOfDay = curHour * 3600 + curMin * 60 + curSec;
+
+    const startSeconds = module2WindowStartHour * 3600;
+    const endSeconds = module2WindowEndHour * 3600;
+
+    const isActive = curSecondsOfDay >= startSeconds && curSecondsOfDay < endSeconds;
+
+    let secondsUntilOpen = 0;
+    let secondsUntilClose = 0;
+
+    if (isActive) {
+      secondsUntilClose = Math.max(0, endSeconds - curSecondsOfDay);
+    } else if (curSecondsOfDay < startSeconds) {
+      secondsUntilOpen = Math.max(0, startSeconds - curSecondsOfDay);
+    } else {
+      // Past endHour (after 10 PM), next window opens tomorrow at startHour
+      secondsUntilOpen = Math.max(0, (24 * 3600 - curSecondsOfDay) + startSeconds);
+    }
+
+    return {
+      isActive,
+      isBypassed: false,
+      isEnabled: true,
+      startHour: module2WindowStartHour,
+      endHour: module2WindowEndHour,
+      formattedWindow,
+      statusLabel: isActive ? 'ACTIVE' : curSecondsOfDay < startSeconds ? 'UPCOMING' : 'CLOSED',
+      secondsUntilOpen,
+      secondsUntilClose,
+      countdownOpen: formatSecondsToHms(secondsUntilOpen),
+      countdownClose: formatSecondsToHms(secondsUntilClose)
+    };
+  };
+
   // RED LOCKDOWN ALARM THEME STATE (Strict persistence - requires supervisor disarm)
   const [isRedLockdownActive, setIsRedLockdownActive] = useState(() => {
     return localStorage.getItem('forensic_red_lockdown') === 'true';
@@ -508,6 +702,17 @@ export const ForensicProvider = ({ children }) => {
     }
   });
 
+  // POSITIVE REINFORCEMENT MOMENTUM ENGINE (Daily Streaks & Trust Score)
+  const [currentStreak, setCurrentStreak] = useState(() => {
+    const saved = localStorage.getItem('forensic_current_streak');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const [trustScore, setTrustScore] = useState(() => {
+    const saved = localStorage.getItem('forensic_trust_score');
+    return saved ? parseInt(saved, 10) : 100;
+  });
+
   // SYSTEM THEME IS PERMANENTLY LOCKED TO CYBER DARK
   const [theme] = useState('dark');
   const setTheme = () => {};
@@ -517,6 +722,15 @@ export const ForensicProvider = ({ children }) => {
   const broadcastChannelRef = useRef(null);
   const sirenCleanupRef = useRef(null);
   const lastSyncedVersionRef = useRef(0);
+
+  // Sync streaks & trust score to local storage
+  useEffect(() => {
+    localStorage.setItem('forensic_current_streak', currentStreak.toString());
+  }, [currentStreak]);
+
+  useEffect(() => {
+    localStorage.setItem('forensic_trust_score', trustScore.toString());
+  }, [trustScore]);
 
   // Sync to local storage
   useEffect(() => {
@@ -649,6 +863,13 @@ export const ForensicProvider = ({ children }) => {
               localStorage.setItem('forensic_module2_question_limit', data.module2QuestionLimit.toString());
             } catch (e) {}
           }
+        } else if (data?.type === 'STREAK_UPDATED') {
+          if (typeof data.currentStreak === 'number') {
+            setCurrentStreak(data.currentStreak);
+          }
+          if (typeof data.trustScore === 'number') {
+            setTrustScore(data.trustScore);
+          }
         } else if (data?.type === 'STRIKES_RESET') {
           setStrikes(0);
           setTasks(prev => prev.map(t => ({ ...t, strikesCount: 0 })));
@@ -660,6 +881,15 @@ export const ForensicProvider = ({ children }) => {
           if (data.archive) {
             setArchive(data.archive);
           }
+        } else if (data?.type === 'MODULE2_DAY_UPDATED') {
+          if (typeof data.unlockedDay === 'number') {
+            setModule2UnlockedDay(data.unlockedDay);
+          }
+        } else if (data?.type === 'MODULE2_WINDOW_CONFIG') {
+          if (typeof data.enabled === 'boolean') setModule2WindowEnabled(data.enabled);
+          if (typeof data.startHour === 'number') setModule2WindowStartHour(data.startHour);
+          if (typeof data.endHour === 'number') setModule2WindowEndHour(data.endHour);
+          if (typeof data.bypass === 'boolean') setModule2AdminBypass(data.bypass);
         } else if (data?.type === 'NEW_DAY_UNLOCKED') {
           if (data.tasks) {
             setTasks(data.tasks);
@@ -672,6 +902,22 @@ export const ForensicProvider = ({ children }) => {
     }
 
     const handleStorageChange = (e) => {
+      if (e.key === 'module2_unlocked_day') {
+        const val = e.newValue ? parseInt(e.newValue, 10) : 1;
+        setModule2UnlockedDay(val);
+      }
+      if (e.key === 'module2_window_enabled') {
+        setModule2WindowEnabled(e.newValue !== 'false');
+      }
+      if (e.key === 'module2_window_start_hour') {
+        setModule2WindowStartHour(e.newValue ? parseInt(e.newValue, 10) : 19);
+      }
+      if (e.key === 'module2_window_end_hour') {
+        setModule2WindowEndHour(e.newValue ? parseInt(e.newValue, 10) : 22);
+      }
+      if (e.key === 'module2_admin_bypass') {
+        setModule2AdminBypass(e.newValue === 'true');
+      }
       if (e.key === 'forensic_red_lockdown') {
         setIsRedLockdownActive(e.newValue === 'true');
       }
@@ -697,6 +943,14 @@ export const ForensicProvider = ({ children }) => {
       if (e.key === 'forensic_module2_question_limit') {
         const val = e.newValue ? parseInt(e.newValue, 10) : 50;
         setModule2QuestionLimit(val);
+      }
+      if (e.key === 'forensic_current_streak') {
+        const val = e.newValue ? parseInt(e.newValue, 10) : 0;
+        setCurrentStreak(val);
+      }
+      if (e.key === 'forensic_trust_score') {
+        const val = e.newValue ? parseInt(e.newValue, 10) : 100;
+        setTrustScore(val);
       }
     };
 
@@ -756,6 +1010,20 @@ export const ForensicProvider = ({ children }) => {
           setModule2QuestionLimit(serverData.module2QuestionLimit);
           try {
             localStorage.setItem('forensic_module2_question_limit', serverData.module2QuestionLimit.toString());
+          } catch (e) {}
+        }
+
+        if (typeof serverData.currentStreak === 'number') {
+          setCurrentStreak(serverData.currentStreak);
+          try {
+            localStorage.setItem('forensic_current_streak', serverData.currentStreak.toString());
+          } catch (e) {}
+        }
+
+        if (typeof serverData.trustScore === 'number') {
+          setTrustScore(serverData.trustScore);
+          try {
+            localStorage.setItem('forensic_trust_score', serverData.trustScore.toString());
           } catch (e) {}
         }
 
@@ -1123,6 +1391,32 @@ export const ForensicProvider = ({ children }) => {
     );
   };
 
+  const submitTechHardwarePractice = (drillData) => {
+    const updated = tasks.map(t => {
+      if (t.id === 'mod-4-techhardware') {
+        return {
+          ...t,
+          status: 'SUBMITTED',
+          type: 'tech_hardware',
+          ...drillData,
+          submittedAt: new Date().toISOString(),
+          auditorVerdict: null,
+          auditorNotes: ''
+        };
+      }
+      return t;
+    });
+
+    setTasks(updated);
+    registerSubmission(
+      'mod-4-techhardware',
+      'Module 4: Tech & Hardware Mastery',
+      'tech_hardware',
+      `Drill Score: ${drillData.score}/${drillData.totalQuestions} (${drillData.percentage}%) | Terms Mastered: ${drillData.masteredCount || 0}`,
+      updated
+    );
+  };
+
   const clearTask = (taskId) => {
     const updated = tasks.map(t => {
       if (t.id === taskId) {
@@ -1160,6 +1454,18 @@ export const ForensicProvider = ({ children }) => {
             fileCount: null,
             hash: null,
             exifData: null,
+            submittedAt: null,
+            auditorVerdict: null,
+            auditorNotes: ''
+          };
+        } else if (taskId === 'mod-4-techhardware') {
+          return {
+            ...t,
+            status: 'PENDING',
+            score: null,
+            totalQuestions: null,
+            percentage: null,
+            results: [],
             submittedAt: null,
             auditorVerdict: null,
             auditorNotes: ''
@@ -1311,6 +1617,14 @@ export const ForensicProvider = ({ children }) => {
       })
     }).then(r => r.json()).then(res => {
       if (res?.version) lastSyncedVersionRef.current = res.version;
+      if (typeof res?.currentStreak === 'number') {
+        setCurrentStreak(res.currentStreak);
+        try { localStorage.setItem('forensic_current_streak', res.currentStreak.toString()); } catch (e) {}
+      }
+      if (typeof res?.trustScore === 'number') {
+        setTrustScore(res.trustScore);
+        try { localStorage.setItem('forensic_trust_score', res.trustScore.toString()); } catch (e) {}
+      }
     }).catch(() => {});
   };
 
@@ -1439,6 +1753,7 @@ export const ForensicProvider = ({ children }) => {
       submitKeyboardPractice,
       submitDuolingoPractice,
       submitWritingPractice,
+      submitTechHardwarePractice,
       clearTask,
       approveTask,
       rejectTask,
@@ -1456,6 +1771,17 @@ export const ForensicProvider = ({ children }) => {
       updateKeyboardTargetMinutes,
       module2QuestionLimit,
       updateModule2QuestionLimit,
+      module2UnlockedDay,
+      resetModule2ToDay1,
+      updateModule2UnlockedDay,
+      module2WindowEnabled,
+      module2WindowStartHour,
+      module2WindowEndHour,
+      module2AdminBypass,
+      updateModule2WindowEnabled,
+      updateModule2AdminBypass,
+      updateModule2WindowHours,
+      getModule2TimeStatus,
       archive,
       archiveTaskSubmission,
       deleteArchivedItem,
@@ -1468,7 +1794,9 @@ export const ForensicProvider = ({ children }) => {
       isAllTasksCompleted,
       lastCompletedDateKey,
       unlockNewDayTasks,
-      getTodayDateKey
+      getTodayDateKey,
+      currentStreak,
+      trustScore
     }}>
       {children}
     </ForensicContext.Provider>

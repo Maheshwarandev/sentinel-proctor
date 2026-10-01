@@ -84,7 +84,10 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        department: user.department
+        department: user.department,
+        currentStreak: user.currentStreak || 0,
+        trustScore: user.trustScore ?? 100,
+        lastCompletedDate: user.lastCompletedDate || null
       }
     });
   } catch (err) {
@@ -150,8 +153,26 @@ export const register = async (req, res) => {
 };
 
 export const getMe = async (req, res) => {
+  let userDetails = { ...req.user };
+  if (getIsConnected() && req.user?.id) {
+    try {
+      const dbUser = await User.findById(req.user.id).select('-password');
+      if (dbUser) {
+        userDetails = {
+          id: dbUser._id,
+          name: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role,
+          department: dbUser.department,
+          currentStreak: dbUser.currentStreak || 0,
+          trustScore: dbUser.trustScore ?? 100,
+          lastCompletedDate: dbUser.lastCompletedDate || null
+        };
+      }
+    } catch (e) {}
+  }
   return res.status(200).json({
     success: true,
-    user: req.user
+    user: userDetails
   });
 };

@@ -15,6 +15,7 @@
 import { Question } from '../models/Question.js';
 import { getIsConnected } from '../config/db.js';
 import { ENV } from '../config/env.js';
+import { getEffectiveGeminiKey } from './dailyWritingTopicService.js';
 
 // In-memory queue of AI-generated questions ready for instant zero-latency delivery
 let aiPrefetchedQueue = [];
@@ -91,11 +92,17 @@ export function randomizeOptionPlacement(question) {
  * Call Google Gemini API with fallback models
  */
 async function callSingleGemini(prompt, maxTokens = 4096, timeoutMs = 30000) {
-  const apiKey = ENV.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = getEffectiveGeminiKey();
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_GEMINI_API_KEY')) return null;
 
-  // Active high-quota Gemini models: gemini-flash-lite-latest is primary (fast response, high quota)
-  const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash'];
+  // Active high-quota Gemini models: gemini-2.0-flash and gemini-1.5-flash are primary
+  const models = [
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-flash-lite-latest',
+    'gemini-2.5-flash'
+  ];
 
   for (const model of models) {
     try {
@@ -137,7 +144,7 @@ async function callSingleGemini(prompt, maxTokens = 4096, timeoutMs = 30000) {
 
 // Diverse rotating topic clusters for infinite question variety
 const ENGLISH_TOPIC_POOLS = [
-  "computer hardware, keyboard keys, mouse clicks, USB ports, webcams, monitors, headphones, speakers",
+  "digital computer navigation, keyboard shortcuts, mouse navigation, desktop workspace, monitors, audio devices",
   "web browsing, bookmarks, hyperlinks, download vs upload, browser tabs, search engine queries, Wi-Fi connections",
   "workplace emails, polite subject lines, file attachments, reply all, out of office messages, greetings",
   "operating system basics, files, desktop folders, recycle bin, copy and paste, undo, saving documents, cloud drives",
@@ -179,14 +186,14 @@ Strict Requirements:
 1. Short, clear fill-in-the-blank sentence with "_____" (5 underscores).
 2. Exactly 4 distinct options per question.
 3. Randomize the position of the correct answer (correctAnswerIndex: 0, 1, 2, or 3).
-4. Category must be "Beginner English".
+4. MANDATORY "category" KEY: You must assign a specific category to every question. For English/literacy, choose the most accurate tag from: "EN-Grammar", "EN-Vocabulary", "EN-Workplace", "CS-Fundamentals".
 5. Return ONLY a valid JSON array of ${half} objects:
 [
   {
     "text": "To send a copy of a file to another computer over the internet, you _____ it.",
     "options": ["delete", "upload", "format", "restart"],
     "correctAnswerIndex": 1,
-    "category": "Beginner English",
+    "category": "CS-Fundamentals",
     "difficulty": "beginner",
     "explanation": "Uploading transfers files to the internet."
   }
@@ -201,14 +208,14 @@ Strict Requirements:
 1. Short, simple sentence explaining a coding concept with "_____" (5 underscores).
 2. Exactly 4 distinct options per question.
 3. Randomize the position of the correct answer (correctAnswerIndex: 0, 1, 2, or 3).
-4. Category must be "Coding Basics".
+4. MANDATORY "category" KEY: You must assign a specific technical category to every question. For coding, choose the most accurate tag from: "JS-Loops", "JS-Variables", "JS-Functions", "CS-Fundamentals", "Web-Basics", "Git-Workflow".
 5. Return ONLY a valid JSON array of ${half} objects:
 [
   {
     "text": "In programming, a _____ stores a value that can be used later.",
     "options": ["cable", "variable", "pixel", "monitor"],
     "correctAnswerIndex": 1,
-    "category": "Coding Basics",
+    "category": "JS-Variables",
     "difficulty": "beginner",
     "explanation": "Variables are used to store data in code."
   }
@@ -234,7 +241,7 @@ Strict Requirements:
       text: q.text,
       options: q.options,
       correctAnswerIndex: typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0,
-      category: q.category || (idx % 2 === 0 ? 'Beginner English' : 'Coding Basics'),
+      category: q.category || (idx % 2 === 0 ? 'EN-Grammar' : 'CS-Fundamentals'),
       difficulty: 'beginner',
       explanation: q.explanation || 'Created dynamically by Google Gemini AI.',
       source: 'gemini-ai'
@@ -250,7 +257,7 @@ Strict Requirements:
  */
 export async function triggerBackgroundPrefetch() {
   if (isPrefetching) return;
-  const apiKey = ENV.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = getEffectiveGeminiKey();
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_GEMINI_API_KEY')) return;
 
   // Clean stale or recently served items from queue
@@ -296,69 +303,215 @@ setTimeout(() => {
  */
 function generateRichEmergencyQuestions() {
   const templates = [
-    // English & Computer Literacy (40 templates)
-    { text: "We use a _____ to input letters and numbers into the computer.", options: ["keyboard", "scanner", "printer", "projector"], answer: 0, cat: "Beginner English", exp: "A keyboard is used to type text." },
-    { text: "A computer _____ allows you to move the pointer and click items.", options: ["speaker", "mouse", "charger", "desk"], answer: 1, cat: "Beginner English", exp: "A mouse moves the cursor." },
-    { text: "The _____ displays visual output like windows, text, and images.", options: ["monitor", "microphone", "fan", "battery"], answer: 0, cat: "Beginner English", exp: "The monitor shows visual display." },
-    { text: "To view web pages on the internet, we open a web _____.", options: ["calculator", "browser", "notepad", "terminal"], answer: 1, cat: "Beginner English", exp: "Browsers like Chrome or Edge view websites." },
-    { text: "To send a letter electronically over the internet, we use _____.", options: ["email", "paper", "fax", "telegram"], answer: 0, cat: "Beginner English", exp: "Email is electronic mail." },
-    { text: "A secret combination of characters used to secure an account is a _____.", options: ["username", "password", "nickname", "folder"], answer: 1, cat: "Beginner English", exp: "Passwords protect account access." },
-    { text: "To save a copy of a file from the internet onto your computer, you _____ it.", options: ["upload", "download", "erase", "restart"], answer: 1, cat: "Beginner English", exp: "Downloading transfers files to your local drive." },
-    { text: "We store related files together in a virtual _____.", options: ["folder", "cable", "socket", "keycap"], answer: 0, cat: "Beginner English", exp: "Folders organize multiple files." },
-    { text: "To duplicate selected text without deleting the original, we use the _____ command.", options: ["cut", "copy", "delete", "format"], answer: 1, cat: "Beginner English", exp: "Copy creates a duplicate." },
-    { text: "To insert copied text into a new location, we use the _____ command.", options: ["paste", "print", "undo", "close"], answer: 0, cat: "Beginner English", exp: "Paste places clipboard content." },
-    { text: "To reverse your last typing mistake, click the _____ button.", options: ["redo", "undo", "refresh", "power"], answer: 1, cat: "Beginner English", exp: "Undo reverses the most recent action." },
-    { text: "A portable computer with a built-in screen and battery is called a _____.", options: ["server", "laptop", "mainframe", "modem"], answer: 1, cat: "Beginner English", exp: "A laptop is a portable computer." },
-    { text: "The camera built into a computer used for video calls is a _____.", options: ["webcam", "projector", "scanner", "printer"], answer: 0, cat: "Beginner English", exp: "A webcam captures video for calls." },
-    { text: "To hear sound privately without disturbing others, connect your _____.", options: ["microphone", "headphones", "webcam", "keyboard"], answer: 1, cat: "Beginner English", exp: "Headphones provide private audio." },
-    { text: "A physical device that produces paper copies of digital documents is a _____.", options: ["printer", "monitor", "speaker", "router"], answer: 0, cat: "Beginner English", exp: "Printers produce physical paper copies." },
-    { text: "The wireless networking standard used to connect computers without wires is _____.", options: ["Wi-Fi", "HDMI", "VGA", "Ethernet"], answer: 0, cat: "Beginner English", exp: "Wi-Fi provides wireless networking." },
-    { text: "Deleted files in Windows are temporarily held in the _____ Bin.", options: ["Trash", "Recycle", "Archive", "Temporary"], answer: 1, cat: "Beginner English", exp: "The Recycle Bin holds deleted files." },
-    { text: "To reload the current webpage to get recent updates, click the _____ button.", options: ["refresh", "back", "forward", "history"], answer: 0, cat: "Beginner English", exp: "Refresh reloads the current page." },
-    { text: "A clickable piece of text that opens another web page is a _____.", options: ["hyperlink", "hashtag", "folder", "command"], answer: 0, cat: "Beginner English", exp: "Hyperlinks connect web pages." },
-    { text: "To save an updated document with a new name, choose 'Save _____'.", options: ["As", "New", "Copy", "File"], answer: 0, cat: "Beginner English", exp: "Save As creates a copy with a new name." },
-    { text: "The key used to create a blank space between two words is the _____ bar.", options: ["Enter", "space", "Shift", "Tab"], answer: 1, cat: "Beginner English", exp: "The space bar creates spaces between words." },
-    { text: "The key pressed to start a new line or paragraph is the _____ key.", options: ["Enter", "Esc", "Backspace", "Alt"], answer: 0, cat: "Beginner English", exp: "Enter moves to the next line." },
-    { text: "To delete the character to the left of the cursor, press the _____ key.", options: ["Delete", "Backspace", "Insert", "Home"], answer: 1, cat: "Beginner English", exp: "Backspace deletes to the left." },
-    { text: "A software application that scans your computer for viruses is _____ software.", options: ["antivirus", "browser", "editor", "compiler"], answer: 0, cat: "Beginner English", exp: "Antivirus protects against malware." },
-    { text: "A small flash drive plugged into a USB port to store files is a _____ drive.", options: ["hard", "thumb", "floppy", "optical"], answer: 1, cat: "Beginner English", exp: "A thumb drive (or USB drive) stores files." },
-    { text: "When you shut down a computer and start it again immediately, you _____ it.", options: ["format", "restart", "erase", "unplug"], answer: 1, cat: "Beginner English", exp: "Restarting reboots the operating system." },
-    { text: "To send a digital file attached to an email, click the _____ icon.", options: ["attachment", "delete", "trash", "star"], answer: 0, cat: "Beginner English", exp: "The paperclip attachment icon attaches files." },
-    { text: "A brief summary line indicating the topic of an email is the _____ line.", options: ["subject", "header", "footer", "signature"], answer: 0, cat: "Beginner English", exp: "The subject line describes the email topic." },
-    { text: "The primary screen background seen after logging into Windows is the _____.", options: ["desktop", "browser", "taskbar", "terminal"], answer: 0, cat: "Beginner English", exp: "The desktop is the main workspace screen." },
-    { text: "A small graphical symbol representing a file or application is an _____.", options: ["icon", "arrow", "cursor", "tag"], answer: 0, cat: "Beginner English", exp: "An icon represents programs or files visually." },
+    // -------------------------------------------------------------
+    // PILLAR 1: BASIC CODING QUESTIONS
+    // -------------------------------------------------------------
+    {
+      text: "In JavaScript, which keyword is used to declare a variable that cannot be reassigned?",
+      options: ["const", "var", "change", "let"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "const maxScore = 100;\n// maxScore cannot be changed",
+      exp: "'const' creates a constant variable whose reference cannot be reassigned."
+    },
+    {
+      text: "In JavaScript, which keyword is used to declare a variable whose value can change later?",
+      options: ["let", "fixed", "freeze", "locked"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "let count = 0;\ncount = count + 1;",
+      exp: "'let' allows you to reassign variables later in your program."
+    },
+    {
+      text: "What will the following code output to the developer console?\nconsole.log(5 + 3);",
+      options: ["8", "53", "Error", "undefined"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "console.log(5 + 3);",
+      exp: "The + operator adds the two numbers 5 and 3 to produce 8."
+    },
+    {
+      text: "In programming, what data type represents text surrounded by quotation marks?",
+      options: ["String", "Number", "Boolean", "Array"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: 'let studentName = "Alex";',
+      exp: "Text surrounded by quotes (' or \") is called a String."
+    },
+    {
+      text: "Which boolean value indicates that a condition is true?",
+      options: ["true", "yes", "valid", "correct"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "let isPassed = true;",
+      exp: "In programming, Boolean values are strictly 'true' or 'false'."
+    },
+    {
+      text: "What statement is used to execute a block of code only if a specific condition is met?",
+      options: ["if", "repeat", "stop", "call"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "if (score >= 70) {\n  console.log('Passed');\n}",
+      exp: "The 'if' statement provides conditional branching."
+    },
+    {
+      text: "What type of loop repeats code while a counter increments from 0 up to a limit?",
+      options: ["for loop", "stop loop", "jump loop", "break loop"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "for (let i = 0; i < 5; i++) {\n  console.log(i);\n}",
+      exp: "A 'for loop' repeats code a specific number of times."
+    },
+    {
+      text: "In JavaScript, what index number corresponds to the FIRST item in an array?",
+      options: ["0", "1", "-1", "first"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "let fruits = ['Apple', 'Banana'];\nconsole.log(fruits[0]); // Apple",
+      exp: "Arrays are zero-indexed, so the first element is always at index 0."
+    },
+    {
+      text: "Which method adds a new element to the very end of a JavaScript array?",
+      options: [".push()", ".pop()", ".add()", ".insert()"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "let list = [1, 2];\nlist.push(3); // [1, 2, 3]",
+      exp: "The .push() method appends an item to the end of an array."
+    },
+    {
+      text: "What keyword is used inside a function to return a calculated result back to the caller?",
+      options: ["return", "output", "send", "give"],
+      answer: 0,
+      cat: "Coding",
+      codeSnippet: "function add(a, b) {\n  return a + b;\n}",
+      exp: "'return' passes the result of a function back to whoever called it."
+    },
 
-    // Coding & Computer Science Basics (40 templates)
-    { text: "In programming, a _____ is a named container used to hold data.", options: ["loop", "variable", "pixel", "cable"], answer: 1, cat: "Coding Basics", exp: "Variables store data values in memory." },
-    { text: "A block of reusable code designed to perform a specific task is a _____.", options: ["function", "constant", "comment", "folder"], answer: 0, cat: "Coding Basics", exp: "Functions package reusable logic." },
-    { text: "To execute a block of code repeatedly until a condition is met, we use a _____.", options: ["branch", "loop", "tag", "button"], answer: 1, cat: "Coding Basics", exp: "Loops repeat execution of code." },
-    { text: "A mistake or defect in computer software that causes it to fail is a _____.", options: ["bug", "variable", "class", "module"], answer: 0, cat: "Coding Basics", exp: "A bug is an error in code." },
-    { text: "The systematic process of finding and removing bugs from code is called _____.", options: ["debugging", "compiling", "rendering", "styling"], answer: 0, cat: "Coding Basics", exp: "Debugging identifies and fixes errors." },
-    { text: "In JavaScript, text characters enclosed inside quotes are called a _____.", options: ["number", "string", "boolean", "null"], answer: 1, cat: "Coding Basics", exp: "Strings represent text data." },
-    { text: "A data type that can only have one of two values: true or false, is a _____.", options: ["integer", "boolean", "float", "array"], answer: 1, cat: "Coding Basics", exp: "Booleans represent true/false values." },
-    { text: "In JavaScript, array index counting begins at index number _____.", options: ["1", "0", "-1", "2"], answer: 1, cat: "Coding Basics", exp: "Arrays are zero-indexed." },
-    { text: "The programming language used to structure elements on a webpage is _____.", options: ["HTML", "Python", "SQL", "C++"], answer: 0, cat: "Coding Basics", exp: "HTML defines webpage structure." },
-    { text: "The language used to define visual styles, colors, and layout of a webpage is _____.", options: ["CSS", "HTML", "Bash", "Java"], answer: 0, cat: "Coding Basics", exp: "CSS provides styling for web pages." },
-    { text: "The programming language that adds interactivity and dynamic logic to websites is _____.", options: ["JavaScript", "HTML", "Markdown", "XML"], answer: 0, cat: "Coding Basics", exp: "JavaScript enables webpage interactivity." },
-    { text: "Lines of text in code written for human readers that the computer ignores are _____.", options: ["comments", "variables", "functions", "loops"], answer: 0, cat: "Coding Basics", exp: "Comments explain code to developers." },
-    { text: "A version control system used by developers to track changes in code is _____.", options: ["Git", "Excel", "Photoshop", "Word"], answer: 0, cat: "Coding Basics", exp: "Git tracks code revisions." },
-    { text: "To save your staged code changes into Git history, you make a _____.", options: ["commit", "branch", "clone", "fork"], answer: 0, cat: "Coding Basics", exp: "A Git commit records changes." },
-    { text: "In JavaScript, to print diagnostic messages to the developer console, use _____.", options: ["console.log()", "print.text()", "display()", "write()"], answer: 0, cat: "Coding Basics", exp: "console.log() outputs to the console." },
-    { text: "The statement used to execute code only if a specific condition is true is _____.", options: ["if", "for", "while", "return"], answer: 0, cat: "Coding Basics", exp: "The if statement provides conditional branching." },
-    { text: "A loop that repeats a specific number of times using a counter variable is a _____ loop.", options: ["for", "if", "switch", "break"], answer: 0, cat: "Coding Basics", exp: "A for loop iterates over a countable range." },
-    { text: "In HTML, the tag used to create a clickable button on a page is <_____>.", options: ["button", "click", "btn", "link"], answer: 0, cat: "Coding Basics", exp: "<button> creates a clickable button." },
-    { text: "In HTML, the tag used to create an anchor hyperlink is <_____>.", options: ["a", "link", "url", "href"], answer: 0, cat: "Coding Basics", exp: "The <a> tag creates hyperlinks." },
-    { text: "The keyword used inside a function to send a result back to the caller is _____.", options: ["return", "output", "send", "give"], answer: 0, cat: "Coding Basics", exp: "return passes back the result from a function." },
-    { text: "An error in the grammar or rules of a programming language is a _____ error.", options: ["syntax", "network", "hardware", "styling"], answer: 0, cat: "Coding Basics", exp: "Syntax errors violate language rules." },
-    { text: "In JavaScript, the keyword used to declare a variable whose value cannot be reassigned is _____.", options: ["const", "let", "var", "fixed"], answer: 0, cat: "Coding Basics", exp: "const creates immutable variable bindings." },
-    { text: "A collection of ordered values enclosed in square brackets [ ] in JavaScript is an _____.", options: ["array", "object", "string", "function"], answer: 0, cat: "Coding Basics", exp: "Arrays store ordered lists of items." },
-    { text: "To add a new element to the very end of a JavaScript array, use the ._____() method.", options: ["push", "pop", "shift", "add"], answer: 0, cat: "Coding Basics", exp: "array.push() appends an element." },
-    { text: "The command-line interface used to run text commands in an operating system is the _____.", options: ["terminal", "browser", "editor", "paint"], answer: 0, cat: "Coding Basics", exp: "The terminal executes shell commands." },
-    { text: "In CSS, the property used to change the background color of an element is _____.", options: ["background-color", "color", "font-color", "bg"], answer: 0, cat: "Coding Basics", exp: "background-color sets background colors in CSS." },
-    { text: "In CSS, the property used to adjust the size of text is _____-size.", options: ["font", "text", "letter", "word"], answer: 0, cat: "Coding Basics", exp: "font-size controls text dimensions." },
-    { text: "In HTML, the tag used to display an image on a webpage is <_____>.", options: ["img", "pic", "image", "photo"], answer: 0, cat: "Coding Basics", exp: "<img> displays images on the web." },
-    { text: "When a user clicks on a webpage element, JavaScript detects a '_____' event.", options: ["click", "press", "touch", "hit"], answer: 0, cat: "Coding Basics", exp: "The click event fires on user mouse clicks." },
-    { text: "A loop that never stops running because its condition is always true is an _____ loop.", options: ["infinite", "empty", "dead", "open"], answer: 0, cat: "Coding Basics", exp: "An infinite loop repeats indefinitely." }
+    // -------------------------------------------------------------
+    // PILLAR 3: ENGLISH GRAMMAR QUESTIONS
+    // -------------------------------------------------------------
+    {
+      text: "She _____ to the office every Monday morning.",
+      options: ["goes", "go", "going", "gone"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "Third-person singular ('she') in simple present takes 'goes'."
+    },
+    {
+      text: "Yesterday, I _____ an email to my team supervisor.",
+      options: ["sent", "send", "sending", "sends"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "'Yesterday' requires the past tense form 'sent'."
+    },
+    {
+      text: "We are _____ on a new software application today.",
+      options: ["working", "work", "worked", "works"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "Present continuous uses 'are' + verb-ing ('working')."
+    },
+    {
+      text: "The laptop is placed _____ the desk.",
+      options: ["on", "at", "to", "into"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "We say something is 'on' a flat surface like a desk."
+    },
+    {
+      text: "He does not _____ how to fix the network cable.",
+      options: ["know", "knows", "knew", "knowing"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "After 'does not', use the base form of the verb ('know')."
+    },
+    {
+      text: "There _____ many computers in the technology laboratory.",
+      options: ["are", "is", "was", "be"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "'Many computers' is plural, so it takes 'are'."
+    },
+    {
+      text: "Please attach _____ file to the message before sending.",
+      options: ["the", "a", "an", "them"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "'The' is used when referring to a specific file."
+    },
+    {
+      text: "I have _____ coding for three hours today.",
+      options: ["been", "be", "being", "was"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "Present perfect continuous uses 'have been' + verb-ing."
+    },
+    {
+      text: "If you have any questions, you can ask _____.",
+      options: ["me", "I", "my", "mine"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "'Me' is the object pronoun following the verb 'ask'."
+    },
+    {
+      text: "We need to finish our tasks _____ 5:00 PM today.",
+      options: ["by", "on", "at", "in"],
+      answer: 0,
+      cat: "Grammar",
+      exp: "'By' indicates completion no later than a specific time deadline."
+    },
+
+    // -------------------------------------------------------------
+    // PILLAR 4: ENGLISH FLUENCY & SPOKEN DIALOGUE QUESTIONS
+    // -------------------------------------------------------------
+    {
+      text: "Colleague asks: 'Could you help me with this task?' What is the most polite, professional response?",
+      options: ["'Sure, I would be happy to help!'", "'No way, do it yourself.'", "'Why are you asking?'", "'Wait forever.'"],
+      answer: 0,
+      cat: "Fluency",
+      isFluency: true,
+      exp: "'Sure, I would be happy to help!' is polite, friendly, and professional."
+    },
+    {
+      text: "Workplace Greeting: When joining a video meeting in the morning, what is the best greeting to say clearly?",
+      options: ["'Good morning everyone, can everyone hear me clearly?'", "'Why is this call happening?'", "'Mute me now.'", "'I am leaving.'"],
+      answer: 0,
+      cat: "Fluency",
+      isFluency: true,
+      exp: "Greeting the team and checking audio clarity is standard professional communication."
+    },
+    {
+      text: "Speaking Practice: When you did not hear what someone said on a call, how do you politely ask them to repeat?",
+      options: ["'Could you please repeat that? I could not hear you clearly.'", "'Speak louder right now.'", "'What is your problem?'", "'Say it again fast.'"],
+      answer: 0,
+      cat: "Fluency",
+      isFluency: true,
+      exp: "'Could you please repeat that?' is polite, natural, and standard workplace English."
+    },
+    {
+      text: "Read Aloud: Complete the sentence: 'I am practicing my English and coding skills _____ every single day.'",
+      options: ["consistently and diligently", "never and badly", "slowly without caring", "yesterday only"],
+      answer: 0,
+      cat: "Fluency",
+      isFluency: true,
+      exp: "'Consistently and diligently' describes dedicated, daily professional improvement."
+    },
+    {
+      text: "Meeting Dialogue: When someone finishes explaining their project idea, how do you express polite agreement?",
+      options: ["'That makes complete sense, thank you for explaining.'", "'I was not listening.'", "'Whatever you want.'", "'This is boring.'"],
+      answer: 0,
+      cat: "Fluency",
+      isFluency: true,
+      exp: "'That makes complete sense, thank you for explaining' shows active listening and courtesy."
+    },
+    {
+      text: "Technical Fluency: How do you describe a completed bug fix clearly to your supervisor?",
+      options: ["'I identified the issue and successfully resolved it.'", "'It was broken and I touched it.'", "'I don't know what happened.'", "'Somebody broke it.'"],
+      answer: 0,
+      cat: "Fluency",
+      isFluency: true,
+      exp: "'I identified the issue and successfully resolved it' demonstrates confidence and clear technical communication."
+    }
   ];
 
   return templates.map((t, idx) => randomizeOptionPlacement({
@@ -369,6 +522,9 @@ function generateRichEmergencyQuestions() {
     category: t.cat,
     difficulty: "beginner",
     explanation: t.exp,
+    imageUrl: t.imageUrl || null,
+    codeSnippet: t.codeSnippet || null,
+    isFluency: Boolean(t.isFluency),
     source: "gemini-ai"
   }));
 }
@@ -495,19 +651,41 @@ export async function getOrGenerateBatch(requestedCount = 50) {
   }
 
   // -------------------------------------------------------------
+  // GUARANTEE 3 PILLARS: Ensure Fluency, Coding, and Grammar are all represented (Hardware is in Module 4)
+  // -------------------------------------------------------------
+  const hasFluency = selected.some(q => q.category === 'Fluency' || q.isFluency);
+  const hasCoding = selected.some(q => q.category === 'Coding');
+
+  if (!hasFluency || !hasCoding) {
+    const emergencyList = generateRichEmergencyQuestions();
+    const fluencyItems = emergencyList.filter(q => q.category === 'Fluency');
+    const codingItems = emergencyList.filter(q => q.category === 'Coding');
+
+    if (!hasFluency && fluencyItems.length > 0) {
+      selected.unshift(...fluencyItems.slice(0, 2));
+    }
+    if (!hasCoding && codingItems.length > 0) {
+      selected.splice(2, 0, ...codingItems.slice(0, 2));
+    }
+  }
+
+  // Cap to requested count if expanded
+  const finalBatch = selected.slice(0, count);
+
+  // -------------------------------------------------------------
   // PHASE 5: Mark all selected questions as served and persist
   // -------------------------------------------------------------
-  selected.forEach(q => markAsRecentlyServed(q.text));
+  finalBatch.forEach(q => markAsRecentlyServed(q.text));
   
   if (getIsConnected()) {
-    saveToDatabaseAsync(selected);
+    saveToDatabaseAsync(finalBatch);
   }
 
   // Trigger background prefetch so the NEXT test is pre-loaded and ready
   setTimeout(() => triggerBackgroundPrefetch(), 1000);
 
   return {
-    questions: selected,
+    questions: finalBatch,
     source: 'gemini-ai',
     timestamp: Date.now()
   };

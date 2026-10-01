@@ -11,6 +11,9 @@ const userSchema = new mongoose.Schema({
   },
   department: { type: String, default: 'Compliance & Proctoring' },
   avatar: { type: String, default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80' },
+  trustScore: { type: Number, default: 100 },
+  currentStreak: { type: Number, default: 0 },
+  lastCompletedDate: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

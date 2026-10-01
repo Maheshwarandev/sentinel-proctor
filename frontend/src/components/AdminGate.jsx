@@ -6,6 +6,10 @@ import { AdminIntelligenceBoard } from './AdminIntelligenceBoard';
 import { SubmissionsBoxPage } from './SubmissionsBoxPage';
 import { AntiCheatPage } from './AntiCheatPage';
 import { DailyArchivePage } from './DailyArchivePage';
+import { AdminModule1Page } from './AdminModule1Page';
+import { AdminModule2Page } from './AdminModule2Page';
+import { AdminModule3Page } from './AdminModule3Page';
+import { AdminModule4Page } from './AdminModule4Page';
 
 export const AdminGate = () => {
   const { isAdminAuthenticated, loginAdmin } = useForensics();
@@ -23,6 +27,18 @@ export const AdminGate = () => {
     }
     if (location.pathname === '/admin/archive') {
       return <DailyArchivePage />;
+    }
+    if (location.pathname === '/admin/module-1' || location.pathname === '/admin/module1' || location.pathname === '/admin/keyboard') {
+      return <AdminModule1Page />;
+    }
+    if (location.pathname === '/admin/module-2' || location.pathname === '/admin/module2' || location.pathname === '/admin/english') {
+      return <AdminModule2Page />;
+    }
+    if (location.pathname === '/admin/module-3' || location.pathname === '/admin/module3' || location.pathname === '/admin/writing') {
+      return <AdminModule3Page />;
+    }
+    if (location.pathname === '/admin/module-4' || location.pathname === '/admin/module4' || location.pathname === '/admin/tech') {
+      return <AdminModule4Page />;
     }
     return <AdminIntelligenceBoard />;
   }

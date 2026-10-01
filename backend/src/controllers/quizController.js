@@ -1,4 +1,5 @@
 import { Question } from '../models/Question.js';
+import { SessionLog } from '../models/SessionLog.js';
 import { getIsConnected } from '../config/db.js';
 import { getOrGenerateBatch, generateGeminiQuestions } from '../services/aiQuestionService.js';
 
@@ -87,7 +88,10 @@ export const startQuizSession = async (req, res) => {
       category: q.category,
       difficulty: q.difficulty,
       correctAnswerIndex: typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0,
-      explanation: q.explanation || ''
+      explanation: q.explanation || '',
+      imageUrl: q.imageUrl || null,
+      codeSnippet: q.codeSnippet || null,
+      isFluency: Boolean(q.isFluency)
     }));
 
     return res.status(200).json({
@@ -196,6 +200,38 @@ export const gradeQuizSession = async (req, res) => {
 
     // Delete session from memory to prevent replay attacks
     activeQuizSessions.delete(sessionId);
+
+    // Persist assessment log to MongoDB SessionLog for weak-point tracking and weakness heatmap
+    if (getIsConnected()) {
+      try {
+        await SessionLog.create({
+          taskId: 'mod-2-duolingo',
+          taskTitle: 'Module 2: English Assessment (AI Engine)',
+          userId: req.user?.id || 'candidate_brother',
+          userName: req.user?.name || 'Brother',
+          userEmail: req.user?.email || 'brother@compliance.local',
+          submissionText: `AI Quiz Graded: ${correctCount}/${totalQuestions} (${percentage}%)`,
+          textHash: `quiz_${sessionId}_${Date.now()}`,
+          module2Assessment: gradedResults.map(r => ({
+            questionId: r.questionId || '',
+            questionText: r.questionText || '',
+            category: r.category || 'General',
+            userAnswer: r.userSelectedText || '',
+            userSelectedIndex: r.userSelectedIndex,
+            correctAnswer: r.correctAnswerText || '',
+            isCorrect: !!r.isCorrect,
+            explanation: r.explanation || '',
+            timeSpentSec: r.timeSpentSec || 0
+          })),
+          integrityScore,
+          violations: flags,
+          verdict: passed ? 'VERIFIED' : 'SUSPICIOUS',
+          auditorNotes: `Scored ${correctCount}/${totalQuestions} (${percentage}%). Passed: ${passed}.`
+        });
+      } catch (logErr) {
+        console.warn('[QuizController] Failed to auto-log SessionLog for quiz:', logErr.message);
+      }
+    }
 
     return res.status(200).json({
       success: true,
