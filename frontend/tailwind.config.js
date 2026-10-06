@@ -12,6 +12,7 @@ export default {
           base: '#080C14',
           raised: '#0F1623',
           elevated: '#151E2D',
+            card: '#0a0f18',
           border: '#243044',
         },
         // Brand accents
