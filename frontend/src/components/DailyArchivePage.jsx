@@ -25,6 +25,8 @@ import {
   Flame,
   FileCheck
 } from 'lucide-react';
+import { PageHeader, Badge } from './ui';
+import { StatusBadge } from './ui/Badge';
 import { useForensics } from '../context/ForensicContext';
 import { CyberNotificationPopup } from './CyberNotificationPopup';
 
@@ -254,46 +256,42 @@ export const DailyArchivePage = () => {
       {/* Real-time floating popup */}
       <CyberNotificationPopup />
 
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        <div>
+      <PageHeader
+        title="Daily Submission Archive"
+        subtitle="Every approved task is archived here with full text, camera EXIF, OCR streak, and approval notes."
+        badge={
           <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border bg-emerald-500/12 text-emerald-400 border-emerald-500/25">
-              <Archive className="w-3 h-3" />
-              Permanent Compliance Ledger
-            </span>
+            <Badge variant="success"><Archive className="w-3 h-3 mr-1" />Permanent Compliance Ledger</Badge>
             <span className="text-xs text-slate-400">Subject: Brother</span>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Daily Submission Archive</h1>
-          <p className="text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-            Every approved task is archived here with full text, camera EXIF, OCR streak, and approval notes.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center shrink-0">
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
-            <div className="text-[10px] uppercase text-slate-500 font-semibold">Total Approved</div>
-            <div className="text-xl font-bold text-emerald-400 mt-0.5">{archive.length}</div>
+        }
+        actions={
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center shrink-0">
+            <div className="p-3 rounded-xl bg-surface-card border border-surface-border">
+              <div className="text-[10px] uppercase text-slate-500 font-semibold">Total Approved</div>
+              <div className="text-xl font-bold text-emerald-400 mt-0.5">{archive.length}</div>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-card border border-surface-border">
+              <div className="text-[10px] uppercase text-slate-500 font-semibold">Days Logged</div>
+              <div className="text-xl font-bold text-cyan-400 mt-0.5">{totalDaysCount}</div>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-card border border-surface-border">
+              <div className="text-[10px] uppercase text-slate-500 font-semibold">Duolingo</div>
+              <div className="text-xl font-bold text-amber-400 mt-0.5">{duolingoCount}</div>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-card border border-surface-border">
+              <div className="text-[10px] uppercase text-slate-500 font-semibold">Writing</div>
+              <div className="text-xl font-bold text-teal-400 mt-0.5">{writingCount}</div>
+            </div>
           </div>
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
-            <div className="text-[10px] uppercase text-slate-500 font-semibold">Days Logged</div>
-            <div className="text-xl font-bold text-cyan-400 mt-0.5">{totalDaysCount}</div>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
-            <div className="text-[10px] uppercase text-slate-500 font-semibold">Duolingo</div>
-            <div className="text-xl font-bold text-amber-400 mt-0.5">{duolingoCount}</div>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/[0.07]">
-            <div className="text-[10px] uppercase text-slate-500 font-semibold">Writing</div>
-            <div className="text-xl font-bold text-teal-400 mt-0.5">{writingCount}</div>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ============================================================= */}
       {/* TODAY'S 3-MODULES COMPLETE HERO BUTTON BANNER                 */}
       {/* ============================================================= */}
       {todaySummary && todaySummary.isAllThreeDone && (
-        <div className="p-5 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-emerald-950/20 shadow-xl backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+        <div className="p-5 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-emerald-950/20 shadow-sm  flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
               <Trophy className="w-6 h-6 animate-pulse" />
@@ -339,7 +337,7 @@ export const DailyArchivePage = () => {
       {/* FIND BY DATE BUTTONS TOOLBAR (1-CLICK PER RECORDED DAY)       */}
       {/* ============================================================= */}
       {dateSummaries.length > 0 && (
-        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/90 space-y-2.5 shadow-md backdrop-blur-md">
+        <div className="p-4 rounded-2xl bg-surface-card border border-surface-border space-y-2.5 shadow-md ">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 text-xs font-bold text-slate-200">
               <Calendar className="w-4 h-4 text-cyan-400" />
@@ -369,12 +367,12 @@ export const DailyArchivePage = () => {
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all border ${
                 selectedDateFilter === 'ALL'
                   ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
-                  : 'bg-slate-950/80 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-800'
+                  : 'bg-[rgba(255,255,255,0.02)] text-slate-400 border-surface-border hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
               <span>All Dates</span>
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                selectedDateFilter === 'ALL' ? 'bg-slate-950 text-cyan-400' : 'bg-slate-800 text-slate-400'
+                selectedDateFilter === 'ALL' ? 'bg-[rgba(255,255,255,0.02)] text-cyan-400' : 'bg-slate-800 text-slate-400'
               }`}>
                 {archive.length}
               </span>
@@ -395,7 +393,7 @@ export const DailyArchivePage = () => {
                         : 'bg-cyan-500 text-slate-950 border-cyan-400 ring-2 ring-cyan-300 shadow-md'
                       : day.isAllThreeDone
                       ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-                      : 'bg-slate-950/80 hover:bg-slate-900 text-slate-300 border-slate-800'
+                      : 'bg-[rgba(255,255,255,0.02)] hover:bg-surface-card text-slate-300 border-surface-border'
                   }`}
                   title={`Filter directly to ${day.displayDate}`}
                 >
@@ -408,7 +406,7 @@ export const DailyArchivePage = () => {
 
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
                     isSelected
-                      ? 'bg-slate-950 text-white'
+                      ? 'bg-[rgba(255,255,255,0.02)] text-white'
                       : day.isAllThreeDone
                       ? 'bg-emerald-500 text-slate-950'
                       : 'bg-slate-800 text-slate-400'
@@ -423,7 +421,7 @@ export const DailyArchivePage = () => {
       )}
 
       {/* Filter & Action Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-card p-4 rounded-2xl border border-surface-border">
         
         {/* Search Bar */}
         <div className="relative flex-1 max-w-md">
@@ -433,7 +431,7 @@ export const DailyArchivePage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by date, typed text, streak, camera, or notes..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 transition-colors"
+            className="w-full bg-[rgba(255,255,255,0.02)] border border-surface-border rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 transition-colors"
           />
           {searchQuery && (
             <button
@@ -480,7 +478,7 @@ export const DailyArchivePage = () => {
                 }
               }}
               title="Expand or collapse all recorded days"
-              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-[rgba(255,255,255,0.02)] hover:bg-slate-800 border border-surface-border text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
             >
               <Layers className="w-3.5 h-3.5 text-cyan-400" />
               <span>{Object.keys(groupedByDate).some(k => !isDateExpanded(k)) ? 'Expand All' : 'Collapse All'}</span>
@@ -490,7 +488,7 @@ export const DailyArchivePage = () => {
           <button
             onClick={handleExportJSON}
             title="Download complete archive as JSON report"
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-[rgba(255,255,255,0.02)] hover:bg-slate-800 border border-surface-border text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
           >
             <Download className="w-3.5 h-3.5 text-cyan-400" />
             <span>Export JSON</span>
@@ -507,7 +505,7 @@ export const DailyArchivePage = () => {
                 </button>
                 <button
                   onClick={() => setShowClearConfirm(false)}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-surface-border"
                 >
                   Cancel
                 </button>
@@ -529,8 +527,8 @@ export const DailyArchivePage = () => {
       {/* Main Archive Content: Grouped by Date */}
       {archive.length === 0 ? (
         /* Empty State */
-        <div className="p-12 text-center rounded-2xl border border-slate-800/80 bg-slate-900/40 text-slate-400 space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center mx-auto text-slate-500">
+        <div className="p-12 text-center rounded-2xl border border-surface-border bg-surface-card text-slate-400 space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-slate-800/60 border border-surface-border flex items-center justify-center mx-auto text-slate-500">
             <Archive className="w-8 h-8 text-slate-400" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
@@ -548,7 +546,7 @@ export const DailyArchivePage = () => {
           </button>
         </div>
       ) : Object.keys(groupedByDate).length === 0 ? (
-        <div className="p-10 text-center rounded-2xl border border-slate-800 bg-slate-900/40 text-slate-400">
+        <div className="p-10 text-center rounded-2xl border border-surface-border bg-surface-card text-slate-400">
           <Search className="w-8 h-8 text-slate-600 mx-auto mb-2" />
           <p className="text-sm font-medium text-slate-300">No archived submissions match your filter or search query.</p>
           <button
@@ -575,14 +573,14 @@ export const DailyArchivePage = () => {
             return (
               <div
                 key={dateKey}
-                className={`rounded-2xl border transition-all duration-300 shadow-xl backdrop-blur-md overflow-hidden ${
+                className={`rounded-2xl border transition-all duration-300 shadow-sm  overflow-hidden ${
                   isComplete
-                    ? 'border-emerald-500/40 bg-slate-900/85 hover:border-emerald-500/60'
-                    : 'border-slate-800 bg-slate-900/80 hover:border-slate-700'
+                    ? 'border-emerald-500/40 bg-surface-card hover:border-emerald-500/60'
+                    : 'border-surface-border bg-surface-card hover:border-surface-border'
                 }`}
               >
                 {/* Consolidated Daily Card Header */}
-                <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-950/90 border-b border-slate-800/80">
+                <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-950/90 border-b border-surface-border">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     
                     {/* Left: Date info & Completion Status */}
@@ -629,7 +627,7 @@ export const DailyArchivePage = () => {
                         onClick={() => toggleDateExpanded(dateKey)}
                         className={`px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center space-x-2 transition-all shadow-md active:scale-95 ${
                           isExpanded
-                            ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                            ? 'bg-slate-800 hover:bg-slate-700 text-white border border-surface-border'
                             : isComplete
                             ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 ring-2 ring-emerald-300/30 shadow-[0_0_20px_rgba(16,185,129,0.35)]'
                             : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-[0_0_20px_rgba(6,182,212,0.35)]'
@@ -653,10 +651,10 @@ export const DailyArchivePage = () => {
                   </div>
 
                   {/* Quick Glance Summary Strip (Visible Even While Collapsed) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-4 pt-4 border-t border-slate-800/60 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-4 pt-4 border-t border-surface-border text-xs">
                     {/* Module 1 Glance */}
                     {keyboardItem ? (
-                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border">
                         <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0">
                           <Terminal className="w-4 h-4" />
                         </div>
@@ -671,7 +669,7 @@ export const DailyArchivePage = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-slate-950/30 border border-slate-800/40 opacity-50">
+                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border opacity-50">
                         <Terminal className="w-4 h-4 text-slate-600 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <span className="text-[11px] text-slate-500">Module 1: Keyboard</span>
@@ -682,7 +680,7 @@ export const DailyArchivePage = () => {
 
                     {/* Module 2 Glance */}
                     {duolingoItem ? (
-                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border">
                         <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 shrink-0">
                           <Flame className="w-4 h-4" />
                         </div>
@@ -701,7 +699,7 @@ export const DailyArchivePage = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-slate-950/30 border border-slate-800/40 opacity-50">
+                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border opacity-50">
                         <Flame className="w-4 h-4 text-slate-600 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <span className="text-[11px] text-slate-500">Module 2: Duolingo / English</span>
@@ -712,7 +710,7 @@ export const DailyArchivePage = () => {
 
                     {/* Module 3 Glance */}
                     {writingItem ? (
-                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border">
                         <div className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 shrink-0">
                           <Camera className="w-4 h-4" />
                         </div>
@@ -727,7 +725,7 @@ export const DailyArchivePage = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-slate-950/30 border border-slate-800/40 opacity-50">
+                      <div className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border opacity-50">
                         <Camera className="w-4 h-4 text-slate-600 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <span className="text-[11px] text-slate-500">Module 3: Writing</span>
@@ -740,8 +738,8 @@ export const DailyArchivePage = () => {
 
                 {/* Expanded Module Details Section: Revealed upon clicking Date Button */}
                 {isExpanded && (
-                  <div className="p-5 sm:p-6 space-y-6 bg-slate-950/60 border-t border-slate-800/80 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800/60">
+                  <div className="p-5 sm:p-6 space-y-6 bg-[rgba(255,255,255,0.02)] border-t border-surface-border animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-surface-border">
                       <span className="font-bold text-white flex items-center space-x-2">
                         <span>Detailed Submissions for</span>
                         <span className="text-cyan-400">{group.displayDate}</span>
@@ -755,10 +753,10 @@ export const DailyArchivePage = () => {
                       {orderedItems.map((item) => (
                         <div
                           key={item.id}
-                          className="rounded-xl border border-slate-800 bg-slate-900/90 p-4 sm:p-5 space-y-4 shadow-md hover:border-slate-700/80 transition-all"
+                          className="rounded-xl border border-surface-border bg-surface-card p-4 sm:p-5 space-y-4 shadow-md hover:border-surface-border transition-all"
                         >
                           {/* Module Header */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-3">
                             <div className="flex items-center space-x-3">
                               <div className={`p-2.5 rounded-xl border shrink-0 ${
                                 item.type === 'keyboard'
@@ -789,10 +787,7 @@ export const DailyArchivePage = () => {
 
                             {/* Badges & Delete */}
                             <div className="flex items-center space-x-2 shrink-0">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                                <span>VERIFIED</span>
-                              </span>
+                              <StatusBadge status="VERIFIED" />
 
                               <button
                                 onClick={() => handleDeleteItem(item.id)}
@@ -811,25 +806,25 @@ export const DailyArchivePage = () => {
                               <div className="space-y-3">
                                 {/* Metrics row */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Typing Speed</span>
                                     <span className="text-cyan-400 font-bold text-sm">
                                       {item.telemetry?.wpm ? `${item.telemetry.wpm} WPM` : '--'}
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Total Words</span>
                                     <span className="text-white font-bold text-sm">
                                       {item.submissionText ? `${item.submissionText.trim().split(/\s+/).length} words` : '0'}
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Active Writing Time</span>
                                     <span className="text-teal-400 font-bold text-sm">
                                       {item.telemetry?.durationSec ? `${Math.floor(item.telemetry.durationSec / 60)}m ${item.telemetry.durationSec % 60}s` : '--'}
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Total Keystrokes</span>
                                     <span className="text-slate-300 font-bold text-sm">
                                       {item.telemetry?.totalKeystrokes || item.submissionText?.length || 0}
@@ -838,8 +833,8 @@ export const DailyArchivePage = () => {
                                 </div>
 
                                 {/* Typed text */}
-                                <div className="bg-slate-950/90 rounded-xl p-4 border border-slate-800/80 space-y-2">
-                                  <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800/60 pb-2">
+                                <div className="bg-[rgba(255,255,255,0.02)] rounded-xl p-4 border border-surface-border space-y-2">
+                                  <div className="flex items-center justify-between text-xs text-slate-400 border-b border-surface-border pb-2">
                                     <span>Archived Written Attestation:</span>
                                     <button
                                       onClick={() => handleCopyText(item.id, item.submissionText)}
@@ -870,31 +865,31 @@ export const DailyArchivePage = () => {
                               <div className="space-y-3">
                                 {/* Metric pills row */}
                                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Assessment Score</span>
                                     <span className="text-white font-bold text-sm">
                                       {item.quizScore !== undefined ? `${item.quizScore} / ${item.totalQuestions || item.results?.length || 50}` : '--'}
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Accuracy</span>
                                     <span className="text-emerald-400 font-bold text-sm">
                                       {item.percentage !== undefined ? `${item.percentage}%` : '--'}
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">XP Awarded</span>
                                     <span className="text-amber-400 font-bold text-sm">
                                       {item.xpEarned || '+30 XP'}
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Avg Speed / Q</span>
                                     <span className="text-cyan-400 font-bold text-sm">
                                       {item.avgTimePerQuestionSec ? `${item.avgTimePerQuestionSec}s` : '--'}
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                  <div className="bg-[rgba(255,255,255,0.02)] p-2.5 rounded-xl border border-surface-border">
                                     <span className="text-slate-500 text-[10px] block">Cadence Integrity</span>
                                     <span className="text-teal-400 font-bold text-sm">
                                       {item.integrityScore !== undefined ? `${item.integrityScore}%` : '100%'}
@@ -903,8 +898,8 @@ export const DailyArchivePage = () => {
                                 </div>
 
                                 {/* Assessment details box */}
-                                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs space-y-2.5">
-                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/60 pb-2.5">
+                                <div className="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border text-xs space-y-2.5">
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-2.5">
                                     <div className="flex items-center space-x-2">
                                       <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 font-mono font-bold text-[10px] border border-sky-500/20">
                                         WINDOWS 11 ASSESSMENT ENGINE
@@ -942,9 +937,9 @@ export const DailyArchivePage = () => {
                                       </button>
 
                                       {expandedQuestionsItemId === item.id && (
-                                        <div className="mt-3 space-y-2.5 border-t border-slate-800/60 pt-3 animate-in fade-in">
+                                        <div className="mt-3 space-y-2.5 border-t border-surface-border pt-3 animate-in fade-in">
                                           {item.results.map((q, idx) => (
-                                            <div key={idx} className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-xs space-y-1.5">
+                                            <div key={idx} className="p-3 rounded-lg bg-surface-card border border-surface-border text-xs space-y-1.5">
                                               <div className="flex items-center justify-between">
                                                 <span className="text-slate-400 font-mono font-bold text-[10px]">
                                                   Question #{idx + 1} • {q.category}
@@ -962,13 +957,13 @@ export const DailyArchivePage = () => {
                                               <p className="text-white font-medium">"{q.questionText}"</p>
 
                                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
-                                                <div className="p-2 rounded bg-slate-950/80 border border-slate-800">
+                                                <div className="p-2 rounded bg-[rgba(255,255,255,0.02)] border border-surface-border">
                                                   <span className="text-slate-500 block text-[9px]">CANDIDATE ANSWER:</span>
                                                   <span className={q.isCorrect ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
                                                     {q.userSelectedText || '--'}
                                                   </span>
                                                 </div>
-                                                <div className="p-2 rounded bg-slate-950/80 border border-slate-800">
+                                                <div className="p-2 rounded bg-[rgba(255,255,255,0.02)] border border-surface-border">
                                                   <span className="text-slate-500 block text-[9px]">TRUE SERVER KEY:</span>
                                                   <span className="text-emerald-400 font-semibold">
                                                     {q.correctAnswerText || '--'}
@@ -991,8 +986,8 @@ export const DailyArchivePage = () => {
 
                                 {/* Archived Real-Time Proctoring Camera Surveillance Dossier */}
                                 {item.proctorSnapshots?.length > 0 ? (
-                                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs space-y-3">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/60 pb-2.5">
+                                  <div className="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border text-xs space-y-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-2.5">
                                       <div className="flex items-center space-x-2">
                                         <Camera className="w-4 h-4 text-rose-400" />
                                         <span className="font-bold text-white">
@@ -1002,7 +997,7 @@ export const DailyArchivePage = () => {
 
                                       <div className="flex items-center space-x-2">
                                         {item.cameraDevice && (
-                                          <span className="text-[10px] text-slate-400 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                          <span className="text-[10px] text-slate-400 font-mono bg-surface-card px-2 py-0.5 rounded border border-surface-border">
                                             {item.cameraDevice}
                                           </span>
                                         )}
@@ -1021,7 +1016,7 @@ export const DailyArchivePage = () => {
                                         <div
                                           key={snap.id || idx}
                                           onClick={() => setZoomImage(snap.image)}
-                                          className="group relative rounded-xl border border-slate-800 bg-slate-900 overflow-hidden cursor-pointer hover:border-cyan-400/60 transition-all hover:scale-[1.03] shadow-sm"
+                                          className="group relative rounded-xl border border-surface-border bg-surface-card overflow-hidden cursor-pointer hover:border-cyan-400/60 transition-all hover:scale-[1.03] shadow-sm"
                                           title={`Click to zoom archived frame captured at ${snap.timeStr}`}
                                         >
                                           <img
@@ -1043,7 +1038,7 @@ export const DailyArchivePage = () => {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/60 text-xs text-slate-500 flex items-center justify-between">
+                                  <div className="p-3 rounded-xl bg-[rgba(255,255,255,0.02)] border border-surface-border text-xs text-slate-500 flex items-center justify-between">
                                     <div className="flex items-center space-x-2">
                                       <Camera className="w-3.5 h-3.5 text-slate-600" />
                                       <span>Continuous candidate webcam surveillance verified for this assessment archive.</span>
@@ -1058,7 +1053,7 @@ export const DailyArchivePage = () => {
                             {item.type === 'image_ocr' && !item.quizScore && (
                               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                                 <div 
-                                  className="md:col-span-4 relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden group cursor-pointer min-h-[160px] flex items-center justify-center"
+                                  className="md:col-span-4 relative rounded-xl border border-surface-border bg-[rgba(255,255,255,0.02)] overflow-hidden group cursor-pointer min-h-[160px] flex items-center justify-center"
                                   onClick={() => item.image && setZoomImage(item.image)}
                                 >
                                   {item.image ? (
@@ -1078,16 +1073,16 @@ export const DailyArchivePage = () => {
                                   )}
                                 </div>
 
-                                <div className="md:col-span-8 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 text-xs space-y-2.5">
-                                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                <div className="md:col-span-8 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-surface-border text-xs space-y-2.5">
+                                  <div className="flex items-center justify-between border-b border-surface-border pb-2">
                                     <span className="text-slate-400">Detected Streak:</span>
                                     <span className="text-amber-400 font-bold text-sm">{item.ocrData?.streakDetected || '--'}</span>
                                   </div>
-                                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                  <div className="flex items-center justify-between border-b border-surface-border pb-2">
                                     <span className="text-slate-400">XP Verified:</span>
                                     <span className="text-white font-semibold">{item.ocrData?.xpEarned || '--'}</span>
                                   </div>
-                                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                  <div className="flex items-center justify-between border-b border-surface-border pb-2">
                                     <span className="text-slate-400">Lesson Topic:</span>
                                     <span className="text-slate-300">{item.ocrData?.lessonTitle || '--'}</span>
                                   </div>
@@ -1121,7 +1116,7 @@ export const DailyArchivePage = () => {
                                           <div
                                             key={slot.id || sIdx}
                                             onClick={() => slotImg && setZoomImage(slotImg)}
-                                            className="group relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden cursor-pointer h-24 hover:border-teal-400/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-end"
+                                            className="group relative rounded-xl border border-surface-border bg-[rgba(255,255,255,0.02)] overflow-hidden cursor-pointer h-24 hover:border-teal-400/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-end"
                                             title={`Click to zoom Page ${pageNum}`}
                                           >
                                             {slotImg ? (
@@ -1134,7 +1129,7 @@ export const DailyArchivePage = () => {
                                                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-teal-300">
                                                   <Maximize2 className="w-4 h-4" />
                                                 </div>
-                                                <div className="relative z-10 bg-black/80 px-2 py-0.5 flex items-center justify-between text-[9px] font-mono text-teal-300 border-t border-slate-800/80">
+                                                <div className="relative z-10 bg-black/80 px-2 py-0.5 flex items-center justify-between text-[9px] font-mono text-teal-300 border-t border-surface-border">
                                                   <span>Page {pageNum}</span>
                                                 </div>
                                               </>
@@ -1149,7 +1144,7 @@ export const DailyArchivePage = () => {
                                   </div>
                                 ) : (
                                   <div 
-                                    className="md:col-span-4 relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden group cursor-pointer min-h-[160px] flex items-center justify-center"
+                                    className="md:col-span-4 relative rounded-xl border border-surface-border bg-[rgba(255,255,255,0.02)] overflow-hidden group cursor-pointer min-h-[160px] flex items-center justify-center"
                                     onClick={() => item.image && setZoomImage(item.image)}
                                   >
                                     {item.image ? (
@@ -1170,26 +1165,26 @@ export const DailyArchivePage = () => {
                                   </div>
                                 )}
 
-                                <div className={`${item.images && Array.isArray(item.images) && item.images.length > 1 ? 'md:col-span-7' : 'md:col-span-8'} bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 text-xs space-y-2.5`}>
+                                <div className={`${item.images && Array.isArray(item.images) && item.images.length > 1 ? 'md:col-span-7' : 'md:col-span-8'} bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-surface-border text-xs space-y-2.5`}>
                                   {item.images && Array.isArray(item.images) && item.images.length > 1 && (
-                                    <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                    <div className="flex items-center justify-between border-b border-surface-border pb-2">
                                       <span className="text-slate-400">Total Uploaded Pages:</span>
                                       <span className="text-teal-300 font-bold font-mono">
                                         {item.images.length} Pages Verified ({item.fileSize || `${item.images.length * 2} MB`})
                                       </span>
                                     </div>
                                   )}
-                                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                  <div className="flex items-center justify-between border-b border-surface-border pb-2">
                                     <span className="text-slate-400">Camera Model:</span>
                                     <span className="text-teal-300 font-semibold">
                                       {item.exifData?.deviceModel ? `${item.exifData.deviceMake || ''} ${item.exifData.deviceModel}` : '--'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                  <div className="flex items-center justify-between border-b border-surface-border pb-2">
                                     <span className="text-slate-400">Date & Time Taken:</span>
                                     <span className="text-white font-medium">{item.exifData?.dateTimeOriginal || '--'}</span>
                                   </div>
-                                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                                  <div className="flex items-center justify-between border-b border-surface-border pb-2">
                                     <span className="text-slate-400">Sensor / Lens:</span>
                                     <span className="text-slate-300">{item.exifData?.lens || '--'}</span>
                                   </div>
@@ -1203,7 +1198,7 @@ export const DailyArchivePage = () => {
                           </div>
 
                           {/* Auditor Evaluation Note Footer */}
-                          <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
+                          <div className="pt-3 border-t border-surface-border flex items-center justify-between text-xs">
                             <div className="flex items-center space-x-2 text-slate-400">
                               <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
                               <span>Auditor Evaluation: <strong className="text-slate-200">{item.auditorNotes}</strong></span>
@@ -1222,7 +1217,7 @@ export const DailyArchivePage = () => {
                       <button
                         type="button"
                         onClick={() => toggleDateExpanded(dateKey)}
-                        className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center space-x-1.5 transition-all"
+                        className="px-4 py-2 rounded-xl bg-surface-card hover:bg-slate-800 border border-surface-border text-slate-300 hover:text-white text-xs font-semibold flex items-center space-x-1.5 transition-all"
                       >
                         <ChevronUp className="w-4 h-4" />
                         <span>Hide {group.displayDate} Submissions ▴</span>
@@ -1241,10 +1236,10 @@ export const DailyArchivePage = () => {
       {zoomImage && (
         <div 
           onClick={() => setZoomImage(null)}
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-50 bg-black/90  flex items-center justify-center p-4 animate-in fade-in"
         >
-          <div className="relative max-w-5xl w-full bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-3.5 border-b border-slate-800 text-xs text-slate-300">
+          <div className="relative max-w-5xl w-full bg-surface-card border border-surface-border rounded-2xl overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between p-3.5 border-b border-surface-border text-xs text-slate-300">
               <span className="font-medium">Archived Artifact Preview</span>
               <button 
                 onClick={() => setZoomImage(null)}

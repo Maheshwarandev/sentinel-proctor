@@ -21,7 +21,6 @@ const NAV_ITEMS = [
     group: 'Monitor',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-      { label: 'Anti-Cheat & CCTV', icon: Activity, path: '/admin/anti-cheat', badgeKey: 'strikes' },
     ]
   },
   {
@@ -30,13 +29,12 @@ const NAV_ITEMS = [
       { label: 'Module 1: Keyboard', icon: Terminal, path: '/admin/module-1' },
       { label: 'Module 2: English Quest', icon: Zap, path: '/admin/module-2' },
       { label: 'Module 3: Handwriting', icon: Edit3, path: '/admin/module-3' },
-      { label: 'Module 4: Tech & Hardware', icon: Cpu, path: '/admin/module-4' },
+      { label: 'Module 4: Developer & OS', icon: Cpu, path: '/admin/module-4' },
     ]
   },
   {
     group: 'Review',
     items: [
-      { label: 'Submissions', icon: Inbox, path: '/admin/submissions', badgeKey: 'pending' },
       { label: 'Archive', icon: Archive, path: '/admin/archive', badgeKey: 'archive' },
     ]
   },
@@ -59,7 +57,6 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
   const isActive = (path) => {
     if (path === '/admin') return location.pathname === '/admin' || location.pathname === '/';
     if (path === '/admin/anti-cheat') return location.pathname.startsWith('/admin/anti-cheat') || location.pathname.startsWith('/admin/telemetry');
-    if (path === '/admin/submissions') return location.pathname.startsWith('/admin/submissions') || location.pathname.startsWith('/admin/finished-tasks');
     return location.pathname.startsWith(path);
   };
 
@@ -80,10 +77,10 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
 
       {/* Sidebar panel */}
       <aside
-        className={`admin-sidebar ${isOpen ? 'open' : ''} flex flex-col bg-slate-950 border-r border-white/[0.07]`}
+        className={`admin-sidebar ${isOpen ? 'open' : ''} flex flex-col bg-surface-raised border-r border-surface-border`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.07] shrink-0">
+        <div className="flex items-center justify-between px-5 h-16 border-b border-surface-border shrink-0">
           <button
             onClick={() => handleNav('/admin')}
             className="flex items-center gap-2.5 cursor-pointer group"
@@ -91,16 +88,16 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all ${
               isRedLockdownActive
                 ? 'bg-rose-500/15 border-rose-500/40 text-rose-400'
-                : 'bg-cyan-500/10 border-cyan-500/25 text-cyan-400 group-hover:bg-cyan-500/20'
+                : 'bg-accent/10 border-accent/25 text-accent group-hover:bg-accent/20'
             }`}>
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-sm font-bold text-white">
-                Sentinel<span className="text-cyan-400">.</span>Proctor
+              <span className="text-sm font-bold text-content-primary">
+                Sentinel<span className="text-accent">.</span>Proctor
               </span>
               <div className={`text-[10px] font-medium leading-none mt-0.5 ${
-                isRedLockdownActive ? 'text-rose-400' : 'text-slate-500'
+                isRedLockdownActive ? 'text-rose-400' : 'text-content-muted'
               }`}>
                 {isRedLockdownActive ? 'LOCKDOWN ACTIVE' : 'Supervisor Console'}
               </div>
@@ -110,7 +107,7 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
           {/* Close on mobile */}
           <button
             onClick={onClose}
-            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/[0.05] transition-colors"
+            className="lg:hidden p-1.5 rounded-lg text-content-muted hover:text-content-primary hover:bg-surface-base transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -120,7 +117,7 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
           {NAV_ITEMS.map(({ group, items }) => (
             <div key={group}>
-              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-2 mb-1.5">
+              <p className="text-[10px] font-semibold text-content-muted uppercase tracking-widest px-2 mb-1.5">
                 {group}
               </p>
               <div className="space-y-0.5">
@@ -135,19 +132,19 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
                       onClick={() => handleNav(path)}
                       className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                         active
-                          ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/20'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] border border-transparent'
+                          ? 'bg-accent/10 text-accent'
+                          : 'text-content-muted hover:text-content-primary hover:bg-surface-elevated'
                       }`}
                     >
                       <span className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-accent' : 'text-content-muted'}`} />
                         {label}
                       </span>
                       {badge !== null && (
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
                           isDanger
                             ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                            : 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/25'
+                            : 'bg-accent/15 text-accent border border-accent/25'
                         }`}>
                           {badge}
                         </span>
@@ -161,19 +158,19 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
         </nav>
 
         {/* Footer: user + logout */}
-        <div className="shrink-0 px-3 py-4 border-t border-white/[0.07]">
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-cyan-300 text-[11px] font-bold shrink-0">
+        <div className="shrink-0 px-3 py-4 border-t border-surface-border">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-surface-base border border-surface-border">
+            <div className="w-7 h-7 rounded-lg bg-accent/15 border border-accent/25 flex items-center justify-center text-accent text-[11px] font-bold shrink-0">
               A
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-200">Admin</p>
-              <p className="text-[10px] text-slate-500 truncate">Supervisor</p>
+              <p className="text-xs font-semibold text-content-primary">Admin</p>
+              <p className="text-[10px] text-content-muted truncate">Supervisor</p>
             </div>
             <button
               onClick={logoutAdmin}
               title="Lock Admin Console"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg text-content-muted hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>

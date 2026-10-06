@@ -8,14 +8,14 @@
 
 :root {
   color-scheme: dark;
-  --sidebar-width: 240px;
+  --sidebar-width: 250px;
 }
 
 body {
   margin: 0;
-  background-color: #080c14;
+  background-color: #080C14;
   overflow-x: hidden;
-  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ============================================================

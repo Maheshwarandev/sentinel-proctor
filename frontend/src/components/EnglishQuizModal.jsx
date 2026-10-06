@@ -273,418 +273,30 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
   // -------------------------------------------------------------
   // REAL-TIME VIDEO PROCTORING CAMERA LIFECYCLE & FRAME CAPTURE
   // -------------------------------------------------------------
-  const captureSnapshot = (reason = 'PERIODIC_CHECK') => {
-    try {
-      if (!videoRef.current || !canvasRef.current) return;
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      if (!video.videoWidth || !video.videoHeight) return;
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Watermark with timestamp & question metadata
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.70)';
-      ctx.fillRect(8, canvas.height - 28, 250, 22);
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 11px monospace';
-      ctx.fillText(`PROCTOR REC: ${timeStr} | Q${currentIndex + 1} | ${reason}`, 14, canvas.height - 13);
-
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
-      const newSnapshot = {
-        id: `snap_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        timestamp: Date.now(),
-        timeStr,
-        reason,
-        questionIndex: currentIndex + 1,
-        image: dataUrl
-      };
-
-      setProctorSnapshots(prev => [newSnapshot, ...prev.slice(0, 14)]);
-    } catch (e) {
-      console.warn('[Proctoring Engine] Frame capture notice:', e);
-    }
-  };
+  const captureSnapshot = (reason = 'PERIODIC_CHECK') => {};
 
   const stopWebcam = () => {
-    if (liveStreamIntervalRef.current) {
-      clearInterval(liveStreamIntervalRef.current);
-      liveStreamIntervalRef.current = null;
-    }
-    if (webrtcPollTimerRef.current) {
-      clearInterval(webrtcPollTimerRef.current);
-      webrtcPollTimerRef.current = null;
-    }
-    if (webrtcPcRef.current) {
-      try { webrtcPcRef.current.close(); } catch (e) {}
-      webrtcPcRef.current = null;
-    }
     setIsWebRtcLive(false);
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        try { track.stop(); } catch (e) {}
-      });
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
     setIsCameraActive(false);
-
-    // Notify Admin CCTV surveillance monitor that candidate stream has ended
-    if (broadcastChannelRef.current) {
-      try {
-        broadcastChannelRef.current.postMessage({
-          type: 'CANDIDATE_LIVE_STREAM_ENDED',
-          timestamp: Date.now()
-        });
-        broadcastChannelRef.current.postMessage({
-          type: 'WEBRTC_RESET',
-          timestamp: Date.now()
-        });
-      } catch (e) {}
-    }
-    fetch('/api/quiz/live-stream-end', { method: 'POST' }).catch(() => {});
-    fetch('/api/quiz/webrtc/reset', { method: 'POST' }).catch(() => {});
   };
 
-  const startWebRtcCall = async (stream) => {
-    try {
-      if (!window.RTCPeerConnection) return;
-      if (webrtcPcRef.current) {
-        try { webrtcPcRef.current.close(); } catch (e) {}
-      }
+  const startWebRtcCall = async (stream) => {};
 
-      const pc = new RTCPeerConnection(RTC_CONFIG);
-      webrtcPcRef.current = pc;
-
-      // Add local camera video track
-      stream.getTracks().forEach(track => {
-        pc.addTrack(track, stream);
-      });
-
-      // Handle local ICE candidates
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          fetch('/api/quiz/webrtc/ice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ candidate: event.candidate, sender: 'candidate' })
-          }).catch(() => {});
-
-          try {
-            broadcastChannelRef.current?.postMessage({
-              type: 'WEBRTC_ICE',
-              candidate: event.candidate.toJSON ? event.candidate.toJSON() : JSON.parse(JSON.stringify(event.candidate)),
-              sender: 'candidate'
-            });
-          } catch (err) {}
-        }
-      };
-
-      pc.onconnectionstatechange = () => {
-        if (pc.connectionState === 'connected') {
-          setIsWebRtcLive(true);
-        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-          setIsWebRtcLive(false);
-        }
-      };
-
-      // Create WebRTC Offer
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: false,
-        offerToReceiveVideo: false
-      });
-      await pc.setLocalDescription(offer);
-
-      // Wait briefly (up to 800ms) for local STUN candidates to be embedded directly into SDP
-      await new Promise(resolve => {
-        if (pc.iceGatheringState === 'complete') return resolve();
-        const timer = setTimeout(resolve, 800);
-        const check = () => {
-          if (pc.iceGatheringState === 'complete') {
-            clearTimeout(timer);
-            pc.removeEventListener('icegatheringstatechange', check);
-            resolve();
-          }
-        };
-        pc.addEventListener('icegatheringstatechange', check);
-      });
-
-      const completeOffer = {
-        type: pc.localDescription.type,
-        sdp: pc.localDescription.sdp
-      };
-
-      // 1. Post offer to backend signaling relay
-      await fetch('/api/quiz/webrtc/offer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offer: completeOffer })
-      });
-
-      // 2. Broadcast offer to local tabs
-      broadcastChannelRef.current?.postMessage({
-        type: 'WEBRTC_OFFER',
-        offer: completeOffer
-      });
-
-      // 3. Fallback polling for Admin Answer until connected
-      let checkCount = 0;
-      if (webrtcPollTimerRef.current) clearInterval(webrtcPollTimerRef.current);
-      webrtcPollTimerRef.current = setInterval(async () => {
-        checkCount++;
-        if (checkCount > 60 || pc.connectionState === 'connected') {
-          clearInterval(webrtcPollTimerRef.current);
-          return;
-        }
-        try {
-          const res = await fetch('/api/quiz/webrtc/status');
-          const data = await res.json();
-          // Self-healing: if server lost our offer, re-register so Admin can connect anytime
-          if (data.success && !data.hasOffer && !data.hasAnswer && pc.localDescription) {
-            fetch('/api/quiz/webrtc/offer', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ offer: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } })
-            }).catch(() => {});
-          }
-          if (data.success && data.hasAnswer && pc.signalingState === 'have-local-offer') {
-            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-          }
-          if (data.adminCandidates?.length) {
-            for (const cand of data.adminCandidates) {
-              try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) {}
-            }
-          }
-        } catch (e) {}
-      }, 1200);
-
-    } catch (err) {
-      console.warn('[WebRTC Candidate notice]:', err.message);
-    }
-  };
-
-  const initWebcam = async () => {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        const isNetworkIp = window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-        if (isNetworkIp) {
-          setCameraError(`Camera requires permissions for LAN IP. In Chrome/Edge on this laptop, open chrome://flags/#unsafely-treat-insecure-origin-as-secure, add "http://${window.location.host}", enable & relaunch.`);
-        } else {
-          setCameraError('Webcam API not supported in this browser.');
-        }
-        return;
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          facingMode: 'user',
-          frameRate: { ideal: 30, min: 15 }
-        },
-        audio: false
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-      setIsCameraActive(true);
-      setCameraError(null);
-
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        setCameraDeviceName(videoTrack.label || 'Candidate Live Camera');
-      }
-
-      // Initiate 30 FPS WebRTC Video Calling Handshake
-      startWebRtcCall(stream);
-
-      // Initial baseline snapshot once video warms up
-      setTimeout(() => {
-        captureSnapshot('BASELINE_ASSESSMENT_START');
-      }, 1500);
-    } catch (err) {
-      console.warn('[Proctoring Engine] Webcam initialization notice:', err.message);
-      setCameraError(
-        err.name === 'NotAllowedError'
-          ? 'Camera permission denied. Real-time video proctoring is recommended.'
-          : 'Live camera offline: ' + err.message
-      );
-      setIsCameraActive(false);
-    }
-  };
+  const initWebcam = async () => {};
 
   useEffect(() => {
-    try {
-      broadcastChannelRef.current = new BroadcastChannel('forensic_sync_channel');
-      broadcastChannelRef.current.onmessage = (e) => {
-        const data = e.data;
-        if (data?.type === 'SUPERVISOR_STREAM_ALERT' && data?.data) {
-          handleIncomingStreamAlert(data.data);
-        } else if (data?.type === 'WEBRTC_ANSWER' && data?.answer) {
-          if (webrtcPcRef.current && webrtcPcRef.current.signalingState === 'have-local-offer') {
-            webrtcPcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer)).catch(() => {});
-          }
-        } else if (data?.type === 'WEBRTC_ICE' && data?.sender === 'admin' && data?.candidate) {
-          if (webrtcPcRef.current && webrtcPcRef.current.remoteDescription) {
-            webrtcPcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(() => {});
-          }
-        } else if (data?.type === 'WEBRTC_REQUEST_OFFER') {
-          if (streamRef.current) {
-            startWebRtcCall(streamRef.current);
-          }
-        }
-      };
-    } catch (e) {}
-
-    // Multi-device / network SSE listener for supervisor stream alerts & WebRTC signaling
-    try {
-      const sse = new EventSource('/api/quiz/live-stream');
-      sseRef.current = sse;
-      sse.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-          if (parsed.type === 'LIVE_MESSAGE' && parsed.data) {
-            handleIncomingStreamAlert(parsed.data);
-          } else if (parsed.type === 'WEBRTC_REQUEST_OFFER') {
-            if (streamRef.current) {
-              startWebRtcCall(streamRef.current);
-            }
-          } else if (parsed.type === 'WEBRTC_ANSWER' && parsed.answer) {
-            if (webrtcPcRef.current && webrtcPcRef.current.signalingState === 'have-local-offer') {
-              webrtcPcRef.current.setRemoteDescription(new RTCSessionDescription(parsed.answer)).catch(() => {});
-            }
-          } else if (parsed.type === 'WEBRTC_ICE' && parsed.sender === 'admin' && parsed.candidate) {
-            if (webrtcPcRef.current && webrtcPcRef.current.remoteDescription) {
-              webrtcPcRef.current.addIceCandidate(new RTCIceCandidate(parsed.candidate)).catch(() => {});
-            }
-          }
-        } catch (err) {}
-      };
-    } catch (e) {}
-
     if (isOpen) {
       initQuizSession();
-      initWebcam();
+      // initWebcam(); // Camera removed
     }
     return () => {
-      stopWebcam();
-      if (broadcastChannelRef.current) {
-        try { broadcastChannelRef.current.close(); } catch (e) {}
-      }
-      if (sseRef.current) {
-        try { sseRef.current.close(); } catch (e) {}
-      }
-      if (alertDismissTimerRef.current) {
-        clearTimeout(alertDismissTimerRef.current);
-      }
+      // stopWebcam();
     };
   }, [isOpen]);
 
   // Real-Time Video Surveillance Stream Relay to Admin CCTV Monitor (~1.2s cadence)
   useEffect(() => {
-    if (!isCameraActive || loading || isCompleted) {
-      if (liveStreamIntervalRef.current) {
-        clearInterval(liveStreamIntervalRef.current);
-        liveStreamIntervalRef.current = null;
-      }
-      return;
-    }
-
-    const broadcastLiveFrame = async () => {
-      try {
-        if (!videoRef.current || !canvasRef.current) return;
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        if (!video.videoWidth || !video.videoHeight) return;
-
-        // Continuous snapshot cadence (~1000ms) ensuring the Admin monitor never goes blank
-        const nowMs = Date.now();
-        if (nowMs - lastSnapshotSentRef.current < 1000) {
-          return;
-        }
-        lastSnapshotSentRef.current = nowMs;
-
-        // Smart HD canvas sizing (matching webcam aspect ratio without distortion)
-        const isWide = (video.videoWidth / video.videoHeight) >= 1.5;
-        canvas.width = 640;
-        canvas.height = isWide ? 360 : 480;
-
-        const ctx = canvas.getContext('2d', { alpha: false });
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-
-        // Mirror horizontally for natural webcam experience
-        ctx.save();
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        // High-contrast stamped live surveillance watermark
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.fillRect(8, canvas.height - 26, 260, 20);
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText(`LIVE SURVEILLANCE • ${timeStr} • Q${currentIndex + 1}`, 14, canvas.height - 12);
-
-        // Crystal-clear 70% quality JPEG (crisp facial details with ~25KB size)
-        const frameDataUrl = canvas.toDataURL('image/jpeg', 0.70);
-
-        const framePayload = {
-          frame: frameDataUrl,
-          questionIndex: currentIndex + 1,
-          totalQuestions: questions.length || 50,
-          timestamp: Date.now(),
-          deviceName: cameraDeviceName,
-          candidateName: 'Brother (Candidate)'
-        };
-
-        // 1. Instant local BroadcastChannel (0ms delay for tabs on same machine)
-        if (broadcastChannelRef.current) {
-          try {
-            broadcastChannelRef.current.postMessage({
-              type: 'CANDIDATE_LIVE_FRAME',
-              ...framePayload
-            });
-          } catch (e) {}
-        }
-
-        // 2. HTTP Relay for cross-network / remote Admin CCTV monitors
-        // Non-blocking in-flight guard: skip if previous HTTP frame is still uploading to eliminate latency buildup!
-        if (isBroadcastingFrameRef.current) return;
-        isBroadcastingFrameRef.current = true;
-
-        try {
-          await fetch('/api/quiz/live-frame', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(framePayload)
-          });
-        } finally {
-          isBroadcastingFrameRef.current = false;
-        }
-      } catch (e) {
-        isBroadcastingFrameRef.current = false;
-      }
-    };
-
-    // Send immediate initial frame, then adaptive ~2.5 FPS (every 400ms)
-    broadcastLiveFrame();
-    liveStreamIntervalRef.current = setInterval(broadcastLiveFrame, 400);
-
-    return () => {
-      if (liveStreamIntervalRef.current) {
-        clearInterval(liveStreamIntervalRef.current);
-        liveStreamIntervalRef.current = null;
-      }
-    };
+    // Camera streaming removed
   }, [isCameraActive, loading, isCompleted, currentIndex, questions.length, cameraDeviceName]);
 
   // Periodic proctor frame snapshots every 35 seconds
@@ -925,8 +537,8 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
 
   if (isTimeLocked && !isCompleted) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#080c14] text-white font-['Plus_Jakarta_Sans',sans-serif]">
-        <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-base text-white font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="bg-surface-elevated border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
             <Clock className="w-7 h-7" />
           </div>
@@ -936,7 +548,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
               Access Window: 7:00 PM – 10:00 PM (19:00 – 22:00)
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-slate-950/80 border border-white/[0.08] space-y-1">
+          <div className="p-4 rounded-xl bg-surface-card/80 border border-white/[0.08] space-y-1">
             <div className="text-[10px] uppercase font-semibold text-slate-400">Time Until 7:00 PM Tonight</div>
             <div className="text-3xl font-black font-mono text-amber-400">{timeStatus.countdownOpen}</div>
             <p className="text-xs text-slate-400 pt-1 leading-relaxed">
@@ -959,63 +571,9 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
   const progressPercent = questions.length > 0 ? Math.round(((currentIndex + (hasChecked ? 1 : 0)) / questions.length) * 100) : 0;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col font-sans select-none overflow-x-hidden overflow-y-auto min-h-screen">
+    <div className="fixed inset-0 z-50 bg-surface-card flex flex-col font-sans select-none overflow-x-hidden overflow-y-auto min-h-screen">
       
-      {/* Hidden Canvas for Proctor Snapshot Telemetry (Keeps Supervisor CCTV Auditing 100% Active) */}
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Undercover Practice Camera Widget */}
-      {!isCompleted && (
-        <div className="fixed top-4 right-4 z-40">
-          <div className="flex items-center space-x-2 bg-[#F7F7F7] border border-[#E5E5E5] px-3 py-1.5 rounded-full shadow-sm">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#58CC02] animate-pulse" />
-            <span className="text-xs font-bold text-[#777777]">Practice Cam</span>
-            <button
-              type="button"
-              onClick={() => setIsPiPMinimized(p => !p)}
-              className="text-[#AFAFAF] hover:text-[#4B4B4B] cursor-pointer ml-1"
-              title={isPiPMinimized ? "Show Camera Preview" : "Hide Camera Preview"}
-            >
-              {isPiPMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-
-          <div className={`mt-2 w-36 h-28 rounded-2xl overflow-hidden border-2 border-[#E5E5E5] bg-black shadow-md transition-all ${
-            isPiPMinimized ? 'opacity-0 pointer-events-none h-0 w-0 absolute' : 'block'
-          }`}>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-              style={{ transform: 'scaleX(-1)' }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Live Streamer Alert Toast (Superchat styled as a friendly Duolingo notice) */}
-      {activeStreamAlert && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md animate-in slide-in-from-top-4 duration-300">
-          <div className="bg-white border-2 border-b-4 border-[#FFC800] border-b-[#E5A500] rounded-2xl p-4 shadow-xl flex items-center space-x-3.5">
-            <DuoOwl className="w-12 h-12 shrink-0" mood="happy" />
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-[#E5A500] uppercase tracking-wider">
-                  Supervisor Notice
-                </span>
-                <button onClick={() => setActiveStreamAlert(null)} className="text-[#AFAFAF] hover:text-[#4B4B4B] cursor-pointer">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-sm font-extrabold text-[#3C3C3C] mt-0.5 leading-snug">
-                "{activeStreamAlert.text}"
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Duolingo Top Header */}
       <div className="max-w-5xl mx-auto w-full px-4 sm:px-8 pt-5 pb-3 flex items-center justify-between gap-4 shrink-0">
@@ -1023,7 +581,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
         <button
           type="button"
           onClick={onClose || (() => navigate('/candidate'))}
-          className="p-1.5 rounded-xl text-[#AFAFAF] hover:text-[#4B4B4B] hover:bg-[#F7F7F7] transition-colors cursor-pointer"
+          className="p-1.5 rounded-xl text-content-secondary hover:text-content-primary hover:bg-surface-elevated transition-colors cursor-pointer"
           title="Exit Practice"
         >
           <X className="w-6 h-6 stroke-[2.5]" />
@@ -1032,8 +590,8 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
         {/* Chunky Duolingo Green Progress Bar & Session Label */}
         <div className="flex-1 max-w-2xl flex flex-col justify-center">
           {activeSession && (
-            <div className="flex items-center justify-between text-[11px] font-black font-mono text-[#777777] mb-1 px-1">
-              <span className="truncate text-[#3C3C3C]">
+            <div className="flex items-center justify-between text-[11px] font-black font-mono text-slate-600 mb-1 px-1">
+              <span className="truncate text-slate-800">
                 DAY {activeSession.day}: {activeSession.title}
               </span>
               <span className="text-[#58CC02] shrink-0 ml-2">
@@ -1047,7 +605,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
               style={{ width: `${Math.max(4, progressPercent)}%` }}
             >
               {/* Reflective glossy top line */}
-              <div className="absolute top-0.5 left-2 right-2 h-1 bg-white/35 rounded-full" />
+              <div className="absolute top-0.5 left-2 right-2 h-1 bg-surface-card/35 rounded-full" />
             </div>
           </div>
         </div>
@@ -1072,10 +630,10 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
           <button
             type="button"
             onClick={() => setSoundEnabled(p => !p)}
-            className="p-1.5 rounded-xl text-[#AFAFAF] hover:text-[#4B4B4B] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-content-secondary hover:text-content-primary transition-colors cursor-pointer"
             title={soundEnabled ? "Mute audio" : "Enable audio"}
           >
-            {soundEnabled ? <Volume2 className="w-5 h-5 text-[#1CB0F6]" /> : <VolumeX className="w-5 h-5 text-[#AFAFAF]" />}
+            {soundEnabled ? <Volume2 className="w-5 h-5 text-[#1CB0F6]" /> : <VolumeX className="w-5 h-5 text-content-secondary" />}
           </button>
         </div>
       </div>
@@ -1083,15 +641,15 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
       {/* Main Body */}
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 my-auto">
-          <DuoOwl className="w-28 h-28 animate-bounce" />
-          <h3 className="text-2xl font-black text-[#3C3C3C]">Loading your English lesson...</h3>
-          <p className="text-sm font-bold text-[#AFAFAF]">Get ready to practice!</p>
+          
+          <h3 className="text-2xl font-black text-slate-800">Loading your English lesson...</h3>
+          <p className="text-sm font-bold text-content-secondary">Get ready to practice!</p>
         </div>
       ) : error ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 my-auto text-center">
-          <DuoOwl className="w-24 h-24" />
+          
           <h3 className="text-xl font-black text-[#FF4B4B]">Could not load lesson</h3>
-          <p className="text-sm text-[#777777] max-w-sm">{error}</p>
+          <p className="text-sm text-slate-600 max-w-sm">{error}</p>
           <button
             type="button"
             onClick={initQuizSession}
@@ -1103,13 +661,13 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
       ) : isCompleted ? (
         /* Lesson Finished Screen (Authentic Duolingo Victory) */
         <div className="max-w-lg mx-auto w-full py-12 px-6 flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 my-auto">
-          <DuoOwl className="w-36 h-36 animate-bounce" mood="party" />
+          
           
           <div className="space-y-1">
             <h2 className="text-3xl sm:text-4xl font-black text-[#FFC800] tracking-tight">
               Lesson Complete!
             </h2>
-            <p className="text-sm font-bold text-[#777777]">
+            <p className="text-sm font-bold text-slate-600">
               You're making incredible progress with your English practice.
             </p>
           </div>
@@ -1143,9 +701,9 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
         </div>
       ) : !currentQuestion ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 my-auto text-center">
-          <DuoOwl className="w-24 h-24" />
-          <h3 className="text-xl font-black text-[#3C3C3C]">Ready for English Practice?</h3>
-          <p className="text-sm text-[#777777]">Press start to begin your lesson.</p>
+          
+          <h3 className="text-xl font-black text-slate-800">Ready for English Practice?</h3>
+          <p className="text-sm text-slate-600">Press start to begin your lesson.</p>
           <button
             type="button"
             onClick={initQuizSession}
@@ -1176,12 +734,12 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
               )}
             </div>
 
-            <span className="text-xs font-bold text-[#AFAFAF] uppercase tracking-wider font-mono">
+            <span className="text-xs font-bold text-content-secondary uppercase tracking-wider font-mono">
               Question {currentIndex + 1} of {questions.length}
             </span>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#3C3C3C] tracking-tight mb-4">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight mb-4">
             {currentQuestion.category === 'Fluency' || currentQuestion.isFluency 
               ? "Listen and choose the most natural workplace response:" 
               : "Select the correct answer"}
@@ -1189,7 +747,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
 
           {/* VISUAL IMAGE CARD (IF IMAGE PRESENT) */}
           {currentQuestion.imageUrl && (
-            <div className="mb-5 rounded-2xl overflow-hidden border-2 border-[#E5E5E5] bg-slate-950 shadow-md p-2 flex flex-col items-center">
+            <div className="mb-5 rounded-2xl overflow-hidden border-2 border-surface-border bg-surface-card shadow-md p-2 flex flex-col items-center">
               <img 
                 src={currentQuestion.imageUrl} 
                 alt="Visual Reference" 
@@ -1203,18 +761,18 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
 
           {/* CODE SNIPPET (IF CODING QUESTION WITH CODE) */}
           {currentQuestion.codeSnippet && (
-            <div className="mb-4 rounded-xl bg-slate-900 border border-slate-700 p-3.5 font-mono text-xs text-emerald-400 overflow-x-auto shadow-inner">
+            <div className="mb-4 rounded-xl bg-surface-elevated border border-slate-700 p-3.5 font-mono text-xs text-emerald-400 overflow-x-auto shadow-inner">
               <pre className="whitespace-pre-wrap leading-relaxed">{currentQuestion.codeSnippet}</pre>
             </div>
           )}
 
           {/* Duo the Owl Prompt with Speech Bubble */}
           <div className="flex items-start space-x-4 mb-6">
-            <DuoOwl className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 -mt-1" />
             
-            <div className="relative bg-white border-2 border-[#E5E5E5] rounded-2xl p-4 sm:p-5 shadow-sm text-left flex items-center space-x-3.5 flex-1">
+            
+            <div className="relative bg-surface-card border-2 border-surface-border rounded-2xl p-4 sm:p-5 shadow-sm text-left flex items-center space-x-3.5 flex-1">
               {/* Triangle pointer to Duo */}
-              <div className="absolute -left-2.5 top-6 w-3 h-3 bg-white border-l-2 border-b-2 border-[#E5E5E5] rotate-45 transform" />
+              <div className="absolute -left-2.5 top-6 w-3 h-3 bg-surface-card border-l-2 border-b-2 border-surface-border rotate-45 transform" />
 
               <button
                 type="button"
@@ -1226,7 +784,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
               </button>
 
               <div className="space-y-0.5">
-                <span className="text-base sm:text-lg font-extrabold text-[#3C3C3C] leading-snug block">
+                <span className="text-base sm:text-lg font-extrabold text-slate-800 leading-snug block">
                   {currentQuestion.text}
                 </span>
                 {(currentQuestion.category === 'Fluency' || currentQuestion.isFluency) && (
@@ -1244,8 +802,8 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
               const isSelected = selectedOption === idx;
               const isCorrectOption = typeof currentQuestion.correctAnswerIndex === 'number' && currentQuestion.correctAnswerIndex === idx;
 
-              let cardStyle = "border-[#E5E5E5] border-b-[#CECECE] bg-white text-[#4B4B4B] hover:bg-[#F7F7F7]";
-              let chipStyle = "border-[#E5E5E5] text-[#AFAFAF] bg-white";
+              let cardStyle = "border-surface-border border-surface-border bg-surface-card text-content-primary hover:bg-surface-elevated";
+              let chipStyle = "border-surface-border text-content-secondary bg-surface-card";
               let statusIcon = null;
 
               if (isSelected && !hasChecked) {
@@ -1259,8 +817,8 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
                     chipStyle = "border-[#58CC02] text-white bg-[#58CC02]";
                     statusIcon = <CheckCircle2 className="w-6 h-6 text-[#58CC02] shrink-0" />;
                   } else {
-                    cardStyle = "border-[#E5E5E5] border-b-[#E5E5E5] bg-white text-[#AFAFAF] opacity-40";
-                    chipStyle = "border-[#E5E5E5] text-[#AFAFAF] bg-[#F7F7F7]";
+                    cardStyle = "border-surface-border border-surface-border bg-surface-card text-content-secondary opacity-40";
+                    chipStyle = "border-surface-border text-content-secondary bg-[#F7F7F7]";
                   }
                 } else {
                   // Candidate answered WRONGLY -> Put RED on selected, and show GREEN on correct
@@ -1273,8 +831,8 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
                     chipStyle = "border-[#58CC02] text-white bg-[#58CC02]";
                     statusIcon = <CheckCircle2 className="w-6 h-6 text-[#58CC02] shrink-0" />;
                   } else {
-                    cardStyle = "border-[#E5E5E5] border-b-[#E5E5E5] bg-white text-[#AFAFAF] opacity-40";
-                    chipStyle = "border-[#E5E5E5] text-[#AFAFAF] bg-[#F7F7F7]";
+                    cardStyle = "border-surface-border border-surface-border bg-surface-card text-content-secondary opacity-40";
+                    chipStyle = "border-surface-border text-content-secondary bg-[#F7F7F7]";
                   }
                 }
               }
@@ -1305,7 +863,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
       {currentQuestion && !isCompleted && !loading && (
         <div className={`fixed bottom-0 inset-x-0 border-t-2 py-5 px-4 sm:px-8 z-30 transition-all duration-200 ${
           !hasChecked 
-            ? 'bg-white border-[#E5E5E5]' 
+            ? 'bg-surface-card border-surface-border' 
             : isAnswerCorrect
             ? 'bg-[#D7FFB8] border-[#58CC02]/30'
             : 'bg-[#FFDFE0] border-[#FF4B4B]/30'
@@ -1313,7 +871,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
           <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             {!hasChecked ? (
               <>
-                <div className="hidden sm:flex items-center space-x-2 text-sm font-bold text-[#AFAFAF]">
+                <div className="hidden sm:flex items-center space-x-2 text-sm font-bold text-content-secondary">
                   <span>Shortcut: Press [1] to [4], then [Enter]</span>
                 </div>
                 
@@ -1325,7 +883,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
                     className={`w-full sm:w-44 py-3.5 px-8 rounded-2xl font-black text-base uppercase tracking-wider transition-all border-b-4 ${
                       selectedOption !== null
                         ? 'bg-[#58CC02] hover:bg-[#61E002] border-[#46A302] text-white cursor-pointer active:border-b-0 active:translate-y-1 shadow-sm'
-                        : 'bg-[#E5E5E5] border-[#CECECE] text-[#AFAFAF] cursor-not-allowed'
+                        : 'bg-[#E5E5E5] border-[#CECECE] text-content-secondary cursor-not-allowed'
                     }`}
                   >
                     CHECK
@@ -1338,7 +896,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
               // -------------------------------------------------------------
               <>
                 <div className="flex items-center space-x-4 w-full sm:w-auto">
-                  <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#58CC02] shadow-sm shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-surface-card flex items-center justify-center text-[#58CC02] shadow-sm shrink-0">
                     <CheckCircle2 className="w-9 h-9 fill-[#58CC02] text-white" />
                   </div>
                   <div>
@@ -1366,7 +924,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
               // -------------------------------------------------------------
               <>
                 <div className="flex items-center space-x-4 w-full sm:w-auto">
-                  <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#FF4B4B] shadow-sm shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-surface-card flex items-center justify-center text-[#FF4B4B] shadow-sm shrink-0">
                     <div className="w-9 h-9 rounded-full bg-[#FF4B4B] flex items-center justify-center">
                       <X className="w-6 h-6 text-white stroke-[3]" />
                     </div>

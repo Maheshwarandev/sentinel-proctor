@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Card } from './ui/Card';
 import { 
   Terminal, 
-  FileText, 
-  ShieldAlert, 
-  Lock, 
   CheckCircle2, 
   AlertOctagon, 
   Clock, 
@@ -11,9 +9,6 @@ import {
   Sparkles, 
   Send, 
   Camera, 
-  AlertTriangle,
-  Image as ImageIcon,
-  ArrowLeft,
   RotateCcw,
   BookOpen,
   X,
@@ -24,12 +19,12 @@ import {
   Edit3,
   Zap,
   Plus,
-  Trash2
+  Lock
 } from 'lucide-react';
 import { useForensics, INITIAL_TASKS } from '../context/ForensicContext';
 import { EnglishQuizModal } from './EnglishQuizModal';
 import { Module2RoadmapLanding } from './Module2RoadmapLanding';
-import { Module4TechHardwareModal } from './Module4TechHardwareModal';
+import { Module4DeveloperSkills } from './Module4DeveloperSkills';
 import { WRITING_TOPICS } from '../data/writingTopics';
 
 export const SubjectHub = () => {
@@ -38,6 +33,7 @@ export const SubjectHub = () => {
     submitKeyboardPractice, 
     submitDuolingoPractice, 
     submitWritingPractice, 
+    submitTechHardwarePractice,
     clearTask,
     triggerRedLockdown,
     isAllTasksCompleted,
@@ -101,8 +97,8 @@ export const SubjectHub = () => {
   const [isEnglishQuizOpen, setIsEnglishQuizOpen] = useState(false);
   const [activeSession, setActiveSession] = useState(null);
 
-  // Module 4 Tech & Hardware Modal State
-  const [isModule4ModalOpen, setIsModule4ModalOpen] = useState(false);
+  // Module 4 Developer Skills Modal State
+  const [isDeveloperSkillsOpen, setIsDeveloperSkillsOpen] = useState(false);
 
   // -------------------------------------------------------------
   // MODULE 1: FULLSCREEN BLACK WRITING CANVAS STATE
@@ -720,8 +716,8 @@ export const SubjectHub = () => {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-700/40 text-slate-400 border-slate-600/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-700/40 text-content-secondary border-slate-600/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-surface-base0 shrink-0" />
             Not Started
           </span>
         );
@@ -731,13 +727,13 @@ export const SubjectHub = () => {
   if (isPageClosed) {
     return (
       <div className="min-h-screen bg-[#06080d] flex items-center justify-center p-6 text-center select-none font-sans">
-        <div className="max-w-md w-full bg-[#0d121d] border border-rose-500/30 rounded-2xl p-8 shadow-[0_0_60px_rgba(244,63,94,0.15)] space-y-5">
+        <div className="max-w-md w-full bg-surface-raised border border-rose-500/30 rounded-2xl p-8 shadow-[0_0_60px_rgba(244,63,94,0.15)] space-y-5">
           <div className="w-16 h-16 mx-auto rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
             <X className="w-8 h-8 text-rose-400 stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-wide">Workstation Session Closed</h2>
-            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+            <h2 className="text-xl font-bold text-content-primary tracking-wide">Workstation Session Closed</h2>
+            <p className="text-xs text-content-secondary mt-2 leading-relaxed">
               Assessment session has been terminated. You can safely close this browser tab or window.
             </p>
           </div>
@@ -750,7 +746,7 @@ export const SubjectHub = () => {
                   window.close();
                 } catch (e) {}
               }}
-              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow cursor-pointer active:scale-95"
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-content-primary rounded-xl text-xs font-bold transition-all shadow cursor-pointer active:scale-95"
             >
               Close Tab Now
             </button>
@@ -770,7 +766,7 @@ export const SubjectHub = () => {
   }
 
   return (
-    <div className="w-full h-full min-h-screen lg:min-h-0 lg:h-screen lg:max-h-screen flex flex-col justify-between px-3 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 bg-[#080c14] relative lg:overflow-hidden select-none">
+    <div className="w-full h-full min-h-screen lg:min-h-0 lg:h-screen lg:max-h-screen flex flex-col justify-between px-3 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 bg-surface-base relative lg:overflow-hidden select-none">
       
       {/* Ambient Atmospheric Backdrop Glows */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -780,7 +776,7 @@ export const SubjectHub = () => {
       </div>
 
       {/* Subject Welcome Dossier Command Bar */}
-      <div className="rounded-2xl border border-white/[0.08] bg-slate-900/70 shadow-xl px-4 py-2.5 sm:px-5 sm:py-3 relative overflow-hidden backdrop-blur-2xl shrink-0 z-10">
+      <div className="rounded-2xl border border-white/[0.08] bg-surface-raised shadow-xl px-4 py-2.5 sm:px-5 sm:py-3 relative overflow-hidden backdrop-blur-2xl shrink-0 z-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div className="space-y-0.5">
             <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -788,7 +784,7 @@ export const SubjectHub = () => {
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                 CANDIDATE WORKSTATION
               </span>
-              <span className="text-[11px] text-slate-400 font-mono">ID: CANDIDATE-01</span>
+              <span className="text-[11px] text-content-secondary font-mono">ID: CANDIDATE-01</span>
 
               {currentStreak > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/25 border border-amber-500/40 text-amber-300 text-[11px] font-black tracking-wide shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse">
@@ -797,9 +793,10 @@ export const SubjectHub = () => {
                 </span>
               )}
             </div>
-            <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            <h1 className="text-base sm:text-lg font-bold text-content-primary tracking-tight">
               Daily Practice Disciplines
             </h1>
+            <div className="mt-2 font-medium text-content-secondary">Today's Progress: {tasks.filter(t => t.status === 'VERIFIED').length}/{tasks.length}</div>
           </div>
 
           <div className="flex items-center space-x-2 text-xs shrink-0">
@@ -814,13 +811,13 @@ export const SubjectHub = () => {
               </div>
             )}
             <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[70px]">
-              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">Quota</div>
+              <div className="text-[9px] uppercase tracking-wider text-content-secondary font-medium">Quota</div>
               <div className={`text-xs sm:text-sm font-bold font-mono ${isAllTasksCompleted ? 'text-emerald-400' : 'text-cyan-400'}`}>
                 {isAllTasksCompleted ? `${tasks.length} / ${tasks.length} ✓` : `${tasks.filter(t => t.status !== 'PENDING').length} / ${tasks.length}`}
               </div>
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/[0.08] text-center min-w-[75px]">
-              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">State</div>
+              <div className="text-[9px] uppercase tracking-wider text-content-secondary font-medium">State</div>
               <div className={`text-xs sm:text-sm font-bold flex items-center justify-center space-x-1 ${isAllTasksCompleted ? 'text-emerald-400' : 'text-amber-400'}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${isAllTasksCompleted ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
                 <span>{isAllTasksCompleted ? 'DONE' : 'ACTIVE'}</span>
@@ -832,7 +829,7 @@ export const SubjectHub = () => {
               type="button"
               onClick={handleCloseWindow}
               title="Close and exit workstation"
-              className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 active:scale-95 border border-rose-500/40 hover:border-rose-400 text-rose-300 hover:text-white text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer ml-1"
+              className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 active:scale-95 border border-rose-500/40 hover:border-rose-400 text-rose-300 hover:text-content-primary text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer ml-1"
             >
               <X className="w-3.5 h-3.5" />
               <span>Close</span>
@@ -847,13 +844,13 @@ export const SubjectHub = () => {
           <div className="flex items-center space-x-2 text-xs font-mono text-emerald-300">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span className="font-bold">ALL {tasks.length} DISCIPLINES COMPLETED FOR TODAY! ({tasks.length}/{tasks.length} DONE)</span>
-            <span className="text-slate-400 hidden lg:inline">• Today's session locked & archived</span>
+            <span className="text-content-secondary hidden lg:inline">• Today's session locked & archived</span>
           </div>
 
           <div className="flex items-center space-x-2.5 shrink-0 font-mono text-xs">
             <div className="flex items-center space-x-1 px-2.5 py-0.5 rounded-lg bg-slate-950/90 border border-emerald-500/40 text-[10px]">
               <Clock className="w-3 h-3 text-emerald-400 mr-0.5" />
-              <span className="text-slate-400">UNLOCKS IN:</span>
+              <span className="text-content-secondary">UNLOCKS IN:</span>
               <span className="text-xs font-black text-emerald-400 tracking-wider">
                 {String(timeUntilTomorrow.hours).padStart(2, '0')}:
                 {String(timeUntilTomorrow.minutes).padStart(2, '0')}:
@@ -867,7 +864,7 @@ export const SubjectHub = () => {
                 unlockNewDayTasks();
                 showHubToast('Tomorrow\'s session unlocked successfully! Daily tasks reset to PENDING.', 'success');
               }}
-              className="py-1 px-2.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-mono font-bold flex items-center space-x-1 transition-all cursor-pointer shadow active:scale-95"
+              className="py-1 px-2.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-content-primary text-[10px] font-mono font-bold flex items-center space-x-1 transition-all cursor-pointer shadow active:scale-95"
             >
               <RotateCcw className="w-3 h-3 text-cyan-400" />
               <span>Unlock Tomorrow Now</span>
@@ -884,7 +881,7 @@ export const SubjectHub = () => {
         {/* ------------------------------------------------------------- */}
         <div 
           onClick={() => setIsWritingAreaOpen(true)}
-          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
+          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-surface-raised p-4 sm:p-4.5 shadow-sm relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
         >
           {/* Subtle Ambient Hover Glow & Top Scan Accent */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
@@ -897,13 +894,13 @@ export const SubjectHub = () => {
                 <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
                   <Terminal className="w-5 h-5" />
                 </div>
-                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-cyan-400/80 font-mono bg-slate-900 border border-cyan-500/30 px-1 rounded">01</span>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-cyan-400/80 font-mono bg-surface-raised border border-cyan-500/30 px-1 rounded">01</span>
               </div>
               <div>
-                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-cyan-300 transition-colors">
+                <h2 className="font-bold text-sm text-content-primary tracking-tight group-hover:text-cyan-300 transition-colors">
                   Keyboard Practice
                 </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-[11px] text-content-secondary mt-0.5">
                   Full-screen typing terminal
                 </p>
               </div>
@@ -923,7 +920,7 @@ export const SubjectHub = () => {
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
                   : typingSeconds > 0 
                   ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                  : 'bg-slate-800 text-slate-400'
+                  : 'bg-slate-800 text-content-secondary'
               }`}>
                 {isTypingActive ? '● TYPING ACTIVE' : typingSeconds > 0 ? '❚❚ PAUSED' : 'READY TO WRITE'}
               </span>
@@ -931,18 +928,18 @@ export const SubjectHub = () => {
 
           <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
-                <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Words</span>
+                <span className="text-content-secondary text-[9px] font-medium uppercase tracking-wider block">Words</span>
                 <span className={`font-bold font-mono text-sm mt-0.5 block ${
-                  (() => { const t = parseInt(localStorage.getItem('module1_word_target') || '300', 10); return words >= t ? 'text-emerald-400' : 'text-white'; })()
+                  (() => { const t = parseInt(localStorage.getItem('module1_word_target') || '300', 10); return words >= t ? 'text-emerald-400' : 'text-content-primary'; })()
                 }`}>{words}</span>
                 <span className="text-[9px] text-slate-500 font-mono">/ {parseInt(localStorage.getItem('module1_word_target') || '300', 10)}</span>
               </div>
               <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
-                <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Active Writing</span>
+                <span className="text-content-secondary text-[9px] font-medium uppercase tracking-wider block">Active Writing</span>
                 <span className="text-cyan-400 font-bold font-mono text-sm mt-0.5 block">{formatTimer(typingSeconds)}</span>
               </div>
               <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
-                <span className="text-slate-400 text-[9px] font-medium uppercase tracking-wider block">Live WPM</span>
+                <span className="text-content-secondary text-[9px] font-medium uppercase tracking-wider block">Live WPM</span>
                 <span className="text-teal-400 font-bold font-mono text-sm mt-0.5 block">{liveWpm}</span>
               </div>
             </div>
@@ -1010,7 +1007,7 @@ export const SubjectHub = () => {
         {isWritingAreaOpen && (
           <div className={`fixed inset-0 z-50 flex flex-col p-4 sm:p-8 font-mono animate-in fade-in duration-200 select-none ${
             isLightWritingCanvas 
-              ? 'bg-[#faf9f5] text-slate-900' 
+              ? 'bg-[#faf9f5] text-content-primary' 
               : 'bg-black text-slate-100'
           }`}>
             {/* Minimalist Top Control Bar */}
@@ -1019,7 +1016,7 @@ export const SubjectHub = () => {
             }`}>
               <div className="flex items-center space-x-4">
                 <span className={`font-bold flex items-center space-x-2 ${
-                  isLightWritingCanvas ? 'text-slate-900' : 'text-white'
+                  isLightWritingCanvas ? 'text-content-primary' : 'text-content-primary'
                 }`}>
                   <Terminal className={`w-4 h-4 ${isLightWritingCanvas ? 'text-cyan-600' : 'text-cyan-400'}`} />
                   <span>TERMINAL ATTESTATION ENCLAVE</span>
@@ -1032,7 +1029,7 @@ export const SubjectHub = () => {
                     : typingSeconds > 0 
                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' 
                     : isLightWritingCanvas
-                    ? 'bg-slate-100 text-slate-500 border-slate-200'
+                    ? 'bg-surface-raised text-slate-500 border-slate-200'
                     : 'bg-zinc-900 text-zinc-500 border-zinc-800'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${
@@ -1061,20 +1058,20 @@ export const SubjectHub = () => {
                   isTypingActive 
                     ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300 ring-2 ring-emerald-500/20' 
                     : isLightWritingCanvas
-                    ? 'bg-white border-slate-200 text-slate-800 shadow-sm'
+                    ? 'bg-surface-raised border-slate-200 text-slate-800 shadow-sm'
                     : 'bg-zinc-900 border-zinc-800 text-zinc-300'
                 }`}>
-                  <Clock className={`w-4 h-4 ${isTypingActive ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
+                  <Clock className={`w-4 h-4 ${isTypingActive ? 'text-emerald-400 animate-pulse' : 'text-content-secondary'}`} />
                   <span className="text-sm tracking-widest">{formatTimer(typingSeconds)}</span>
                   <span className="text-[10px] opacity-70">ACTIVE</span>
                 </div>
 
                 <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border font-mono font-bold text-xs ${
                   isLightWritingCanvas
-                    ? 'bg-slate-100 border-slate-200 text-slate-700'
+                    ? 'bg-surface-raised border-slate-200 text-content-secondary'
                     : 'bg-zinc-900 border-zinc-800 text-zinc-300'
                 }`} title="Total session duration on this page">
-                  <span className="text-[10px] text-slate-400 font-semibold tracking-wider">FULL TIME:</span>
+                  <span className="text-[10px] text-content-secondary font-semibold tracking-wider">FULL TIME:</span>
                   <span className="text-cyan-400 font-mono tracking-wider">{formatTimer(fullSessionSeconds)}</span>
                 </div>
               </div>
@@ -1108,8 +1105,8 @@ export const SubjectHub = () => {
                   onClick={() => setIsWritingAreaOpen(false)}
                   className={`p-1.5 rounded-lg border transition-colors ${
                     isLightWritingCanvas 
-                      ? 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100' 
-                      : 'border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900'
+                      ? 'border-slate-200 text-content-secondary hover:text-content-primary hover:bg-surface-raised' 
+                      : 'border-zinc-800 text-zinc-400 hover:text-content-primary hover:bg-zinc-900'
                   }`}
                   title="Minimize writing area (esc)"
                 >
@@ -1140,7 +1137,7 @@ export const SubjectHub = () => {
                 placeholder="Start typing manually here. Timer starts automatically when you type and pauses when idle. Clipboard pasting, dragging & dropping text, and context menu inspection are strictly locked down..."
                 className={`w-full flex-1 font-mono text-base sm:text-xl leading-relaxed focus:outline-none resize-none border-none p-2 sm:p-6 ${
                   isLightWritingCanvas
-                    ? 'bg-[#faf9f5] text-slate-900 placeholder:text-slate-400 selection:bg-cyan-500 selection:text-white'
+                    ? 'bg-[#faf9f5] text-content-primary placeholder:text-content-secondary selection:bg-cyan-500 selection:text-content-primary'
                     : 'bg-black text-slate-100 placeholder:text-zinc-800 selection:bg-cyan-500 selection:text-black canvas-dark'
                 }`}
               />
@@ -1154,24 +1151,24 @@ export const SubjectHub = () => {
                     const target = parseInt(localStorage.getItem('module1_word_target') || '300', 10);
                     const isTargetReached = words >= target;
                     return (
-                      <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
+                      <span className={isLightWritingCanvas ? 'text-content-secondary' : 'text-zinc-400'}>
                         <strong className={
                           isLightWritingCanvas 
-                            ? 'text-slate-900' 
+                            ? 'text-content-primary' 
                             : isTargetReached 
                             ? 'text-emerald-400' 
-                            : 'text-white'
+                            : 'text-content-primary'
                         }>
                           ({words}/{target})
                         </strong> words {isTargetReached && <span className="text-emerald-400 ml-0.5">✓</span>}
                       </span>
                     );
                   })()}
-                  <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
-                    <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{chars}</strong> chars
+                  <span className={isLightWritingCanvas ? 'text-content-secondary' : 'text-zinc-400'}>
+                    <strong className={isLightWritingCanvas ? 'text-content-primary' : 'text-content-primary'}>{chars}</strong> chars
                   </span>
-                  <span className={isLightWritingCanvas ? 'text-slate-600' : 'text-zinc-400'}>
-                    <strong className={isLightWritingCanvas ? 'text-slate-900' : 'text-white'}>{liveWpm}</strong> WPM
+                  <span className={isLightWritingCanvas ? 'text-content-secondary' : 'text-zinc-400'}>
+                    <strong className={isLightWritingCanvas ? 'text-content-primary' : 'text-content-primary'}>{liveWpm}</strong> WPM
                   </span>
                   <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold text-[11px]" title="Active typing duration">
                     ⏱️ Active: {formatTimer(typingSeconds)}
@@ -1190,7 +1187,7 @@ export const SubjectHub = () => {
         {/* ------------------------------------------------------------- */}
         <div 
           onClick={() => setIsRoadmapOpen(true)}
-          className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-sky-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden group cursor-pointer transition-all duration-300 h-full"
+          className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-sky-500/50 bg-surface-raised p-4 sm:p-4.5 shadow-sm relative overflow-hidden group cursor-pointer transition-all duration-300 h-full"
         >
           {/* Ambient Glow */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all pointer-events-none" />
@@ -1203,13 +1200,13 @@ export const SubjectHub = () => {
                 <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
                   <Zap className="w-5 h-5" />
                 </div>
-                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-sky-400/80 font-mono bg-slate-900 border border-sky-500/30 px-1 rounded">02</span>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-sky-400/80 font-mono bg-surface-raised border border-sky-500/30 px-1 rounded">02</span>
               </div>
               <div>
-                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-sky-300 transition-colors">
+                <h2 className="font-bold text-sm text-content-primary tracking-tight group-hover:text-sky-300 transition-colors">
                   English Assessment
                 </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-[11px] text-content-secondary mt-0.5">
                   AI-powered quiz + live proctoring
                 </p>
               </div>
@@ -1236,7 +1233,7 @@ export const SubjectHub = () => {
                 </span>
               )}
             </div>
-            <p className="text-[10px] text-slate-400 leading-tight">
+            <p className="text-[10px] text-content-secondary leading-tight">
               30 structured daily sessions • {module2QuestionLimit} Gemini questions • Active window: 7:00 PM – 10:00 PM.
             </p>
           </div>
@@ -1249,7 +1246,7 @@ export const SubjectHub = () => {
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-white">
+                  <h3 className="text-xs sm:text-sm font-bold text-content-primary">
                     {duolingoTask?.quizScore !== undefined 
                       ? `Score: ${duolingoTask.quizScore}/${duolingoTask.totalQuestions || module2QuestionLimit} (${duolingoTask.percentage}%)` 
                       : 'Assessment Completed'}
@@ -1268,10 +1265,10 @@ export const SubjectHub = () => {
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-white tracking-wide">
+                  <div className="text-xs font-bold text-content-primary tracking-wide">
                     TOUCH TO VIEW DAILY SESSIONS
                   </div>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-content-secondary">
                     Day-by-day sequential unlocking • {module2QuestionLimit} questions
                   </p>
                 </div>
@@ -1295,7 +1292,7 @@ export const SubjectHub = () => {
                 e.stopPropagation();
                 setIsRoadmapOpen(true);
               }}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all active:scale-[0.98]"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-content-primary font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all active:scale-[0.98]"
             >
               <Zap className="w-4 h-4" />
               <span>{duolingoTask?.status !== 'PENDING' ? 'OPEN DAILY QUEST (RETAKE)' : 'OPEN DAILY QUEST (DAY-BY-DAY) →'}</span>
@@ -1320,7 +1317,7 @@ export const SubjectHub = () => {
         {/* ------------------------------------------------------------- */}
         {/* MODULE 3: WRITING PRACTICE (EXIF METADATA & CRYPTO HASH)      */}
         {/* ------------------------------------------------------------- */}
-        <div className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-emerald-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all duration-300 h-full group">
+        <div className="lg:col-span-1 flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-emerald-500/50 bg-surface-raised p-4 sm:p-4.5 shadow-sm relative overflow-hidden transition-all duration-300 h-full group">
           {/* Ambient Glow */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1332,13 +1329,13 @@ export const SubjectHub = () => {
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shadow-inner shrink-0 group-hover:scale-105 transition-transform">
                   <FileCheck className="w-5 h-5" />
                 </div>
-                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-emerald-400/80 font-mono bg-slate-900 border border-emerald-500/30 px-1 rounded">03</span>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-emerald-400/80 font-mono bg-surface-raised border border-emerald-500/30 px-1 rounded">03</span>
               </div>
               <div>
-                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-emerald-300 transition-colors">
+                <h2 className="font-bold text-sm text-content-primary tracking-tight group-hover:text-emerald-300 transition-colors">
                   Writing Practice
                 </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-[11px] text-content-secondary mt-0.5">
                   Handwritten notes — photo upload
                 </p>
               </div>
@@ -1372,10 +1369,10 @@ export const SubjectHub = () => {
             </div>
 
             <div>
-              <h3 className="text-white font-bold text-xs sm:text-sm tracking-tight leading-snug line-clamp-1">
+              <h3 className="text-content-primary font-bold text-xs sm:text-sm tracking-tight leading-snug line-clamp-1">
                 "{currentWritingTopic.title}"
               </h3>
-              <p className="text-[10px] text-slate-400 leading-tight line-clamp-1 mt-0.5">
+              <p className="text-[10px] text-content-secondary leading-tight line-clamp-1 mt-0.5">
                 {currentWritingTopic.description}
               </p>
             </div>
@@ -1419,14 +1416,14 @@ export const SubjectHub = () => {
                   <Lock className="w-4 h-4 text-amber-400" />
                 </div>
                 <div className="space-y-0.5">
-                  <h3 className="text-xs font-bold text-white tracking-wide">
+                  <h3 className="text-xs font-bold text-content-primary tracking-wide">
                     WRITING PRACTICE LOCKED UNTIL 7:00 PM
                   </h3>
-                  <p className="text-[10px] text-slate-400 leading-tight">
+                  <p className="text-[10px] text-content-secondary leading-tight">
                     Synchronized with Module 2. Scheduled daily window: 7:00 PM – 10:00 PM.
                   </p>
                 </div>
-                <div className="inline-flex items-center justify-center space-x-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-semibold mx-auto">
+                <div className="inline-flex items-center justify-center space-x-1.5 px-3 py-1 rounded-full bg-surface-raised/90 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-semibold mx-auto">
                   <Clock className="w-3 h-3 text-amber-400" />
                   <span>Opens in: {module2TimeStatus?.countdownOpen || '00:00:00'}</span>
                 </div>
@@ -1457,7 +1454,7 @@ export const SubjectHub = () => {
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
                     writingSlots.length > 0
                       ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                      : 'bg-slate-800 text-content-secondary border-slate-700'
                   }`}>
                     📸 {writingSlots.length} / 5 Slots Filled
                   </span>
@@ -1479,7 +1476,7 @@ export const SubjectHub = () => {
                       {writingSlots.map((slot) => (
                         <div 
                           key={slot.id} 
-                          className="relative rounded-xl border border-emerald-500/30 bg-slate-900/90 overflow-hidden group/slot shadow-md flex flex-col justify-between"
+                          className="relative rounded-xl border border-emerald-500/30 bg-surface-raised/90 overflow-hidden group/slot shadow-md flex flex-col justify-between"
                         >
                           <div className="absolute top-1 inset-x-1 flex items-center justify-between z-10">
                             <span className="px-1.5 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-[8px]">
@@ -1489,7 +1486,7 @@ export const SubjectHub = () => {
                               type="button"
                               onClick={(e) => handleRemoveSlot(slot.id, e)}
                               title={`Remove Page ${slot.pageNumber}`}
-                              className="w-4 h-4 rounded-full bg-rose-950/90 border border-rose-500/60 text-rose-300 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-4 h-4 rounded-full bg-rose-950/90 border border-rose-500/60 text-rose-300 hover:text-content-primary hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                             >
                               <X className="w-2.5 h-2.5" />
                             </button>
@@ -1502,11 +1499,11 @@ export const SubjectHub = () => {
                           >
                             <img src={slot.dataUrl} alt={`Handwritten Page ${slot.pageNumber}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
-                              <Maximize2 className="w-4 h-4 text-white" />
+                              <Maximize2 className="w-4 h-4 text-content-primary" />
                             </div>
                           </div>
 
-                          <div className="p-1 bg-slate-950 border-t border-white/[0.06] text-[8px] text-slate-400 truncate">
+                          <div className="p-1 bg-slate-950 border-t border-white/[0.06] text-[8px] text-content-secondary truncate">
                             <span className="text-emerald-400 font-bold">{slot.fileName || `Page ${slot.pageNumber}`}</span> ({slot.fileSize})
                           </div>
                         </div>
@@ -1540,7 +1537,7 @@ export const SubjectHub = () => {
                     <div className="text-xs font-bold text-slate-200">
                       UPLOAD PHOTOS OF HANDWRITTEN PAPER
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                    <p className="text-[10px] text-content-secondary mt-0.5">
                       Supports multiple pages (up to 5 photo slots) • Tap or select photos
                     </p>
                     <input
@@ -1555,7 +1552,7 @@ export const SubjectHub = () => {
 
                 {/* Audit Status Footer */}
                 <div className="flex items-center justify-between pt-0.5 px-0.5">
-                  <span className="text-[10px] text-slate-400">Physical pen & paper photos</span>
+                  <span className="text-[10px] text-content-secondary">Physical pen & paper photos</span>
                   <span className="text-[10px] text-slate-500 font-mono">EXIF & Multi-Page Audit Active</span>
                 </div>
               </div>
@@ -1587,11 +1584,11 @@ export const SubjectHub = () => {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* MODULE 4: TECHNOLOGY, HARDWARE & ABBREVIATIONS                */}
+        {/* MODULE 4: DEVELOPER & OS SURVIVAL                             */}
         {/* ------------------------------------------------------------- */}
         <div 
-          onClick={() => setIsModule4ModalOpen(true)}
-          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 sm:p-4.5 shadow-2xl backdrop-blur-xl relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
+          onClick={() => setIsDeveloperSkillsOpen(true)}
+          className="flex flex-col justify-between rounded-2xl border border-white/[0.08] hover:border-cyan-500/50 bg-surface-raised p-4 sm:p-4.5 shadow-sm relative overflow-hidden cursor-pointer group transition-all duration-300 h-full"
         >
           {/* Subtle Ambient Hover Glow & Top Scan Accent */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
@@ -1602,16 +1599,16 @@ export const SubjectHub = () => {
             <div className="flex items-center space-x-3">
               <div className="relative">
                 <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform shadow-inner shrink-0">
-                  <Cpu className="w-5 h-5" />
+                  <Terminal className="w-5 h-5" />
                 </div>
-                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-cyan-400/80 font-mono bg-slate-900 border border-cyan-500/30 px-1 rounded">04</span>
+                <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-cyan-400/80 font-mono bg-surface-raised border border-cyan-500/30 px-1 rounded">04</span>
               </div>
               <div>
-                <h2 className="font-bold text-sm text-white tracking-tight group-hover:text-cyan-300 transition-colors">
-                  Hardware & Rig Audit
+                <h2 className="font-bold text-sm text-content-primary tracking-tight group-hover:text-cyan-300 transition-colors">
+                  Developer & OS Survival
                 </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Kitchen mental model & machine audit
+                <p className="text-[11px] text-content-secondary mt-0.5">
+                  Interactive developer skill station
                 </p>
               </div>
             </div>
@@ -1625,57 +1622,37 @@ export const SubjectHub = () => {
                 <div className="flex items-center justify-between">
                   <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Rig Verified</span>
+                    <span>Skills Verified</span>
                   </div>
-                  <span className="text-[10px] text-emerald-400/80 font-mono font-medium">
-                    {techHardwareTask.rigAudit?.os ? techHardwareTask.rigAudit.os.toUpperCase() : 'AUDIT LOGGED'}
-                  </span>
+                  <span className="text-[10px] text-emerald-400/80 font-mono font-medium uppercase">DEV SURVIVAL</span>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Cpu className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span className="text-xs font-bold font-mono text-white truncate" title={techHardwareTask.rigAudit?.cpuInfo || 'CPU Logged'}>
-                      {techHardwareTask.rigAudit?.cpuInfo || 'CPU Detected'}
-                    </span>
-                  </div>
-                  <div className="text-[11px] font-mono text-slate-300 pl-6 flex items-center gap-1.5 flex-wrap">
-                    <span className="text-emerald-300/90 font-semibold">
-                      {techHardwareTask.rigAudit?.ramInfo ? `${techHardwareTask.rigAudit.ramInfo} RAM` : 'RAM Logged'}
-                    </span>
-                    {techHardwareTask.rigAudit?.networkType && (
-                      <>
-                        <span className="text-slate-600">•</span>
-                        <span className="text-slate-400">{techHardwareTask.rigAudit.networkType}</span>
-                      </>
-                    )}
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Terminal className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="text-xs font-bold font-mono text-content-primary">5 OS Tracks Mastered</span>
                 </div>
 
-                <div className="pt-1.5 border-t border-emerald-500/15 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                  <span>Curriculum: Kitchen Model</span>
+                <div className="pt-1.5 border-t border-emerald-500/15 flex items-center justify-between text-[10px] text-content-secondary font-mono">
+                  <span>Developer Survival Engine</span>
                   <span className="text-emerald-400 font-semibold">✓ Completed</span>
                 </div>
               </div>
             ) : (
               <div className="p-3.5 rounded-xl border border-white/[0.08] group-hover:border-cyan-500/40 bg-slate-950/60 group-hover:bg-cyan-950/15 text-center space-y-2 transition-all relative z-10">
                 <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-inner">
-                  <Sparkles className="w-4 h-4" />
+                  <Terminal className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-white tracking-wide group-hover:text-cyan-200 transition-colors">
-                    Learn the Kitchen Model & Auto-Detect Your Rig
+                  <div className="text-xs font-bold text-content-primary tracking-wide group-hover:text-cyan-200 transition-colors">
+                    Master 5 Core OS Disciplines
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-relaxed px-1">
-                    Chef (CPU), Countertop (RAM), Pantry (SSD) & 3-step workstation check
+                  <p className="text-[10px] text-content-secondary leading-relaxed px-1">
+                    Keyboard shortcuts, CLI fundamentals, file architecture, Task Manager triage & Git factory game.
                   </p>
                 </div>
                 <div className="flex items-center justify-center gap-1.5 pt-0.5">
                   <span className="px-2 py-0.5 rounded-full bg-slate-800 text-cyan-300 text-[9px] font-semibold border border-slate-700">
-                    🍳 Kitchen Model
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[9px] font-semibold border border-slate-700">
-                    💻 Rig Audit
+                    💻 5 Interactive Tracks
                   </span>
                 </div>
               </div>
@@ -1688,12 +1665,12 @@ export const SubjectHub = () => {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsModule4ModalOpen(true);
+                setIsDeveloperSkillsOpen(true);
               }}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all cursor-pointer group-hover:scale-[1.01] active:scale-[0.98]"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all cursor-pointer group-hover:scale-[1.01] active:scale-[0.98]"
             >
-              <Cpu className="w-3.5 h-3.5 fill-slate-950" />
-              <span>{techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED' ? 'Review Kitchen Model & Rig' : 'Open Kitchen Model & Rig Audit'}</span>
+              <Terminal className="w-3.5 h-3.5 fill-slate-950" />
+              <span>{techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED' ? 'Review Developer Skills' : 'Launch OS Workstation'}</span>
             </button>
             {(techHardwareTask?.status === 'SUBMITTED' || techHardwareTask?.status === 'VERIFIED') && (
               <button
@@ -1702,7 +1679,7 @@ export const SubjectHub = () => {
                   e.stopPropagation();
                   handleClearTechHardware();
                 }}
-                title="Clear Hardware & Rig Audit"
+                title="Clear Developer Skills Audit"
                 className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center space-x-1 transition-all shrink-0 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
@@ -1720,20 +1697,20 @@ export const SubjectHub = () => {
           >
             <div 
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-4xl w-full max-h-[90vh] bg-slate-900 border border-teal-500/50 rounded-2xl overflow-hidden flex flex-col shadow-2xl"
+              className="relative max-w-4xl w-full max-h-[90vh] bg-surface-raised border border-teal-500/50 rounded-2xl overflow-hidden flex flex-col shadow-2xl"
             >
               <div className="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs font-mono text-teal-300">
                   <span className="px-2 py-0.5 rounded bg-teal-500/20 font-bold border border-teal-500/30">
                     PAGE {activeSlotZoom.pageNumber}
                   </span>
-                  <span className="text-white font-bold">{activeSlotZoom.fileName}</span>
-                  <span className="text-slate-400">({activeSlotZoom.fileSize})</span>
+                  <span className="text-content-primary font-bold">{activeSlotZoom.fileName}</span>
+                  <span className="text-content-secondary">({activeSlotZoom.fileSize})</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveSlotZoom(null)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-content-secondary hover:text-content-primary hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1752,7 +1729,7 @@ export const SubjectHub = () => {
         <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-xs font-mono font-semibold shadow-2xl flex items-center space-x-2.5 animate-in fade-in slide-in-from-bottom-2 ${
           hubNotification.type === 'error'
             ? 'bg-rose-950/95 border-rose-500 text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.3)]'
-            : 'bg-slate-900/95 border-cyan-500/50 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.3)]'
+            : 'bg-surface-raised/95 border-cyan-500/50 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.3)]'
         }`}>
           {hubNotification.type === 'error' ? (
             <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0" />
@@ -1767,7 +1744,7 @@ export const SubjectHub = () => {
       {/* 10-Point Handwriting Assignment Sheet Modal */}
       {isWritingTopicModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-none">
-          <div className="w-full max-w-3xl rounded-2xl border border-teal-500/40 bg-slate-900/95 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-3xl rounded-2xl border border-teal-500/40 bg-surface-raised/95 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
@@ -1776,10 +1753,10 @@ export const SubjectHub = () => {
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-sm sm:text-base tracking-tight">
+                  <h3 className="text-content-primary font-bold text-sm sm:text-base tracking-tight">
                     Handwritten Practice: 10-Point Paper Copy Assignment
                   </h3>
-                  <p className="text-[11px] text-slate-400 font-mono">
+                  <p className="text-[11px] text-content-secondary font-mono">
                     Module 3 Discipline • Physical Pen & Paper Required
                   </p>
                 </div>
@@ -1788,7 +1765,7 @@ export const SubjectHub = () => {
               <button
                 type="button"
                 onClick={() => setIsWritingTopicModalOpen(false)}
-                className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-content-secondary hover:text-content-primary flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1807,7 +1784,7 @@ export const SubjectHub = () => {
                     1 TOPIC FOR TODAY • CERTIFIED CURRICULUM
                   </span>
                 </div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+                <h2 className="text-lg sm:text-xl font-extrabold text-content-primary tracking-tight">
                   "{currentWritingTopic.title}"
                 </h2>
                 <p className="text-xs text-slate-300 leading-relaxed">
@@ -1856,7 +1833,7 @@ export const SubjectHub = () => {
 
             {/* Modal Footer (Daily Topic Automatically Generated for Today) */}
             <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
+              <div className="flex items-center space-x-2 text-xs font-mono text-content-secondary">
                 <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
                 <span>{currentWritingTopic.source === 'gemini-ai' ? '✨ Daily Topic • Synthesized by Google Gemini AI' : '✨ Daily Topic • 10 Points Assigned'}</span>
               </div>
@@ -1911,12 +1888,26 @@ export const SubjectHub = () => {
         />
       )}
 
-      {/* Module 4 Technology, Hardware & Abbreviations Modal */}
-      {isModule4ModalOpen && (
-        <Module4TechHardwareModal
-          isOpen={isModule4ModalOpen}
-          onClose={() => setIsModule4ModalOpen(false)}
-        />
+      {/* Module 4 Developer & OS Survival Modal */}
+      {isDeveloperSkillsOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-surface-base animate-in fade-in zoom-in-95 select-none">
+          <div className="w-full min-h-screen relative flex flex-col">
+            <button 
+              onClick={() => setIsDeveloperSkillsOpen(false)}
+              className="fixed top-4 right-4 w-10 h-10 rounded-full bg-slate-800/80 hover:bg-rose-500 text-content-primary flex items-center justify-center border border-white/[0.1] shadow-xl z-50 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <Module4DeveloperSkills
+              onClose={() => setIsDeveloperSkillsOpen(false)}
+              onComplete={() => {
+                submitTechHardwarePractice({ tracksCleared: 5 });
+                showHubToast('Module 4: Developer OS Skills cleared successfully!');
+                setIsDeveloperSkillsOpen(false);
+              }}
+            />
+          </div>
+        </div>
       )}
 
     </div>

@@ -69,7 +69,11 @@ export const CyberNotificationPopup = () => {
             type="button"
             onClick={() => {
               checkTaskFromNotification(taskId);
-              navigate('/admin/submissions');
+              if (taskId.includes('mod-1')) navigate('/admin/module-1');
+              else if (taskId.includes('mod-2')) navigate('/admin/module-2');
+              else if (taskId.includes('mod-3')) navigate('/admin/module-3');
+              else if (taskId.includes('mod-4')) navigate('/admin/module-4');
+              else navigate('/admin/archive');
             }}
             className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs flex items-center space-x-1.5 transition-all shadow-sm"
           >

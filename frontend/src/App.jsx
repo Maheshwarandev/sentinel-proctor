@@ -10,7 +10,7 @@ function AppLayout() {
   const location = useLocation();
 
   // Candidate routes — distraction-free, no admin chrome
-  const candidateRoutes = ['/candidate', '/test', '/brother', '/quiz', '/exercise', '/subject'];
+  const candidateRoutes = ['/candidate', '/test', '/brother', '/quiz', '/exercise', '/subject', '/module4'];
   const isCandidateRoute = candidateRoutes.some(path =>
     location.pathname === path || location.pathname.startsWith(`${path}/`)
   );
@@ -39,10 +39,6 @@ function AppLayout() {
         {/* Default root (/) is Admin Gate */}
         <Route path="/" element={<AdminGate />} />
         <Route path="/admin" element={<AdminGate />} />
-        <Route path="/admin/submissions" element={<AdminGate />} />
-        <Route path="/admin/finished-tasks" element={<AdminGate />} />
-        <Route path="/admin/anti-cheat" element={<AdminGate />} />
-        <Route path="/admin/telemetry" element={<AdminGate />} />
         <Route path="/admin/archive" element={<AdminGate />} />
         <Route path="/admin/module-1" element={<AdminGate />} />
         <Route path="/admin/module-2" element={<AdminGate />} />

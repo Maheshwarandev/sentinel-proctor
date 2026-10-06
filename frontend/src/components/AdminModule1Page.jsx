@@ -118,14 +118,16 @@ export const AdminModule1Page = () => {
         <div className="lg:col-span-5 space-y-6">
           
           {/* Word Target Configuration Card */}
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center space-x-2">
                 <Sliders className="w-4 h-4 text-cyan-400" />
                 <h3 className="text-sm font-bold text-white">Target Word Quota Control</h3>
               </div>
               <Badge variant="info">Real-Time Sync</Badge>
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
 
             <p className="text-xs text-slate-400 leading-relaxed">
               Set the required word count for Module 1. The candidate typing terminal will display this counter (e.g. 0 / {wordTarget} words) and enforce quota completion before submission.
@@ -144,7 +146,7 @@ export const AdminModule1Page = () => {
                     onClick={() => handleSaveWordTarget(val)}
                     className={`py-2 px-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer text-center ${
                       wordTarget === val
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
                         : 'bg-slate-800/80 text-slate-300 border-white/[0.08] hover:bg-slate-700'
                     }`}
                   >
@@ -186,14 +188,17 @@ export const AdminModule1Page = () => {
                 <span>{feedback}</span>
               </div>
             )}
-          </Card>
+          
+</CardBody></Card>
 
           {/* Telemetry Rules & Safeguards */}
-          <Card className="p-5 space-y-3">
-            <div className="flex items-center space-x-2 border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center space-x-2 border-b border-white/[0.06] pb-3">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <h3 className="text-sm font-bold text-white">Active Anti-Cheat Safeguards</h3>
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
             <ul className="space-y-2 text-xs text-slate-400">
               <li className="flex items-start space-x-2">
                 <span className="text-emerald-400">✓</span>
@@ -208,15 +213,16 @@ export const AdminModule1Page = () => {
                 <span><strong>Window Blur Lock:</strong> Tracks tab switches and application blurs during the typing session.</span>
               </li>
             </ul>
-          </Card>
+          
+</CardBody></Card>
 
         </div>
 
         {/* Right Column: Typed Content Draft & Verdict (7 Cols) */}
         <div className="lg:col-span-7 space-y-6">
           
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div>
                 <h3 className="text-sm font-bold text-white">Candidate Typed Submission</h3>
                 <p className="text-xs text-slate-400 mt-0.5">Live content typed in fullscreen terminal</p>
@@ -230,7 +236,9 @@ export const AdminModule1Page = () => {
                   {(keyboardTask.content || '').length} Characters
                 </span>
               </div>
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
 
             {/* Typed Text Preview Box */}
             <div className="rounded-xl bg-slate-950 border border-white/[0.08] p-4 min-h-[220px] max-h-[380px] overflow-y-auto font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-cyan-500 selection:text-slate-950">
@@ -276,7 +284,8 @@ export const AdminModule1Page = () => {
               </div>
             </div>
 
-          </Card>
+          
+</CardBody></Card>
 
         </div>
 

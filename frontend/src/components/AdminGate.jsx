@@ -3,8 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { Lock, ArrowRight, AlertCircle, Eye, EyeOff, ShieldCheck, Sparkles, KeyRound, Cpu, ShieldAlert } from 'lucide-react';
 import { useForensics } from '../context/ForensicContext';
 import { AdminIntelligenceBoard } from './AdminIntelligenceBoard';
-import { SubmissionsBoxPage } from './SubmissionsBoxPage';
-import { AntiCheatPage } from './AntiCheatPage';
 import { DailyArchivePage } from './DailyArchivePage';
 import { AdminModule1Page } from './AdminModule1Page';
 import { AdminModule2Page } from './AdminModule2Page';
@@ -19,12 +17,6 @@ export const AdminGate = () => {
   const [error, setError] = useState('');
 
   if (isAdminAuthenticated) {
-    if (location.pathname === '/admin/anti-cheat' || location.pathname === '/admin/telemetry') {
-      return <AntiCheatPage />;
-    }
-    if (location.pathname === '/admin/submissions' || location.pathname === '/admin/finished-tasks') {
-      return <SubmissionsBoxPage />;
-    }
     if (location.pathname === '/admin/archive') {
       return <DailyArchivePage />;
     }

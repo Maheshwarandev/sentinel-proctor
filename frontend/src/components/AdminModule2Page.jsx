@@ -18,7 +18,7 @@ import {
   Play
 } from 'lucide-react';
 import { useForensics } from '../context/ForensicContext';
-import { PageHeader, StatCard, Card, Badge, Button } from './ui';
+import { PageHeader, StatCard, Card, CardHeader, CardBody, Badge, Button } from './ui';
 import { CyberNotificationPopup } from './CyberNotificationPopup';
 
 export const AdminModule2Page = () => {
@@ -250,14 +250,16 @@ export const AdminModule2Page = () => {
         <div className="lg:col-span-6 space-y-6">
 
           {/* Supervisor Day Control Card */}
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4 text-amber-400" />
                 <h3 className="text-sm font-bold text-white">Supervisor Day-by-Day Controller</h3>
               </div>
               <Badge variant="warning">Manual Command</Badge>
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
 
             <p className="text-xs text-slate-400 leading-relaxed">
               Control when each day starts. The candidate will remain on the commanded day until you choose to unlock the next session.
@@ -300,17 +302,20 @@ export const AdminModule2Page = () => {
                 <span>{limitFeedback}</span>
               </div>
             )}
-          </Card>
+          
+</CardBody></Card>
 
           {/* Question Limit Configuration Card */}
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center space-x-2">
                 <Sliders className="w-4 h-4 text-cyan-400" />
                 <h3 className="text-sm font-bold text-white">Questions per Assessment</h3>
               </div>
               <Badge variant="info">Synced with Dealer API</Badge>
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
 
             <p className="text-xs text-slate-400 leading-relaxed">
               Configure how many questions Gemini AI deals for each assessment session. Default is 50, but you can set 5 or 10 for quick drills.
@@ -329,7 +334,7 @@ export const AdminModule2Page = () => {
                     onClick={() => handleSaveQuestionLimit(val)}
                     className={`py-2 px-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer text-center ${
                       module2QuestionLimit === val
-                        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
                         : 'bg-slate-800/80 text-slate-300 border-white/[0.08] hover:bg-slate-700'
                     }`}
                   >
@@ -363,11 +368,12 @@ export const AdminModule2Page = () => {
                 </button>
               </div>
             </div>
-          </Card>
+          
+</CardBody></Card>
 
           {/* 7:00 PM – 10:00 PM Daily Schedule Access Window Card */}
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-sm font-bold text-white">Daily 7:00 PM – 10:00 PM Schedule Window</h3>
@@ -379,7 +385,9 @@ export const AdminModule2Page = () => {
               ) : (
                 <Badge variant="neutral">Window Locked</Badge>
               )}
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
 
             <p className="text-xs text-slate-400 leading-relaxed">
               Enforce candidate access strictly between 7:00 PM and 10:00 PM daily. Outside of this window, the candidate roadmap displays a countdown lock.
@@ -468,7 +476,8 @@ export const AdminModule2Page = () => {
                 <span>{timeFeedback}</span>
               </div>
             )}
-          </Card>
+          
+</CardBody></Card>
 
         </div>
 
@@ -476,14 +485,16 @@ export const AdminModule2Page = () => {
         <div className="lg:col-span-6 space-y-6">
 
           {/* 3 Pillars Overview Card */}
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center space-x-2">
                 <Layers className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-sm font-bold text-white">3 Essential Daily Disciplines</h3>
               </div>
               <Badge variant="success">Standardized</Badge>
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
 
             <div className="space-y-2.5 text-xs">
               <div className="p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-500/25 flex items-start space-x-2.5">
@@ -510,17 +521,20 @@ export const AdminModule2Page = () => {
                 </div>
               </div>
             </div>
-          </Card>
+          
+</CardBody></Card>
 
           {/* Student Category Weakness Heatmap */}
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <Card>
+<CardHeader className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center space-x-2">
                 <Brain className="w-4 h-4 text-purple-400" />
                 <h3 className="text-sm font-bold text-white">Student Category Weakness Heatmap</h3>
               </div>
               <Badge variant="neutral">Auto-Evaluated</Badge>
-            </div>
+            </CardHeader>
+<CardBody className="space-y-4">
+
 
             {weaknessStats.length === 0 ? (
               <p className="text-xs text-slate-500 py-4 text-center">
@@ -550,7 +564,8 @@ export const AdminModule2Page = () => {
                 ))}
               </div>
             )}
-          </Card>
+          
+</CardBody></Card>
 
         </div>
 

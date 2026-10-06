@@ -35,8 +35,7 @@ import {
 } from 'lucide-react';
 import { useForensics } from '../context/ForensicContext';
 import { CyberNotificationPopup } from './CyberNotificationPopup';
-import { LiveProctorCCTV } from './LiveProctorCCTV';
-import { PageHeader, StatCard, Card, Badge } from './ui';
+import { PageHeader, SectionHeader, StatCard, Card, Badge } from './ui';
 
 export const AdminIntelligenceBoard = () => {
   const navigate = useNavigate();
@@ -200,7 +199,7 @@ export const AdminIntelligenceBoard = () => {
               <Bell className="w-4 h-4 text-cyan-400" />
               <span>Alerts Feed</span>
               {unreadCount > 0 ? (
-                <span className="px-2 py-0.5 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black font-mono shadow-[0_0_10px_rgba(6,182,212,0.4)] animate-pulse">
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black font-mono shadow-sm animate-pulse">
                   {unreadCount}
                 </span>
               ) : (
@@ -210,8 +209,8 @@ export const AdminIntelligenceBoard = () => {
 
             {/* Dropdown Menu */}
             {showNotificationsDropdown && (
-              <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-slate-950/95 border border-white/[0.1] p-4 shadow-xl z-50 animate-slide-up backdrop-blur-2xl">
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-3">
+              <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-xl bg-surface-raised border border-surface-border p-4 shadow-lg z-50 animate-slide-up">
+                <div className="flex items-center justify-between border-b border-surface-border pb-3 mb-3">
                   <span className="text-xs font-bold text-white tracking-tight">Recent Submissions</span>
                   <span className="text-[10px] text-cyan-400 font-mono font-semibold">{notifications.length} logged</span>
                 </div>
@@ -366,41 +365,24 @@ export const AdminIntelligenceBoard = () => {
       </div>
 
       {/* ============================================================= */}
-      {/* REAL-TIME CANDIDATE WEBCAM CCTV SURVEILLANCE FEED (MODULE 2) */}
-      {/* ============================================================= */}
-      <LiveProctorCCTV />
 
       {/* ============================================================= */}
       {/* WEAKNESS HEATMAP: TECHNICAL & LINGUISTIC ACCURACY MAPPING    */}
       {/* ============================================================= */}
       <Card className="p-6 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
-          <div className="flex items-center space-x-3.5">
-            <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
-              <Brain className="w-5 h-5" />
+        <SectionHeader 
+          title="Weakness Heatmap & Topic Diagnostics"
+          subtitle="Aggregates candidate's correct and incorrect quiz answers grouped by technical and linguistic category tags."
+          actions={
+            <div className="flex items-center space-x-2 font-mono text-xs">
+              <span className="text-content-muted">Total Evaluated:</span>
+              <span className="px-2.5 py-1 rounded-xl bg-surface-base border border-surface-border text-accent font-bold">
+                {weaknessStats.reduce((acc, c) => acc + c.total, 0)} Questions
+              </span>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="text-sm font-bold text-white tracking-tight">
-                  Weakness Heatmap & Topic Diagnostics
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 font-mono text-[10px] font-bold border border-rose-500/30">
-                  AI GEMINI TELEMETRY
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Aggregates candidate's correct and incorrect quiz answers grouped by technical and linguistic category tags.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 self-start sm:self-auto font-mono text-xs">
-            <span className="text-slate-400">Total Evaluated:</span>
-            <span className="px-2.5 py-1 rounded-xl bg-slate-950/80 border border-white/[0.08] text-cyan-400 font-bold">
-              {weaknessStats.reduce((acc, c) => acc + c.total, 0)} Questions
-            </span>
-          </div>
-        </div>
+          }
+          className="pb-4 border-b border-surface-border"
+        />
 
         {weaknessStats.length === 0 ? (
           <div className="py-8 text-center space-y-2 border border-dashed border-white/[0.08] rounded-2xl bg-white/[0.01]">
@@ -424,10 +406,10 @@ export const AdminIntelligenceBoard = () => {
                     ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' 
                     : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
                 const barGradient = isWeak 
-                  ? 'bg-gradient-to-r from-rose-600 to-red-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]' 
+                  ? 'bg-gradient-to-r from-rose-600 to-red-500 shadow-sm' 
                   : isModerate 
-                    ? 'bg-gradient-to-r from-amber-500 to-yellow-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' 
-                    : 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]';
+                    ? 'bg-gradient-to-r from-amber-500 to-yellow-400 shadow-sm' 
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-sm';
                 const statusLabel = isWeak ? 'Needs Practice' : isModerate ? 'Moderate' : 'Proficient';
 
                 return (
@@ -479,12 +461,10 @@ export const AdminIntelligenceBoard = () => {
       {/* 3-MODULE DEDICATED CONTROL HUBS                               */}
       {/* ============================================================= */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-white tracking-tight">Dedicated Module Controls</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Individual dedicated consoles to configure and supervise each module</p>
-          </div>
-        </div>
+        <SectionHeader 
+          title="Dedicated Module Controls" 
+          subtitle="Individual dedicated consoles to configure and supervise each module" 
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           

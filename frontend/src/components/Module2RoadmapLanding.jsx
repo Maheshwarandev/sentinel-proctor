@@ -168,7 +168,7 @@ export const Module2RoadmapLanding = ({
   const totalCompleted = completedDays.length;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#080c14] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] select-none">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-surface-base text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] select-none">
       {/* Dynamic Background Grid & Ambient Glows */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(rgba(14,165,233,0.06)_1px,transparent_1px)] [background-size:28px_28px] opacity-70" />
       <div className="fixed -top-40 -left-40 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -182,7 +182,7 @@ export const Module2RoadmapLanding = ({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] transition-all cursor-pointer text-xs font-bold shrink-0"
+            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-surface-card/[0.04] hover:bg-surface-card/[0.08] text-slate-300 hover:text-content-primary border border-white/[0.08] transition-all cursor-pointer text-xs font-bold shrink-0"
           >
             <ArrowLeft className="w-4 h-4 text-cyan-400" />
             <span className="hidden sm:inline">Back to Workstation</span>
@@ -195,7 +195,7 @@ export const Module2RoadmapLanding = ({
               <Zap className="w-4 h-4" />
             </span>
             <div>
-              <div className="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center space-x-1.5">
+              <div className="text-xs sm:text-sm font-extrabold text-content-primary tracking-tight flex items-center space-x-1.5">
                 <span>Module 2: Daily 3-Pillar Learning Quest</span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/30">
                   ACTIVE: DAY {unlockedDay}
@@ -271,7 +271,7 @@ export const Module2RoadmapLanding = ({
             <div className="flex items-center gap-3 shrink-0 bg-slate-950/90 p-3 rounded-xl border border-sky-500/30">
               <div>
                 <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Today's Assigned Session</p>
-                <p className="text-xs font-bold text-white">Day {unlockedDay} Curriculum</p>
+                <p className="text-xs font-bold text-content-primary">Day {unlockedDay} Curriculum</p>
               </div>
               {isWindowActive ? (
                 <button
@@ -304,7 +304,7 @@ export const Module2RoadmapLanding = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
           <div className="flex items-center space-x-2">
             <Compass className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-base font-bold text-white tracking-tight">
+            <h2 className="text-base font-bold text-content-primary tracking-tight">
               Sequential 30-Day Path (3-Pillar Everyday)
             </h2>
             <span className="text-xs text-slate-500 font-mono">
@@ -320,8 +320,8 @@ export const Module2RoadmapLanding = ({
                 onClick={() => setFilterMode('ALL')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                   filterMode === 'ALL'
-                    ? 'bg-slate-800 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-slate-800 text-content-primary shadow-sm'
+                    : 'text-slate-400 hover:text-content-primary'
                 }`}
               >
                 All 30 Days
@@ -332,7 +332,7 @@ export const Module2RoadmapLanding = ({
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                   filterMode === 'UNLOCKED'
                     ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-400 hover:text-content-primary'
                 }`}
               >
                 Unlocked Only ({unlockedDay})
@@ -346,7 +346,7 @@ export const Module2RoadmapLanding = ({
               className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                 practiceMode
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                  : 'bg-white/[0.03] border-white/[0.08] text-slate-400 hover:text-slate-200'
+                  : 'bg-surface-card/[0.03] border-white/[0.08] text-slate-400 hover:text-content-primary'
               }`}
               title="Practice any day freely without waiting"
             >
@@ -388,7 +388,7 @@ export const Module2RoadmapLanding = ({
                           : completed
                           ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                           : unlocked
-                          ? 'bg-slate-800 text-slate-200 border-white/[0.08]'
+                          ? 'bg-slate-800 text-content-primary border-white/[0.08]'
                           : 'bg-slate-900 text-slate-600 border-slate-800'
                       }`}>
                         {String(session.day).padStart(2, '0')}
@@ -410,7 +410,7 @@ export const Module2RoadmapLanding = ({
                         <span>READY TODAY</span>
                       </span>
                     ) : unlocked ? (
-                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-slate-300 text-[10px] font-bold font-mono">
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-surface-card/[0.05] border border-white/[0.08] text-slate-300 text-[10px] font-bold font-mono">
                         <Unlock className="w-3 h-3 text-cyan-400" />
                         <span>UNLOCKED</span>
                       </span>
@@ -425,11 +425,11 @@ export const Module2RoadmapLanding = ({
                   {/* Title */}
                   <h3 className={`text-base font-bold tracking-tight mb-2 transition-colors ${
                     isCurrentToday 
-                      ? 'text-white group-hover:text-sky-300' 
+                      ? 'text-content-primary group-hover:text-sky-300' 
                       : completed 
-                      ? 'text-slate-200 group-hover:text-emerald-300'
+                      ? 'text-content-primary group-hover:text-emerald-300'
                       : unlocked 
-                      ? 'text-white group-hover:text-sky-300' 
+                      ? 'text-content-primary group-hover:text-sky-300' 
                       : 'text-slate-500'
                   }`}>
                     {session.title}
@@ -474,8 +474,8 @@ export const Module2RoadmapLanding = ({
                           : isCurrentToday
                           ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-md shadow-sky-500/25 active:scale-95'
                           : completed
-                          ? 'bg-white/[0.04] hover:bg-white/[0.08] text-emerald-300 border border-emerald-500/30'
-                          : 'bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.1]'
+                          ? 'bg-surface-card/[0.04] hover:bg-surface-card/[0.08] text-emerald-300 border border-emerald-500/30'
+                          : 'bg-surface-card/[0.05] hover:bg-surface-card/[0.1] text-content-primary border border-white/[0.1]'
                       }`}
                     >
                       {completed ? (
@@ -517,7 +517,7 @@ export const Module2RoadmapLanding = ({
           <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
             <button
               onClick={() => setShowLockedModal(false)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.05] cursor-pointer"
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-content-primary hover:bg-surface-card/[0.05] cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -527,7 +527,7 @@ export const Module2RoadmapLanding = ({
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-lg font-bold text-white">Daily Session Opens at 7:00 PM</h3>
+              <h3 className="text-lg font-bold text-content-primary">Daily Session Opens at 7:00 PM</h3>
               <p className="text-xs text-amber-300 font-mono font-semibold">
                 Scheduled Daily Window: 7:00 PM – 10:00 PM (19:00 – 22:00)
               </p>
@@ -563,7 +563,7 @@ export const Module2RoadmapLanding = ({
                     onStartSession?.(selectedLockedSession);
                   }
                 }}
-                className="w-full py-2 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all cursor-pointer"
+                className="w-full py-2 px-4 rounded-xl bg-surface-card/[0.04] hover:bg-surface-card/[0.08] text-slate-300 hover:text-content-primary border border-white/[0.08] text-xs font-semibold transition-all cursor-pointer"
               >
                 Preview in Practice Mode (All Unlocked)
               </button>

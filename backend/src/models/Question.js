@@ -50,5 +50,4 @@ questionSchema.index({ source: 1 });
 questionSchema.index({ createdAt: -1 });
 
 export const Question = mongoose.models.Question || mongoose.model('Question', questionSchema);
-export default Question;
 
