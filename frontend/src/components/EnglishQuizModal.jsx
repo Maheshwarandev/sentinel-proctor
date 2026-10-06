@@ -235,7 +235,7 @@ export const EnglishQuizModal = ({ isOpen = true, onClose, activeSession = null 
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 18000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       const res = await fetch(`/api/quiz/session?limit=${limit}`, {
         signal: controller.signal
